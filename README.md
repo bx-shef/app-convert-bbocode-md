@@ -88,6 +88,41 @@ tests/                   # vitest
 | `[hr]` | `---` |
 | `[p]x[/p]` | `\n\nx\n\n` |
 
+## Развёртывание
+
+Сборка статического SPA и публикация выполняется единым CLI `tools/deploy.ts`:
+
+```bash
+pnpm deploy gh-pages    # сборка под GitHub Pages (артефакт в dist/)
+pnpm deploy joker       # сборка + rsync на ваш сервер по SSH
+```
+
+Те же команды вызываются из CI — ниже только настройка окружения.
+
+### GitHub Pages
+
+Workflow: `.github/workflows/deploy.yml` (push в `main` или ручной `workflow_dispatch`).
+
+Base URL подхватывается автоматически из контекста репозитория:
+`https://<owner>.github.io/<repo>/`. Для форка ничего править не нужно — просто включите Pages с источником **GitHub Actions** в настройках репозитория.
+
+### Joker (или любой SSH-хост)
+
+Workflow: `.github/workflows/deploy-joker.yml` (ручной запуск через **Actions → Deploy to Joker → Run workflow**, опционально с переопределением `site_url` / `base_url`).
+
+Секреты репозитория, которые нужно задать (`Settings → Secrets and variables → Actions`):
+
+| Secret | Назначение |
+| :--- | :--- |
+| `JOKER_SSH_HOST` | хост SSH |
+| `JOKER_SSH_USER` | пользователь |
+| `JOKER_SSH_PORT` | порт (например, `22`) |
+| `JOKER_REMOTE_PATH` | абсолютный путь, например `/var/www/app-convert-bbocode-md` |
+| `JOKER_SSH_KEY` | приватный SSH-ключ целиком (PEM) |
+| `NUXT_PUBLIC_SITE_URL` | публичный URL приложения |
+
+Локально те же переменные читаются из `.env` (см. `.env.example`), для ключа — `JOKER_SSH_KEY_PATH` с путём к файлу. Под капотом — `nuxt generate` + `rsync -avz --delete -e ssh dist/ user@host:path`.
+
 ## Развёртывание в Bitrix24
 
 Приложение работает как placement-iframe. Для локальной разработки прокиньте dev-сервер через ngrok / cloudflared и добавьте хост в `.env`:

@@ -13,7 +13,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
-    "translate-ui": "tsx tools/translate.ui.ts"
+    "translate-ui": "tsx tools/translate.ui.ts",
+    "deploy": "tsx tools/deploy.ts"
   },
   "dependencies": {
     "@bitrix24/b24icons-vue": "^2.0.7",

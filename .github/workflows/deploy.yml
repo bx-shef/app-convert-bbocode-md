@@ -1,4 +1,4 @@
-name: Deploy to Pages 📰
+name: Deploy to GitHub Pages 📰
 on:
   push:
     branches: [ main ]
@@ -15,16 +15,12 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        os: [ ubuntu-latest ]
-        node: [ 22 ]
+    runs-on: ubuntu-latest
 
     env:
-      NUXT_PUBLIC_SITE_URL: https://bitrix24.github.io
-      NUXT_APP_BASE_URL: '/templates-dashboard/'
+      # Portable across forks: <owner>.github.io/<repo>/
+      NUXT_PUBLIC_SITE_URL: https://${{ github.repository_owner }}.github.io
+      NUXT_APP_BASE_URL: /${{ github.event.repository.name }}/
 
     steps:
       - name: Checkout
@@ -36,7 +32,7 @@ jobs:
       - name: Install node
         uses: actions/setup-node@v6
         with:
-          node-version: ${{ matrix.node }}
+          node-version: 22
           cache: pnpm
 
       - name: Setup Pages
@@ -51,13 +47,14 @@ jobs:
       - name: Typecheck
         run: pnpm run typecheck
 
-      - name: Generate
-        run: pnpm run generate
+      - name: Build (gh-pages target)
+        run: pnpm deploy gh-pages
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist
+
   deploy:
     environment:
       name: github-pages
