@@ -13,6 +13,9 @@
       "ui": {
         "title": "BBCode ↔ Markdown converter",
         "clear": "Clear",
+        "copy": "Copy",
+        "copied": "Copied to clipboard",
+        "copyFailed": "Copy failed",
         "chatMode": "Chat mode",
         "chatModeHint": "Render tables as bullet lists (Bitrix24 chat does not support [table]).",
         "bbcodePlaceholder": "Paste Bitrix24 BBCode here…",
