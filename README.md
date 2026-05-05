@@ -20,6 +20,7 @@
 - **Готовая install-страница** для регистрации приложения как placement (сейчас mock-flow без серверной части — расширим позже).
 - **i18n** — 19 локалей унаследованы из шаблона `bitrix24/templates-dashboard`.
 - **Юнит-тесты** на vitest для конвертера в обе стороны и roundtrip.
+- **Развёртывание из коробки** — единый CLI `pnpm deploy <gh-pages|docker>` плюс готовые GitHub Actions: статический хостинг на GitHub Pages и Docker-образ в GHCR (nginx + SPA-фоллбэк, `docker compose pull && up -d` на вашем сервере).
 
 ## Стек
 - [Nuxt 4](https://nuxt.com)
@@ -90,15 +91,20 @@ tests/                   # vitest
 
 ## Развёртывание
 
-Сборка статического SPA и публикация выполняется единым CLI `tools/deploy.ts`:
+**TL;DR.** Поддерживаются два таргета, оба обёрнуты в один CLI `tools/deploy.ts` и в один CI-pipeline:
+
+| Таргет | Команда | Workflow | Где живёт |
+| :--- | :--- | :--- | :--- |
+| GitHub Pages | `pnpm deploy gh-pages` | `.github/workflows/deploy.yml` (push в `main` / ручной) | `https://<owner>.github.io/<repo>/` |
+| Docker | `pnpm deploy docker [--push]` | `.github/workflows/deploy-docker.yml` (ручной) | образ в GHCR + `docker compose` на вашем сервере |
+
+CLI и CI используют один и тот же код сборки — локальный `pnpm deploy …` воспроизводит ровно то, что собирает Actions.
 
 ```bash
 pnpm deploy gh-pages         # сборка под GitHub Pages (артефакт в dist/)
 pnpm deploy docker           # docker build → локальный образ
 pnpm deploy docker --push    # build + push в реестр
 ```
-
-Те же команды вызываются из CI — ниже только настройка окружения.
 
 ### GitHub Pages
 
