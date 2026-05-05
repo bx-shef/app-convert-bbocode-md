@@ -4,7 +4,6 @@ import { computed, onMounted } from 'vue'
 import { useClipboard } from '@vueuse/core'
 import { useB24 } from '~/composables/useB24'
 import { useConverter } from '~/composables/useConverter'
-import Market1Icon from '@bitrix24/b24icons-vue/main/Market1Icon'
 import BroomIcon from '@bitrix24/b24icons-vue/outline/BroomIcon'
 import CopyIcon from '@bitrix24/b24icons-vue/outline/CopyIcon'
 import CheckLIcon from '@bitrix24/b24icons-vue/outline/CheckLIcon'
@@ -54,15 +53,6 @@ async function copyText(value: string) {
     <template #header>
       <B24DashboardNavbar :title="t('page.index.ui.title')">
         <template #right>
-          <B24Button
-            v-if="!isUseB24"
-            size="sm"
-            to="/install"
-            label="Mock Installation"
-            color="air-boost"
-            :icon="Market1Icon"
-            :b24ui="{ label: 'hidden sm:block', baseLine: 'ps-[5px] pe-[5px] sm:pe-[9px]' }"
-          />
           <B24Button
             size="sm"
             color="air-secondary"
