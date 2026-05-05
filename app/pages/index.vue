@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { B24Frame } from '@bitrix24/b24jssdk'
+import type { TabsItem } from '@bitrix24/b24ui-nuxt'
 import { computed, onMounted } from 'vue'
 import { useClipboard } from '@vueuse/core'
 import { useB24 } from '~/composables/useB24'
@@ -18,6 +19,11 @@ const isUseB24 = computed<boolean>(() => b24Instance.isInit())
 const { bbcode, markdown, settings, setBb, setMd, clear } = useConverter()
 
 const { copy, copied, isSupported: clipboardSupported } = useClipboard({ legacy: true, copiedDuring: 1500 })
+
+const tabItems = computed<TabsItem[]>(() => [
+  { label: 'Markdown', value: 'md', slot: 'md' },
+  { label: 'BBCode', value: 'bb', slot: 'bb' }
+])
 
 useHead({ title: t('page.index.seo.title') })
 
@@ -75,7 +81,8 @@ async function copyText(value: string) {
     </template>
 
     <template #body>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 h-full">
+      <!-- Desktop: two-pane grid -->
+      <div class="hidden md:grid grid-cols-2 gap-4 h-full">
         <div class="flex flex-col gap-2 min-h-0">
           <div class="flex items-center justify-between">
             <label class="font-semibold text-(--ui-color-base-1)">Markdown</label>
@@ -117,6 +124,57 @@ async function copyText(value: string) {
           />
         </div>
       </div>
+
+      <!-- Mobile: tabs -->
+      <B24Tabs
+        :items="tabItems"
+        default-value="md"
+        class="md:hidden h-full flex flex-col"
+        :b24ui="{ root: 'h-full', content: 'flex-1 min-h-0 mt-2' }"
+      >
+        <template #md>
+          <div class="flex flex-col gap-2 h-full min-h-[60vh]">
+            <div class="flex items-center justify-end">
+              <B24Button
+                size="xs"
+                color="air-tertiary-no-accent"
+                :icon="copied ? CheckLIcon : CopyIcon"
+                :label="t('page.index.ui.copy')"
+                :disabled="!markdown || !clipboardSupported"
+                @click="copyText(markdown)"
+              />
+            </div>
+            <B24Textarea
+              :model-value="markdown"
+              class="flex-1 font-mono text-sm [&_textarea]:h-full [&_textarea]:resize-none"
+              :rows="14"
+              :placeholder="t('page.index.ui.markdownPlaceholder')"
+              @update:model-value="(v: string | number) => setMd(String(v))"
+            />
+          </div>
+        </template>
+        <template #bb>
+          <div class="flex flex-col gap-2 h-full min-h-[60vh]">
+            <div class="flex items-center justify-end">
+              <B24Button
+                size="xs"
+                color="air-tertiary-no-accent"
+                :icon="copied ? CheckLIcon : CopyIcon"
+                :label="t('page.index.ui.copy')"
+                :disabled="!bbcode || !clipboardSupported"
+                @click="copyText(bbcode)"
+              />
+            </div>
+            <B24Textarea
+              :model-value="bbcode"
+              class="flex-1 font-mono text-sm [&_textarea]:h-full [&_textarea]:resize-none"
+              :rows="14"
+              :placeholder="t('page.index.ui.bbcodePlaceholder')"
+              @update:model-value="(v: string | number) => setBb(String(v))"
+            />
+          </div>
+        </template>
+      </B24Tabs>
     </template>
   </B24DashboardPanel>
 </template>
