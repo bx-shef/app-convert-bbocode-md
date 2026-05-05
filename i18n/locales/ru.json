@@ -16,6 +16,19 @@
         "markdownPlaceholder": "Вставьте Markdown сюда…"
       }
     },
+    "widget": {
+      "im": {
+        "seo": { "title": "BBCode ↔ MD" },
+        "hint": "Markdown → BBCode, вставить в чат",
+        "placeholder": "Пишите Markdown здесь…",
+        "read": "Загрузить",
+        "send": "Вставить",
+        "inserted": "Вставлено в чат",
+        "readFailed": "Не удалось прочитать",
+        "insertFailed": "Не удалось вставить",
+        "notInFrame": "Запущено вне Bitrix24"
+      }
+    },
     "install": {
       "seo": {
         "title": "Установка приложения"

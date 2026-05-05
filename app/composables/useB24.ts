@@ -115,9 +115,8 @@ export const useB24 = () => {
   function getRequiredRights(): string[] {
     return [
       'user_brief',
-      'crm',
-      'tasks',
-      'entity'
+      'im',
+      'placement'
     ]
   }
 

@@ -9,8 +9,11 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useB24 } from '../composables/useB24'
 import { sleepAction } from '../utils'
-// import { withoutTrailingSlash } from 'ufo'
+import { withoutTrailingSlash } from 'ufo'
 import Market1Icon from '@bitrix24/b24icons-vue/main/Market1Icon'
+
+const config = useRuntimeConfig()
+const appUrl = withoutTrailingSlash((config.public.siteUrl as string) || '')
 
 definePageMeta({
   layout: 'clear'
@@ -45,6 +48,10 @@ const steps = ref<Record<string, IStep>>({
   init: {
     caption: t('page.install.step.init.caption'),
     action: makeInit
+  },
+  placement: {
+    caption: t('page.install.step.placement.caption'),
+    action: makePlacement
   },
   // events: {
   //   caption: t('page.install.step.events.caption'),
@@ -284,6 +291,48 @@ async function makeInit(): Promise<void> {
       }[]
     }
   }
+}
+
+async function makePlacement(): Promise<void> {
+  if (!isUseB24.value) {
+    return
+  }
+
+  const PLACEMENT = 'IM_TEXTAREA'
+  const HANDLER = `${appUrl}/widget/im-textarea`
+
+  const placementList = (steps.value.init?.data?.placementList as { placement: string, handler: string }[] | undefined) || []
+  const exists = placementList.some(item => item.placement === PLACEMENT && item.handler === HANDLER)
+
+  const bindParams = {
+    PLACEMENT,
+    HANDLER,
+    LANG_ALL: {
+      ru: { TITLE: 'BBCode ↔ MD' },
+      en: { TITLE: 'BBCode ↔ MD' }
+    },
+    OPTIONS: {
+      iconName: 'fa-cube',
+      context: 'USER;CHAT',
+      role: 'USER',
+      color: 'AZURE',
+      width: '480',
+      height: '320',
+      extranet: 'N'
+    }
+  }
+
+  if (exists) {
+    await $b24.callBatch([
+      { method: 'placement.unbind', params: { PLACEMENT, HANDLER } },
+      { method: 'placement.bind', params: bindParams }
+    ], false)
+    return
+  }
+
+  await $b24.callBatch([
+    { method: 'placement.bind', params: bindParams }
+  ], false)
 }
 
 async function makeFinish(): Promise<void> {

@@ -22,6 +22,19 @@
         "markdownPlaceholder": "Paste Markdown here…"
       }
     },
+    "widget": {
+      "im": {
+        "seo": { "title": "BBCode ↔ MD" },
+        "hint": "Markdown → BBCode, insert into chat",
+        "placeholder": "Type Markdown here…",
+        "read": "Load",
+        "send": "Insert",
+        "inserted": "Inserted into chat",
+        "readFailed": "Read failed",
+        "insertFailed": "Insert failed",
+        "notInFrame": "Not running inside Bitrix24"
+      }
+    },
     "install": {
       "seo": {
         "title": "Application Installation"
