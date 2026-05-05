@@ -1,0 +1,9 @@
+# Run on the server: `docker compose pull && docker compose up -d`.
+# The image is built and pushed by .github/workflows/deploy-docker.yml.
+services:
+  app:
+    image: ${DOCKER_IMAGE:-ghcr.io/bx-shef/app-convert-bbocode-md}:${DOCKER_TAG:-latest}
+    container_name: app-convert-bbocode-md
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-8080}:80"

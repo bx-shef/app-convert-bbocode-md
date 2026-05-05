@@ -88,6 +88,53 @@ tests/                   # vitest
 | `[hr]` | `---` |
 | `[p]x[/p]` | `\n\nx\n\n` |
 
+## Развёртывание
+
+Сборка статического SPA и публикация выполняется единым CLI `tools/deploy.ts`:
+
+```bash
+pnpm deploy gh-pages         # сборка под GitHub Pages (артефакт в dist/)
+pnpm deploy docker           # docker build → локальный образ
+pnpm deploy docker --push    # build + push в реестр
+```
+
+Те же команды вызываются из CI — ниже только настройка окружения.
+
+### GitHub Pages
+
+Workflow: `.github/workflows/deploy.yml` (push в `main` или ручной `workflow_dispatch`).
+
+Base URL подхватывается автоматически из контекста репозитория:
+`https://<owner>.github.io/<repo>/`. Для форка ничего править не нужно — просто включите Pages с источником **GitHub Actions** в настройках репозитория.
+
+### Docker
+
+`Dockerfile` — multi-stage сборка: `pnpm generate` внутри `node:22-alpine`, статический `dist/` отдаёт `nginx:1.27-alpine` со SPA-фоллбэком на `index.html` (`docker/nginx.conf`).
+
+Workflow: `.github/workflows/deploy-docker.yml` (ручной запуск **Actions → Deploy Docker image → Run workflow**, можно переопределить `site_url`, `base_url`, `tag`). Образ публикуется в **GHCR** под именем `ghcr.io/<owner>/<repo>` с тегами `<tag>` и `<sha>` — отдельные секреты не нужны, аутентификация через `GITHUB_TOKEN`.
+
+Локальная сборка:
+
+```bash
+NUXT_PUBLIC_SITE_URL=https://example.com \
+NUXT_APP_BASE_URL=/ \
+DOCKER_IMAGE=ghcr.io/bx-shef/app-convert-bbocode-md \
+DOCKER_TAG=latest \
+pnpm deploy docker --push
+```
+
+`NUXT_PUBLIC_SITE_URL` / `NUXT_APP_BASE_URL` запекаются в бандл на этапе `docker build` через `--build-arg` — поменять их без пересборки нельзя.
+
+Запуск на вашем сервере (`docker-compose.yml` лежит в репо):
+
+```bash
+docker login ghcr.io
+docker compose pull
+HTTP_PORT=8080 docker compose up -d
+```
+
+По умолчанию nginx внутри контейнера слушает `:80`, наружу пробрасывается `${HTTP_PORT:-8080}`. Реверс-прокси (Caddy/Traefik/nginx на хосте) ставится при необходимости перед контейнером.
+
 ## Развёртывание в Bitrix24
 
 Приложение работает как placement-iframe. Для локальной разработки прокиньте dev-сервер через ngrok / cloudflared и добавьте хост в `.env`:

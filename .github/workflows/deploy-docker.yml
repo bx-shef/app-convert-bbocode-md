@@ -1,0 +1,65 @@
+name: Deploy Docker image 🐳
+on:
+  workflow_dispatch:
+    inputs:
+      site_url:
+        description: NUXT_PUBLIC_SITE_URL baked into the bundle.
+        required: false
+      base_url:
+        description: NUXT_APP_BASE_URL (default '/').
+        required: false
+        default: /
+      tag:
+        description: Image tag (default 'latest').
+        required: false
+        default: latest
+
+# Auto-build on main is off by default — uncomment to enable:
+#  push:
+#    branches: [ main ]
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: deploy-docker
+  cancel-in-progress: false
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+
+    env:
+      IMAGE: ghcr.io/${{ github.repository }}
+      TAG: ${{ github.event.inputs.tag || 'latest' }}
+      NUXT_PUBLIC_SITE_URL: ${{ github.event.inputs.site_url || vars.NUXT_PUBLIC_SITE_URL }}
+      NUXT_APP_BASE_URL: ${{ github.event.inputs.base_url || '/' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build & push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ env.TAG }}
+            ${{ env.IMAGE }}:${{ github.sha }}
+          build-args: |
+            NUXT_PUBLIC_SITE_URL=${{ env.NUXT_PUBLIC_SITE_URL }}
+            NUXT_APP_BASE_URL=${{ env.NUXT_APP_BASE_URL }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
