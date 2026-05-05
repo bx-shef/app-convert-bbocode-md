@@ -93,8 +93,9 @@ tests/                   # vitest
 Сборка статического SPA и публикация выполняется единым CLI `tools/deploy.ts`:
 
 ```bash
-pnpm deploy gh-pages    # сборка под GitHub Pages (артефакт в dist/)
-pnpm deploy joker       # сборка + rsync на ваш сервер по SSH
+pnpm deploy gh-pages         # сборка под GitHub Pages (артефакт в dist/)
+pnpm deploy docker           # docker build → локальный образ
+pnpm deploy docker --push    # build + push в реестр
 ```
 
 Те же команды вызываются из CI — ниже только настройка окружения.
@@ -106,22 +107,33 @@ Workflow: `.github/workflows/deploy.yml` (push в `main` или ручной `wo
 Base URL подхватывается автоматически из контекста репозитория:
 `https://<owner>.github.io/<repo>/`. Для форка ничего править не нужно — просто включите Pages с источником **GitHub Actions** в настройках репозитория.
 
-### Joker (или любой SSH-хост)
+### Docker
 
-Workflow: `.github/workflows/deploy-joker.yml` (ручной запуск через **Actions → Deploy to Joker → Run workflow**, опционально с переопределением `site_url` / `base_url`).
+`Dockerfile` — multi-stage сборка: `pnpm generate` внутри `node:22-alpine`, статический `dist/` отдаёт `nginx:1.27-alpine` со SPA-фоллбэком на `index.html` (`docker/nginx.conf`).
 
-Секреты репозитория, которые нужно задать (`Settings → Secrets and variables → Actions`):
+Workflow: `.github/workflows/deploy-docker.yml` (ручной запуск **Actions → Deploy Docker image → Run workflow**, можно переопределить `site_url`, `base_url`, `tag`). Образ публикуется в **GHCR** под именем `ghcr.io/<owner>/<repo>` с тегами `<tag>` и `<sha>` — отдельные секреты не нужны, аутентификация через `GITHUB_TOKEN`.
 
-| Secret | Назначение |
-| :--- | :--- |
-| `JOKER_SSH_HOST` | хост SSH |
-| `JOKER_SSH_USER` | пользователь |
-| `JOKER_SSH_PORT` | порт (например, `22`) |
-| `JOKER_REMOTE_PATH` | абсолютный путь, например `/var/www/app-convert-bbocode-md` |
-| `JOKER_SSH_KEY` | приватный SSH-ключ целиком (PEM) |
-| `NUXT_PUBLIC_SITE_URL` | публичный URL приложения |
+Локальная сборка:
 
-Локально те же переменные читаются из `.env` (см. `.env.example`), для ключа — `JOKER_SSH_KEY_PATH` с путём к файлу. Под капотом — `nuxt generate` + `rsync -avz --delete -e ssh dist/ user@host:path`.
+```bash
+NUXT_PUBLIC_SITE_URL=https://example.com \
+NUXT_APP_BASE_URL=/ \
+DOCKER_IMAGE=ghcr.io/bx-shef/app-convert-bbocode-md \
+DOCKER_TAG=latest \
+pnpm deploy docker --push
+```
+
+`NUXT_PUBLIC_SITE_URL` / `NUXT_APP_BASE_URL` запекаются в бандл на этапе `docker build` через `--build-arg` — поменять их без пересборки нельзя.
+
+Запуск на вашем сервере (`docker-compose.yml` лежит в репо):
+
+```bash
+docker login ghcr.io
+docker compose pull
+HTTP_PORT=8080 docker compose up -d
+```
+
+По умолчанию nginx внутри контейнера слушает `:80`, наружу пробрасывается `${HTTP_PORT:-8080}`. Реверс-прокси (Caddy/Traefik/nginx на хосте) ставится при необходимости перед контейнером.
 
 ## Развёртывание в Bitrix24
 

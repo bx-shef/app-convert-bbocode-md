@@ -2,11 +2,12 @@
 /**
  * Unified deploy CLI for the converter SPA.
  *
- *   pnpm deploy gh-pages   # build for GitHub Pages (output → dist/)
- *   pnpm deploy joker      # build + rsync upload to a Joker.com (or any SSH) host
+ *   pnpm deploy gh-pages          # build for GitHub Pages (output → dist/)
+ *   pnpm deploy docker            # docker build → local image
+ *   pnpm deploy docker --push     # build + push to registry
  *
  * The same script is invoked from .github/workflows/deploy.yml and
- * .github/workflows/deploy-joker.yml so local and CI builds stay in sync.
+ * .github/workflows/deploy-docker.yml so local and CI builds stay in sync.
  *
  * Required env per target (read from process.env / .env / GH secrets):
  *
@@ -14,21 +15,18 @@
  *     NUXT_PUBLIC_SITE_URL    e.g. https://bx-shef.github.io
  *     NUXT_APP_BASE_URL       e.g. /app-convert-bbocode-md/
  *
- *   joker:
- *     NUXT_PUBLIC_SITE_URL    public URL of the deployed SPA
- *     NUXT_APP_BASE_URL       base path on the host (default '/')
- *     JOKER_SSH_HOST          ssh host
- *     JOKER_SSH_USER          ssh user
- *     JOKER_SSH_PORT          ssh port (default 22)
- *     JOKER_REMOTE_PATH       absolute path on the host (e.g. /var/www/app)
- *     JOKER_SSH_KEY_PATH      path to private key (optional; falls back to ssh-agent)
+ *   docker:
+ *     DOCKER_IMAGE            e.g. ghcr.io/bx-shef/app-convert-bbocode-md
+ *     DOCKER_TAG              tag, default 'latest'
+ *     NUXT_PUBLIC_SITE_URL    baked into the static bundle at build time
+ *     NUXT_APP_BASE_URL       base path, default '/'
  */
 import { spawnSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-type Target = 'gh-pages' | 'joker'
-const TARGETS = ['gh-pages', 'joker'] as const satisfies readonly Target[]
+type Target = 'gh-pages' | 'docker'
+const TARGETS = ['gh-pages', 'docker'] as const satisfies readonly Target[]
 
 function run(cmd: string, args: string[], env: NodeJS.ProcessEnv = process.env): void {
   console.log(`\n$ ${cmd} ${args.join(' ')}`)
@@ -45,56 +43,53 @@ function need(name: string): string {
   return v
 }
 
-function generate(extra: Record<string, string>): void {
-  run('pnpm', ['run', 'generate'], { ...process.env, ...extra })
+function deployGhPages(): void {
+  const siteUrl = need('NUXT_PUBLIC_SITE_URL')
+  const baseUrl = need('NUXT_APP_BASE_URL')
+  run('pnpm', ['run', 'generate'], {
+    ...process.env,
+    NUXT_PUBLIC_SITE_URL: siteUrl,
+    NUXT_APP_BASE_URL: baseUrl
+  })
   if (!existsSync(resolve('dist'))) {
     console.error('✗ Expected dist/ to exist after `nuxt generate`')
     process.exit(1)
   }
-}
-
-function deployGhPages(): void {
-  // CI workflow sets these explicitly; require them so local runs don't ship a broken base URL.
-  const siteUrl = need('NUXT_PUBLIC_SITE_URL')
-  const baseUrl = need('NUXT_APP_BASE_URL')
-  generate({ NUXT_PUBLIC_SITE_URL: siteUrl, NUXT_APP_BASE_URL: baseUrl })
   console.log(`\n✓ GitHub Pages build ready in dist/  (base ${baseUrl})`)
 }
 
-function deployJoker(): void {
-  const host = need('JOKER_SSH_HOST')
-  const user = need('JOKER_SSH_USER')
-  const path = need('JOKER_REMOTE_PATH')
-  const port = process.env.JOKER_SSH_PORT ?? '22'
-  const keyPath = process.env.JOKER_SSH_KEY_PATH
-  const siteUrl = need('NUXT_PUBLIC_SITE_URL')
+function deployDocker(extraArgs: string[]): void {
+  const image = need('DOCKER_IMAGE')
+  const tag = process.env.DOCKER_TAG ?? 'latest'
+  const siteUrl = process.env.NUXT_PUBLIC_SITE_URL ?? ''
   const baseUrl = process.env.NUXT_APP_BASE_URL ?? '/'
+  const ref = `${image}:${tag}`
+  const push = extraArgs.includes('--push') || process.env.DOCKER_PUSH === '1'
 
-  generate({ NUXT_PUBLIC_SITE_URL: siteUrl, NUXT_APP_BASE_URL: baseUrl })
-
-  const sshOpts = [
-    '-p', port,
-    '-o', 'StrictHostKeyChecking=accept-new'
-  ]
-  if (keyPath) sshOpts.push('-i', keyPath)
-
-  run('rsync', [
-    '-avz',
-    '--delete',
-    '-e', `ssh ${sshOpts.join(' ')}`,
-    `${resolve('dist')}/`,
-    `${user}@${host}:${path}`
+  run('docker', [
+    'build',
+    '--build-arg', `NUXT_PUBLIC_SITE_URL=${siteUrl}`,
+    '--build-arg', `NUXT_APP_BASE_URL=${baseUrl}`,
+    '-t', ref,
+    '.'
   ])
-  console.log(`\n✓ Deployed to ${user}@${host}:${path}`)
+
+  if (push) {
+    run('docker', ['push', ref])
+    console.log(`\n✓ Pushed ${ref}`)
+  } else {
+    console.log(`\n✓ Built ${ref}  (run with --push to publish)`)
+  }
 }
 
 const target = process.argv[2] as Target | undefined
+const rest = process.argv.slice(3)
 if (!target || !TARGETS.includes(target)) {
-  console.error(`Usage: pnpm deploy <${TARGETS.join('|')}>`)
+  console.error(`Usage: pnpm deploy <${TARGETS.join('|')}> [--push]`)
   process.exit(1)
 }
 
 switch (target) {
   case 'gh-pages': deployGhPages(); break
-  case 'joker':    deployJoker();   break
+  case 'docker':   deployDocker(rest); break
 }
