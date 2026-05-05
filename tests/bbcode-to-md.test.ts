@@ -1,0 +1,99 @@
+import { describe, it, expect } from 'vitest'
+import { bbcodeToMd } from '../app/utils/bbcode-to-md'
+
+describe('bbcodeToMd — basic tags', () => {
+  it('bold', () => {
+    expect(bbcodeToMd('[b]Hello[/b]')).toBe('**Hello**')
+  })
+
+  it('italic', () => {
+    expect(bbcodeToMd('[i]Hi[/i]')).toBe('*Hi*')
+  })
+
+  it('strikethrough', () => {
+    expect(bbcodeToMd('[s]old[/s]')).toBe('~~old~~')
+  })
+
+  it('underline → <u>', () => {
+    expect(bbcodeToMd('[u]u[/u]')).toBe('<u>u</u>')
+  })
+
+  it('url with text', () => {
+    expect(bbcodeToMd('[url=https://x.com]X[/url]')).toBe('[X](https://x.com)')
+  })
+
+  it('url plain (autolink)', () => {
+    expect(bbcodeToMd('[url]https://x.com[/url]')).toBe('<https://x.com>')
+  })
+
+  it('img', () => {
+    expect(bbcodeToMd('[img]https://x.com/a.png[/img]')).toBe('![](https://x.com/a.png)')
+  })
+
+  it('inline code', () => {
+    expect(bbcodeToMd('[code]x[/code]')).toBe('`x`')
+  })
+
+  it('fenced code with lang', () => {
+    expect(bbcodeToMd('[code lang=js]const a=1;\nconst b=2;[/code]'))
+      .toBe('```js\nconst a=1;\nconst b=2;\n```')
+  })
+
+  it('fenced code with primary lang attr', () => {
+    expect(bbcodeToMd('[code=ts]const x: number = 1[/code]'))
+      .toBe('```ts\nconst x: number = 1\n```')
+  })
+
+  it('quote', () => {
+    expect(bbcodeToMd('[quote]hi[/quote]')).toBe('> hi')
+  })
+
+  it('quote multiline', () => {
+    expect(bbcodeToMd('[quote]a\nb[/quote]')).toBe('> a\n> b')
+  })
+
+  it('unordered list', () => {
+    expect(bbcodeToMd('[list][*]a[*]b[/list]')).toBe('- a\n- b')
+  })
+
+  it('ordered list', () => {
+    expect(bbcodeToMd('[list=1][*]a[*]b[/list]')).toBe('1. a\n2. b')
+  })
+
+  it('headings h1-h6', () => {
+    expect(bbcodeToMd('[h1]T[/h1]')).toBe('# T')
+    expect(bbcodeToMd('[h2]T[/h2]')).toBe('## T')
+    expect(bbcodeToMd('[h3]T[/h3]')).toBe('### T')
+    expect(bbcodeToMd('[h4]T[/h4]')).toBe('#### T')
+    expect(bbcodeToMd('[h5]T[/h5]')).toBe('##### T')
+    expect(bbcodeToMd('[h6]T[/h6]')).toBe('###### T')
+  })
+
+  it('hr', () => {
+    expect(bbcodeToMd('[hr]')).toBe('---')
+  })
+
+  it('nested bold+italic', () => {
+    expect(bbcodeToMd('[b][i]x[/i][/b]')).toBe('***x***')
+  })
+
+  it('list with formatted items', () => {
+    expect(bbcodeToMd('[list][*][b]a[/b][*][i]b[/i][/list]')).toBe('- **a**\n- *b*')
+  })
+
+  it('empty input', () => {
+    expect(bbcodeToMd('')).toBe('')
+  })
+
+  it('plain text passthrough', () => {
+    expect(bbcodeToMd('just text')).toBe('just text')
+  })
+
+  it('unknown tag emits as text', () => {
+    expect(bbcodeToMd('[unknown]x[/unknown]')).toBe('[unknown]x[/unknown]')
+  })
+
+  it('unclosed tag — graceful', () => {
+    expect(bbcodeToMd('[b]hi')).toBe('**hi**')
+  })
+})

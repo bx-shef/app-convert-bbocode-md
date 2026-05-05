@@ -1,0 +1,54 @@
+{
+  "mock": {
+    "toast": {
+      "title": "Demo Mode",
+      "description": "Changes will not be applied."
+    }
+  },
+  "page": {
+    "index": {
+      "seo": {
+        "title": "BBCode ↔ Markdown"
+      },
+      "ui": {
+        "title": "BBCode ↔ Markdown converter",
+        "clear": "Clear",
+        "chatMode": "Chat mode",
+        "chatModeHint": "Render tables as bullet lists (Bitrix24 chat does not support [table]).",
+        "bbcodePlaceholder": "Paste Bitrix24 BBCode here…",
+        "markdownPlaceholder": "Paste Markdown here…"
+      }
+    },
+    "install": {
+      "seo": {
+        "title": "Application Installation"
+      },
+      "ui": {
+        "title": "Application Installation"
+      },
+      "step": {
+        "init": {
+          "caption": "Please wait a moment..."
+        },
+        "events": {
+          "caption": "Events..."
+        },
+        "placement": {
+          "caption": "Widgets..."
+        },
+        "userFields": {
+          "caption": "Uf..."
+        },
+        "crm": {
+          "caption": "CRM..."
+        },
+        "serverSide": {
+          "caption": "Server-side scripts..."
+        },
+        "finish": {
+          "caption": "Completion"
+        }
+      }
+    }
+  }
+}

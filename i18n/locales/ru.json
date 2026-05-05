@@ -1,0 +1,51 @@
+{
+  "page": {
+    "index": {
+      "seo": {
+        "title": "BBCode ↔ Markdown"
+      },
+      "ui": {
+        "title": "Конвертер BBCode ↔ Markdown",
+        "clear": "Очистить",
+        "chatMode": "Режим чата",
+        "chatModeHint": "Превращать таблицы в маркированный список (чат Bitrix24 не поддерживает [table]).",
+        "bbcodePlaceholder": "Вставьте BBCode Bitrix24 сюда…",
+        "markdownPlaceholder": "Вставьте Markdown сюда…"
+      }
+    },
+    "install": {
+      "seo": {
+        "title": "Установка приложения"
+      },
+      "ui": {
+        "title": "Установка приложения"
+      },
+      "step": {
+        "init": {
+          "caption": "Нужно немного подождать..."
+        },
+        "demo": {
+          "caption": "Примеры..."
+        },
+        "events": {
+          "caption": "События..."
+        },
+        "placement": {
+          "caption": "Виджеты..."
+        },
+        "userFields": {
+          "caption": "Uf..."
+        },
+        "crm": {
+          "caption": "CRM..."
+        },
+        "serverSide": {
+          "caption": "Серверные скрипты..."
+        },
+        "finish": {
+          "caption": "Завершение"
+        }
+      }
+    }
+  }
+}

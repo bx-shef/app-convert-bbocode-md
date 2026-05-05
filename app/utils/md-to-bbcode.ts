@@ -1,0 +1,211 @@
+import MarkdownIt from 'markdown-it'
+
+type Token = ReturnType<MarkdownIt['parse']>[number]
+
+export interface MdToBBCodeOptions {
+  /**
+   * Chat mode: render Markdown tables as a bullet list (cells joined by ` | `)
+   * because Bitrix24 chat does not support `[table]`. Default: false.
+   */
+  chatMode?: boolean
+}
+
+const md = new MarkdownIt({ html: true, linkify: false, breaks: false })
+
+export function mdToBbcode(input: string, options: MdToBBCodeOptions = {}): string {
+  if (!input) return ''
+  const tokens = md.parse(input, {})
+  const ctx: RenderCtx = { chatMode: options.chatMode === true }
+  let out = ''
+  for (let i = 0; i < tokens.length; i++) {
+    const tk = tokens[i]!
+    if (tk.type === 'table_open') {
+      const end = findMatchingClose(tokens, i, 'table_open', 'table_close')
+      out += renderTable(tokens.slice(i + 1, end), ctx)
+      i = end
+      continue
+    }
+    out += renderToken(tk)
+  }
+  out = out
+    .replace(/\n{2,}\[\/quote\]/g, '[/quote]')
+    .replace(/\[quote\]\n+/g, '[quote]')
+    .replace(/\n{2,}\[\/list\]/g, '\n[/list]')
+    .replace(/\n{3,}/g, '\n\n')
+  return out.trim()
+}
+
+interface RenderCtx {
+  chatMode: boolean
+}
+
+function findMatchingClose(tokens: Token[], start: number, openType: string, closeType: string): number {
+  let depth = 1
+  for (let i = start + 1; i < tokens.length; i++) {
+    if (tokens[i]!.type === openType) depth++
+    else if (tokens[i]!.type === closeType) {
+      depth--
+      if (depth === 0) return i
+    }
+  }
+  return tokens.length - 1
+}
+
+function renderToken(tk: Token): string {
+  switch (tk.type) {
+    case 'paragraph_open':
+      return ''
+    case 'paragraph_close':
+      return tk.hidden ? '' : '\n\n'
+    case 'inline':
+      return renderInline(tk.children || [])
+    case 'heading_open':
+      return `[${tk.tag.toLowerCase()}]`
+    case 'heading_close':
+      return `[/${tk.tag.toLowerCase()}]\n\n`
+    case 'bullet_list_open':
+      return '[list]\n'
+    case 'ordered_list_open':
+      return '[list=1]\n'
+    case 'bullet_list_close':
+    case 'ordered_list_close':
+      return '[/list]\n'
+    case 'list_item_open':
+      return '[*]'
+    case 'list_item_close':
+      return '\n'
+    case 'fence': {
+      const lang = (tk.info || '').trim().split(/\s+/)[0] || ''
+      const content = tk.content.replace(/\n+$/, '')
+      return `[code${lang ? ` lang=${lang}` : ''}]${content}[/code]\n`
+    }
+    case 'code_block': {
+      const content = tk.content.replace(/\n+$/, '')
+      return `[code]${content}[/code]\n`
+    }
+    case 'hr':
+      return '[hr]\n'
+    case 'blockquote_open':
+      return '[quote]'
+    case 'blockquote_close':
+      return '[/quote]\n'
+    case 'html_block':
+      return tk.content
+    default:
+      return ''
+  }
+}
+
+function renderInline(children: Token[]): string {
+  let out = ''
+  for (const c of children) out += renderInlineToken(c)
+  return out
+}
+
+function renderInlineToken(tk: Token): string {
+  switch (tk.type) {
+    case 'text':
+      return tk.content
+    case 'softbreak':
+    case 'hardbreak':
+      return '\n'
+    case 'strong_open':
+      return '[b]'
+    case 'strong_close':
+      return '[/b]'
+    case 'em_open':
+      return '[i]'
+    case 'em_close':
+      return '[/i]'
+    case 's_open':
+      return '[s]'
+    case 's_close':
+      return '[/s]'
+    case 'code_inline':
+      return `[code]${tk.content}[/code]`
+    case 'link_open': {
+      if (tk.markup === 'autolink') return '[url]'
+      const href = tk.attrGet('href') || ''
+      return `[url=${href}]`
+    }
+    case 'link_close':
+      return '[/url]'
+    case 'image': {
+      const src = tk.attrGet('src') || ''
+      return `[img]${src}[/img]`
+    }
+    case 'html_inline': {
+      const c = tk.content.toLowerCase()
+      if (c === '<u>') return '[u]'
+      if (c === '</u>') return '[/u]'
+      return tk.content
+    }
+    default:
+      return ''
+  }
+}
+
+function renderTable(inner: Token[], ctx: RenderCtx): string {
+  const rows: { cells: string[], isHeader: boolean }[] = []
+  let curRow: { cells: string[], isHeader: boolean } | null = null
+  let curCellTokens: Token[] | null = null
+  let curCellIsHeader = false
+
+  for (const tk of inner) {
+    if (tk.type === 'tr_open') {
+      curRow = { cells: [], isHeader: false }
+    } else if (tk.type === 'tr_close') {
+      if (curRow) {
+        rows.push(curRow)
+        curRow = null
+      }
+    } else if (tk.type === 'th_open') {
+      curCellTokens = []
+      curCellIsHeader = true
+      if (curRow) curRow.isHeader = true
+    } else if (tk.type === 'td_open') {
+      curCellTokens = []
+      curCellIsHeader = false
+    } else if (tk.type === 'th_close' || tk.type === 'td_close') {
+      if (curRow && curCellTokens) {
+        const text = renderInlineSeq(curCellTokens).trim()
+        curRow.cells.push(text)
+      }
+      curCellTokens = null
+      void curCellIsHeader
+    } else if (curCellTokens) {
+      curCellTokens.push(tk)
+    }
+  }
+
+  if (rows.length === 0) return ''
+
+  if (ctx.chatMode) {
+    const lines = rows.map((r) => {
+      const joined = r.cells.join(' | ')
+      return r.isHeader ? `[*][b]${joined}[/b]` : `[*]${joined}`
+    })
+    return '[list]\n' + lines.join('\n') + '\n[/list]\n'
+  }
+
+  const out: string[] = ['[table]']
+  for (const r of rows) {
+    const tag = r.isHeader ? 'th' : 'td'
+    const cells = r.cells.map(c => `[${tag}]${c}[/${tag}]`).join('')
+    out.push(`[tr]${cells}[/tr]`)
+  }
+  out.push('[/table]')
+  return out.join('\n') + '\n'
+}
+
+function renderInlineSeq(tokens: Token[]): string {
+  let out = ''
+  for (const tk of tokens) {
+    if (tk.type === 'inline') {
+      out += renderInline(tk.children || [])
+    } else {
+      out += renderToken(tk)
+    }
+  }
+  return out
+}

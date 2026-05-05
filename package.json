@@ -1,0 +1,47 @@
+{
+  "name": "app-convert-bbocode-md",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "lint": "eslint .",
+    "typecheck": "nuxt typecheck",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "translate-ui": "tsx tools/translate.ui.ts"
+  },
+  "dependencies": {
+    "@bitrix24/b24icons-vue": "^2.0.7",
+    "@bitrix24/b24jssdk": "^1.0.5",
+    "@bitrix24/b24jssdk-nuxt": "^1.0.5",
+    "@bitrix24/b24ui-nuxt": "^2.6.0",
+    "@nuxtjs/i18n": "^10.2.4",
+    "@unhead/vue": "^3.0.5",
+    "@vueuse/core": "^14.2.1",
+    "@vueuse/nuxt": "^14.2.1",
+    "markdown-it": "^14.1.0",
+    "nuxt": "^4.4.2",
+    "tailwindcss": "^4.2.4",
+    "ufo": "^1.6.3",
+    "vue": "^3.5.32"
+  },
+  "devDependencies": {
+    "@nuxt/eslint": "^1.15.2",
+    "@types/markdown-it": "^14.1.2",
+    "@types/node": "^25.6.0",
+    "@vitest/ui": "^3.0.0",
+    "dotenv": "^17.4.2",
+    "eslint": "^10.2.0",
+    "openai": "^6.34.0",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2",
+    "vitest": "^3.0.0",
+    "vue-tsc": "^3.2.6"
+  },
+  "packageManager": "pnpm@10.33.0"
+}
