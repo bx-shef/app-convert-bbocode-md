@@ -131,15 +131,29 @@ pnpm deploy docker --push
 
 `NUXT_PUBLIC_SITE_URL` / `NUXT_APP_BASE_URL` запекаются в бандл на этапе `docker build` через `--build-arg` — поменять их без пересборки нельзя.
 
-Запуск на вашем сервере (`docker-compose.yml` лежит в репо):
+Запуск из готового образа — два профиля:
+
+**Локально / standalone** (`docker-compose.yml`) — открывает порт наружу, удобно проверить артефакт CI:
 
 ```bash
 docker login ghcr.io
 docker compose pull
-HTTP_PORT=8080 docker compose up -d
+HTTP_PORT=8080 docker compose up -d   # http://localhost:8080
 ```
 
-По умолчанию nginx внутри контейнера слушает `:80`, наружу пробрасывается `${HTTP_PORT:-8080}`. Реверс-прокси (Caddy/Traefik/nginx на хосте) ставится при необходимости перед контейнером.
+**На сервере с nginx-proxy + acme-companion** (`docker-compose.prod.yml`) — контейнер сидит во внешней сети `proxy-net`, не открывает портов наружу, домен и SSL подхватывает [`nginxproxy/nginx-proxy`](https://github.com/nginx-proxy/nginx-proxy) через `VIRTUAL_HOST`/`LETSENCRYPT_HOST`. Готовые таргеты в `Makefile`:
+
+```bash
+cp .env.prod.example .env.prod   # заполнить VIRTUAL_HOST, LETSENCRYPT_*, DOCKER_TAG
+make init-network                # один раз: создать сеть proxy-net (если её ещё нет)
+# nginx-proxy + acme-companion поднимаются отдельно (ваш собственный compose).
+make up                          # pull + up -d
+make logs / make ps / make down
+```
+
+Контейнер имеет встроенный `HEALTHCHECK` (curl `/` через nginx), `restart: unless-stopped` и мягкие лимиты `0.5 CPU / 128 MB` — для статики этого хватает с запасом.
+
+`NUXT_PUBLIC_SITE_URL` / `NUXT_APP_BASE_URL` запекаются в бандл на этапе `docker build` через `--build-arg` — менять их через `.env.prod` бесполезно, нужно пересобирать образ (передать новые значения в workflow `Deploy Docker image → Run workflow`).
 
 ## Развёртывание в Bitrix24
 

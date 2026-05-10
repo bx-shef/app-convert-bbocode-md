@@ -1,5 +1,5 @@
-# Run on the server: `docker compose pull && docker compose up -d`.
-# The image is built and pushed by .github/workflows/deploy-docker.yml.
+# Local / standalone run: open the SPA on http://localhost:${HTTP_PORT:-8080}
+# Use docker-compose.prod.yml on a server that already has nginx-proxy + acme-companion.
 services:
   app:
     image: ${DOCKER_IMAGE:-ghcr.io/bx-shef/app-convert-bbocode-md}:${DOCKER_TAG:-latest}
