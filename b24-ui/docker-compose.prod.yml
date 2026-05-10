@@ -1,0 +1,31 @@
+services:
+  b24ui-app:
+    image: b24ui-app
+    container_name: b24ui-app-production
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0' # CPU limit
+          memory: 768M # Max memory
+        reservations:
+          cpus: '1.0' # Guaranteed CPUs
+          memory: 768M # Minimum memory
+    expose:
+      - "80"
+    extra_hosts:
+      - "b24ui.bx-shef.by:172.17.0.1"
+    env_file: .env.prod
+    environment:
+      - NUXT_PUBLIC_APP_URL="https://${VIRTUAL_HOST}"
+      - NUXT_PUBLIC_SITE_URL="https://${VIRTUAL_HOST}"
+    networks:
+      - internal-net
+      - proxy-net
+    restart: always
+
+networks:
+  proxy-net:
+    driver: bridge
+    external: true
+  internal-net:
+    driver: bridge
