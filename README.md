@@ -271,6 +271,16 @@ NUXT_ALLOWED_HOSTS=your-tunnel.ngrok.app
 
 Скоупы те же. Дальше — тот же поток: «Установить» → `/install` → `placement.bind`.
 
+## Аналитика посетителей (опционально)
+
+Поддержан **Cloudflare Web Analytics** — без кук, без баннера согласия GDPR, бесплатно. Один env-флаг:
+
+```env
+NUXT_PUBLIC_CF_ANALYTICS_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+Если переменная пустая — никакой скрипт не подключается. Токен берётся в Cloudflare → Analytics & Logs → Web Analytics → Add a site (для GitHub Pages выбирать «manual installation»). Значение запекается в бандл при сборке (через `--build-arg` для Docker / `vars` для GitHub Actions), как и `NUXT_PUBLIC_SITE_URL`.
+
 ## Roadmap
 - [ ] Подтягивать тексты задач/комментариев/постов из Bitrix24 REST и сохранять обратно (`useB24` уже инициализирован).
 - [ ] Bitrix-специфичные теги: `[USER=id]`, `[DISK File=id]`, `[DEPARTMENT=id]`, `[color]`, `[size]`, `[font]`.

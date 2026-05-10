@@ -4,6 +4,15 @@ const extraAllowedHosts = (process?.env.NUXT_ALLOWED_HOSTS?.split(',').map((s: s
 
 const prodUrl = process?.env.NUXT_PUBLIC_SITE_URL ?? ''
 
+const cfAnalyticsToken = process?.env.NUXT_PUBLIC_CF_ANALYTICS_TOKEN ?? ''
+const headScripts = cfAnalyticsToken
+  ? [{
+      'src': 'https://static.cloudflareinsights.com/beacon.min.js',
+      'defer': true,
+      'data-cf-beacon': JSON.stringify({ token: cfAnalyticsToken })
+    }]
+  : []
+
 export default defineNuxtConfig({
 
   modules: [
@@ -15,7 +24,10 @@ export default defineNuxtConfig({
   ], devtools: { enabled: false },
 
   app: {
-    rootAttrs: { 'data-vaul-drawer-wrapper': '' }
+    rootAttrs: { 'data-vaul-drawer-wrapper': '' },
+    head: {
+      script: headScripts
+    }
   },
 
   css: ['~/assets/css/main.css'],
