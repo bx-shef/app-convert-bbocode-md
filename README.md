@@ -20,7 +20,7 @@
 - **Готовая install-страница** для регистрации приложения как placement (сейчас mock-flow без серверной части — расширим позже).
 - **i18n** — 19 локалей унаследованы из шаблона `bitrix24/templates-dashboard`.
 - **Юнит-тесты** на vitest для конвертера в обе стороны и roundtrip.
-- **Развёртывание из коробки** — единый CLI `pnpm deploy <gh-pages|docker>` плюс готовые GitHub Actions: статический хостинг на GitHub Pages и Docker-образ в GHCR (nginx + SPA-фоллбэк, `docker compose pull && up -d` на вашем сервере).
+- **Развёртывание из коробки** — единый CLI `pnpm run deploy <gh-pages|docker>` плюс готовые GitHub Actions: статический хостинг на GitHub Pages и Docker-образ в GHCR (nginx + SPA-фоллбэк, `docker compose pull && up -d` на вашем сервере).
 
 ## Стек
 - [Nuxt 4](https://nuxt.com)
@@ -95,15 +95,15 @@ tests/                   # vitest
 
 | Таргет | Команда | Workflow | Где живёт |
 | :--- | :--- | :--- | :--- |
-| GitHub Pages | `pnpm deploy gh-pages` | `.github/workflows/deploy.yml` (push в `main` / ручной) | `https://<owner>.github.io/<repo>/` |
-| Docker | `pnpm deploy docker [--push]` | `.github/workflows/deploy-docker.yml` (ручной) | образ в GHCR + `docker compose` на вашем сервере |
+| GitHub Pages | `pnpm run deploy gh-pages` | `.github/workflows/deploy.yml` (push в `main` / ручной) | `https://<owner>.github.io/<repo>/` |
+| Docker | `pnpm run deploy docker [--push]` | `.github/workflows/deploy-docker.yml` (ручной) | образ в GHCR + `docker compose` на вашем сервере |
 
-CLI и CI используют один и тот же код сборки — локальный `pnpm deploy …` воспроизводит ровно то, что собирает Actions.
+CLI и CI используют один и тот же код сборки — локальный `pnpm run deploy …` воспроизводит ровно то, что собирает Actions. (Команда называется `pnpm run deploy`, а не `pnpm deploy`, потому что у pnpm есть встроенная команда `deploy` для монорепо — её и перекрывает наш скрипт.)
 
 ```bash
-pnpm deploy gh-pages         # сборка под GitHub Pages (артефакт в dist/)
-pnpm deploy docker           # docker build → локальный образ
-pnpm deploy docker --push    # build + push в реестр
+pnpm run deploy gh-pages         # сборка под GitHub Pages (артефакт в dist/)
+pnpm run deploy docker           # docker build → локальный образ
+pnpm run deploy docker --push    # build + push в реестр
 ```
 
 ### GitHub Pages
@@ -128,7 +128,7 @@ NUXT_PUBLIC_SITE_URL=https://example.com \
 NUXT_APP_BASE_URL=/ \
 DOCKER_IMAGE=ghcr.io/bx-shef/app-convert-bbocode-md \
 DOCKER_TAG=latest \
-pnpm deploy docker --push
+pnpm run deploy docker --push
 ```
 
 `NUXT_PUBLIC_SITE_URL` / `NUXT_APP_BASE_URL` запекаются в бандл на этапе `docker build` через `--build-arg` — поменять их без пересборки нельзя.
