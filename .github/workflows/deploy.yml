@@ -48,7 +48,9 @@ jobs:
         run: pnpm run typecheck
 
       - name: Build (gh-pages target)
-        run: pnpm deploy gh-pages
+        # `pnpm deploy` is a pnpm built-in for monorepo deploys; use `pnpm run`
+        # to invoke our custom script from package.json.
+        run: pnpm run deploy gh-pages
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
