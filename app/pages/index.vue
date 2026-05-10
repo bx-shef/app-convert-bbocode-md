@@ -5,9 +5,11 @@ import { computed, onMounted } from 'vue'
 import { useClipboard } from '@vueuse/core'
 import { useB24 } from '~/composables/useB24'
 import { useConverter } from '~/composables/useConverter'
+import { usePrint } from '~/composables/usePrint'
 import BroomIcon from '@bitrix24/b24icons-vue/outline/BroomIcon'
 import CopyIcon from '@bitrix24/b24icons-vue/outline/CopyIcon'
 import CheckLIcon from '@bitrix24/b24icons-vue/outline/CheckLIcon'
+import PrinterIcon from '@bitrix24/b24icons-vue/outline/PrinterIcon'
 
 definePageMeta({ layout: 'clear' })
 
@@ -19,6 +21,7 @@ const isUseB24 = computed<boolean>(() => b24Instance.isInit())
 const { bbcode, markdown, settings, setBb, setMd, clear } = useConverter()
 
 const { copy, copied, isSupported: clipboardSupported } = useClipboard({ legacy: true, copiedDuring: 1500 })
+const { printMarkdown } = usePrint()
 
 const tabItems = computed<TabsItem[]>(() => [
   { label: 'Markdown', value: 'md', slot: 'md' },
@@ -47,6 +50,19 @@ async function copyText(value: string) {
   } catch {
     toast.add({
       title: t('page.index.ui.copyFailed'),
+      color: 'air-primary-alert',
+      duration: 2500
+    })
+  }
+}
+
+async function printText(value: string) {
+  if (!value) return
+  try {
+    await printMarkdown(value, { title: t('page.index.seo.title') })
+  } catch {
+    toast.add({
+      title: t('page.index.ui.printFailed'),
       color: 'air-primary-alert',
       duration: 2500
     })
@@ -86,14 +102,24 @@ async function copyText(value: string) {
         <div class="flex flex-col gap-2 min-h-0">
           <div class="flex items-center justify-between">
             <label class="font-semibold text-(--ui-color-base-1)">Markdown</label>
-            <B24Button
-              size="xs"
-              color="air-tertiary-no-accent"
-              :icon="copied ? CheckLIcon : CopyIcon"
-              :label="t('page.index.ui.copy')"
-              :disabled="!markdown || !clipboardSupported"
-              @click="copyText(markdown)"
-            />
+            <div class="flex items-center gap-2">
+              <B24Button
+                size="xs"
+                color="air-tertiary-no-accent"
+                :icon="PrinterIcon"
+                :label="t('page.index.ui.print')"
+                :disabled="!markdown"
+                @click="printText(markdown)"
+              />
+              <B24Button
+                size="xs"
+                color="air-tertiary-no-accent"
+                :icon="copied ? CheckLIcon : CopyIcon"
+                :label="t('page.index.ui.copy')"
+                :disabled="!markdown || !clipboardSupported"
+                @click="copyText(markdown)"
+              />
+            </div>
           </div>
           <B24Textarea
             :model-value="markdown"
@@ -134,7 +160,15 @@ async function copyText(value: string) {
       >
         <template #md>
           <div class="flex flex-col gap-2 h-full min-h-[60vh]">
-            <div class="flex items-center justify-end">
+            <div class="flex items-center justify-end gap-2">
+              <B24Button
+                size="xs"
+                color="air-tertiary-no-accent"
+                :icon="PrinterIcon"
+                :label="t('page.index.ui.print')"
+                :disabled="!markdown"
+                @click="printText(markdown)"
+              />
               <B24Button
                 size="xs"
                 color="air-tertiary-no-accent"
