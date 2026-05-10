@@ -59,6 +59,12 @@ async function copyText(value: string) {
     <template #header>
       <B24DashboardNavbar :title="t('page.index.ui.title')">
         <template #right>
+          <B24Badge
+            :label="isUseB24 ? t('page.index.mode.b24') : t('page.index.mode.standalone')"
+            :color="isUseB24 ? 'air-primary-success' : 'air-primary-warning'"
+            variant="soft"
+            size="sm"
+          />
           <B24Button
             size="sm"
             color="air-secondary"
@@ -123,6 +129,59 @@ async function copyText(value: string) {
             @update:model-value="(v: string | number) => setBb(String(v))"
           />
         </div>
+      </div>
+
+      <!-- Setup instructions (hidden inside Bitrix24 placement to keep UI clean there) -->
+      <div v-if="!isUseB24" class="hidden md:block mt-6">
+        <B24Accordion
+          :items="[
+            { label: t('page.index.setup.installB24'), value: 'install', slot: 'install' },
+            { label: t('page.index.setup.selfHost'), value: 'host', slot: 'host' }
+          ]"
+          type="multiple"
+        >
+          <template #install>
+            <div class="text-sm flex flex-col gap-2 p-2">
+              <p>{{ t('page.index.setup.installB24Intro') }}</p>
+              <ol class="list-decimal pl-6 flex flex-col gap-1">
+                <li>{{ t('page.index.setup.installB24Step1') }}</li>
+                <li>
+                  {{ t('page.index.setup.installB24Step2') }}
+                  <code class="font-mono text-xs">https://convert-bbocode-md.bx-shef.by</code>
+                </li>
+                <li>
+                  {{ t('page.index.setup.installB24Step3') }}
+                  <code class="font-mono text-xs">https://convert-bbocode-md.bx-shef.by/install</code>
+                </li>
+                <li>
+                  {{ t('page.index.setup.installB24Step4') }}
+                  <code class="font-mono text-xs">user_brief, im, imopenlines</code>
+                </li>
+                <li>{{ t('page.index.setup.installB24Step5') }}</li>
+              </ol>
+            </div>
+          </template>
+          <template #host>
+            <div class="text-sm flex flex-col gap-2 p-2">
+              <p>{{ t('page.index.setup.selfHostIntro') }}</p>
+              <p>
+                {{ t('page.index.setup.selfHostReadme') }}
+                <a
+                  href="https://github.com/bx-shef/app-convert-bbocode-md#readme"
+                  target="_blank"
+                  rel="noopener"
+                  class="underline"
+                >
+                  README
+                </a>.
+              </p>
+              <ul class="list-disc pl-6 flex flex-col gap-1">
+                <li>{{ t('page.index.setup.selfHostOption1') }}</li>
+                <li>{{ t('page.index.setup.selfHostOption2') }}</li>
+              </ul>
+            </div>
+          </template>
+        </B24Accordion>
       </div>
 
       <!-- Mobile: tabs -->
