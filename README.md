@@ -170,15 +170,21 @@ GitHub → **Actions → Deploy Docker image → Run workflow** на ветке 
 
 После прогона: **Code → Packages → app-convert-bbocode-md → Package settings → Change visibility → Public** (или оставить приватным и ниже сделать `docker login ghcr.io`).
 
-**Один раз — раскладка на сервере.**
+**Один раз — раскладка на сервере.** На хосте нужны ровно три файла: `docker-compose.prod.yml`, `Makefile`, `.env.prod.example`. Тянем их напрямую с `main`:
+
 ```bash
 mkdir -p /home/bitrix/convert-bbocode-md && cd /home/bitrix/convert-bbocode-md
-git clone https://github.com/bx-shef/app-convert-bbocode-md.git .
+RAW=https://raw.githubusercontent.com/bx-shef/app-convert-bbocode-md/main
+for f in docker-compose.prod.yml Makefile .env.prod.example; do
+  curl -fsSL -o "$f" "$RAW/$f"
+done
 cp .env.prod.example .env.prod        # домен и почта уже подставлены под bx-shef
 docker network inspect proxy-net >/dev/null 2>&1 || docker network create proxy-net
 # для приватного образа (если visibility != Public):
 # docker login ghcr.io                # username: GH login, password: PAT с read:packages
 ```
+
+Обновить конфиг при изменениях в репо — тот же цикл `curl`-ом.
 
 **Запуск / обновление.**
 ```bash
@@ -224,21 +230,44 @@ make restart # down + up
 
 ## Развёртывание в Bitrix24
 
-Приложение работает как placement-iframe. Для локальной разработки прокиньте dev-сервер через ngrok / cloudflared и добавьте хост в `.env`:
+Приложение работает как placement-iframe. Регистрируется через **«Разработчикам → Иное → Локальное приложение»** в портале Bitrix24.
+
+### Прод (`bx-shef`)
+
+Образ уже задеплоен на `https://convert-bbocode-md.bx-shef.by` (см. шпаргалку выше). В Bitrix24 заполняем:
+
+| Параметр | Значение |
+| :--- | :--- |
+| **Application URL** | `https://convert-bbocode-md.bx-shef.by` |
+| **Installation URL** | `https://convert-bbocode-md.bx-shef.by/install` |
+| **Назначение** | iframe-приложение |
+| **Скоупы** | `user_brief`, `im`, `imopenlines` (для `IM_TEXTAREA`-виджета) + задел: `crm`, `tasks`, `entity` |
+
+После сохранения нажать **«Установить»** — портал откроет страницу `/install`, она:
+1. инициализирует JSSDK,
+2. через `placement.bind` регистрирует виджет на `IM_TEXTAREA` (handler `https://convert-bbocode-md.bx-shef.by/widget/im-textarea`, контекст `USER;CHAT`, размер `480×320`).
+
+После этого в правом нижнем углу панели ввода чата появится иконка `BBCode ↔ MD` — клик открывает конвертер.
+
+> **Сменили домен / пересобрали с другим `NUXT_PUBLIC_SITE_URL`?** В `placement.list` остаётся старый handler. Откройте `/install` ещё раз — `makePlacement` сделает `unbind` старого и `bind` нового.
+
+### Локальная разработка
+
+Dev-сервер `pnpm dev` крутится на `:3000` — порту нужен HTTPS-туннель, чтобы Bitrix24 пустил его в iframe. Поднимите ngrok / cloudflared, добавьте хост в `.env`:
 
 ```env
 NUXT_PUBLIC_SITE_URL=https://your-tunnel.ngrok.app
 NUXT_ALLOWED_HOSTS=your-tunnel.ngrok.app
 ```
 
-Затем зарегистрируйте локальное приложение в Bitrix24:
+Зарегистрируйте отдельное локальное приложение в портале (рядом с прод-инсталляцией, чтобы не мешало):
 
 | Параметр | URL |
 | :--- | :--- |
 | **Application URL** | `https://your-tunnel.ngrok.app` |
 | **Installation URL** | `https://your-tunnel.ngrok.app/install` |
 
-Обязательные скоупы (на текущем этапе — задел на будущее): `user_brief`, `crm`, `tasks`, `entity`.
+Скоупы те же. Дальше — тот же поток: «Установить» → `/install` → `placement.bind`.
 
 ## Roadmap
 - [ ] Подтягивать тексты задач/комментариев/постов из Bitrix24 REST и сохранять обратно (`useB24` уже инициализирован).
