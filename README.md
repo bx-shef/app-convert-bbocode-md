@@ -117,7 +117,9 @@ Base URL подхватывается автоматически из конте
 
 `Dockerfile` — multi-stage сборка: `pnpm generate` внутри `node:22-alpine`, статический `dist/` отдаёт `nginx:1.27-alpine` со SPA-фоллбэком на `index.html` (`docker/nginx.conf`).
 
-Workflow: `.github/workflows/deploy-docker.yml` (ручной запуск **Actions → Deploy Docker image → Run workflow**, можно переопределить `site_url`, `base_url`, `tag`). Образ публикуется в **GHCR** под именем `ghcr.io/<owner>/<repo>` с тегами `<tag>` и `<sha>` — отдельные секреты не нужны, аутентификация через `GITHUB_TOKEN`.
+Workflow: `.github/workflows/deploy-docker.yml`. Триггерится **автоматически** на push в `main`, если затронуты файлы, влияющие на образ (`app/`, `public/`, `i18n/`, `docker/`, `Dockerfile`, `package.json`, `pnpm-lock.yaml`, `nuxt.config.ts`, `tsconfig.json` и сам workflow). Чисто документационные коммиты сборку не вызывают. Можно также запустить руками: **Actions → Deploy Docker image → Run workflow** с переопределением `site_url`, `base_url`, `tag`.
+
+Образ публикуется в **GHCR** под именем `ghcr.io/<owner>/<repo>` с тегами `latest` и `<sha>`. Отдельные секреты не нужны — аутентификация через `GITHUB_TOKEN`. `NUXT_PUBLIC_SITE_URL` берётся из **GitHub Variable** `NUXT_PUBLIC_SITE_URL` (см. шпаргалку ниже).
 
 Локальная сборка:
 
@@ -159,16 +161,16 @@ make logs / make ps / make down
 
 Реальные значения (домен, путь). Подразумевает, что `nginxproxy/nginx-proxy` + `acme-companion` уже подняты на сервере, а DNS A-записи `convert-bbocode-md.bx-shef.by` смотрит на IP сервера.
 
-**Один раз — сборка образа в GHCR.**
-GitHub → **Actions → Deploy Docker image → Run workflow** на ветке `main`:
+**Один раз — настройка GitHub Variable.**
+**Settings → Secrets and variables → Actions → Variables → New repository variable**:
 
-| Поле | Значение |
+| Name | Value |
 | :--- | :--- |
-| `site_url` | `https://convert-bbocode-md.bx-shef.by` |
-| `base_url` | `/` |
-| `tag` | `latest` |
+| `NUXT_PUBLIC_SITE_URL` | `https://convert-bbocode-md.bx-shef.by` |
 
-После прогона: **Code → Packages → app-convert-bbocode-md → Package settings → Change visibility → Public** (или оставить приватным и ниже сделать `docker login ghcr.io`).
+Это публичная переменная (не секрет) — её значение запекается в JS-бандл и видно в браузере. Меняется при смене домена → следующий push в `main` пересоберёт образ с новым URL.
+
+**Сборка образа.** Каждый push в `main`, затрагивающий код/конфиг сборки, автоматически собирает и пушит образ в GHCR (`:latest` + `:<sha>`). Первая сборка инициирует пакет — после неё **Code → Packages → app-convert-bbocode-md → Package settings → Change visibility → Public** (или оставить приватным и сделать `docker login ghcr.io` на сервере). Если в `main` ещё нет ни одного «кодового» коммита — запустить **Actions → Deploy Docker image → Run workflow** руками.
 
 **Один раз — раскладка на сервере.** На хосте нужны ровно три файла: `docker-compose.prod.yml`, `Makefile`, `.env.prod.example`. Тянем их напрямую с `main`:
 

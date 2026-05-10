@@ -1,5 +1,21 @@
 name: Deploy Docker image 🐳
 on:
+  # Auto: rebuild on every push to main that touches image-affecting files.
+  push:
+    branches: [ main ]
+    paths:
+      - 'app/**'
+      - 'public/**'
+      - 'i18n/**'
+      - 'docker/**'
+      - 'Dockerfile'
+      - '.dockerignore'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'nuxt.config.ts'
+      - 'tsconfig.json'
+      - '.github/workflows/deploy-docker.yml'
+  # Manual: override site_url / base_url / tag for one-off rebuilds.
   workflow_dispatch:
     inputs:
       site_url:
@@ -13,10 +29,6 @@ on:
         description: Image tag (default 'latest').
         required: false
         default: latest
-
-# Auto-build on main is off by default — uncomment to enable:
-#  push:
-#    branches: [ main ]
 
 permissions:
   contents: read
