@@ -75,3 +75,13 @@ jobs:
             NUXT_APP_BASE_URL=${{ env.NUXT_APP_BASE_URL }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # Temporary: kick the server-side webhook to do `docker compose pull && up -d`.
+      # See README → "Авто-обновление на сервере". Migrate to Watchtower when ready.
+      - name: Trigger server redeploy
+        if: vars.DEPLOY_HOOK_HOST != ''
+        run: |
+          curl -fsSL --max-time 120 \
+            -X POST \
+            -H "X-Deploy-Token: ${{ secrets.DEPLOY_HOOK_TOKEN }}" \
+            "https://${{ vars.DEPLOY_HOOK_HOST }}/hooks/redeploy-convert-bbocode-md"

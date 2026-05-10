@@ -157,6 +157,41 @@ make logs / make ps / make down
 
 `NUXT_PUBLIC_SITE_URL` / `NUXT_APP_BASE_URL` запекаются в бандл на этапе `docker build` через `--build-arg` — менять их через `.env.prod` бесполезно, нужно пересобирать образ (передать новые значения в workflow `Deploy Docker image → Run workflow`).
 
+#### Авто-обновление контейнера на сервере
+
+После публикации нового образа CI дёргает webhook на сервере, тот делает `docker compose pull && up -d` — `make up` руками больше не нужен.
+
+Реализация в `webhook/`: маленький Python-сервис (~30 строк), валидирует `X-Deploy-Token`, запускает скрипт `webhook/scripts/redeploy-convert-bbocode-md.sh` который и обновляет нужный compose-стек. Сидит за тем же `nginx-proxy` + `acme-companion`, как и приложения.
+
+**Настройка на сервере (один раз).**
+```bash
+mkdir -p /home/bitrix/webhook && cd /home/bitrix/webhook
+RAW=https://raw.githubusercontent.com/bx-shef/app-convert-bbocode-md/main/webhook
+for f in docker-compose.yml Dockerfile server.py .env.example scripts/redeploy-convert-bbocode-md.sh; do
+  install -D /dev/null "$f"
+  curl -fsSL -o "$f" "$RAW/$f"
+done
+cp .env.example .env && nano .env       # выписать TOKEN (openssl rand -hex 32) и домен
+docker compose up -d --build
+```
+
+**Настройка в GitHub (один раз).**
+
+| Где | Тип | Имя | Значение |
+| :--- | :--- | :--- | :--- |
+| Variables | repo | `DEPLOY_HOOK_HOST` | `deploy-hook.bx-shef.by` |
+| Secrets | repo | `DEPLOY_HOOK_TOKEN` | тот же токен, что в `.env` на сервере |
+
+В workflow `Deploy Docker image` есть шаг **Trigger server redeploy** — если `vars.DEPLOY_HOOK_HOST` пустой, он скипается, можно жить без авто-обновления.
+
+> **ARCH-DECISION (2026-05).** Решили начать с webhook, потому что мгновенно и без polling. **Это временно.** Дальше планируется миграция на [Watchtower](https://containrrr.dev/watchtower/) — стандартный sidecar-контейнер, который следит за GHCR и сам обновляет `:latest`. Watchtower:
+> - не требует ничего в GitHub Secrets (никаких токенов CI → сервер);
+> - не требует входящего HTTPS-эндпоинта на сервере и его доменного имени;
+> - даёт лаг 1–5 минут вместо мгновенного — для статического SPA это не критично;
+> - убирает с нашей стороны код webhook-сервиса и его сопровождение.
+>
+> Когда мигрируем — удаляем папку `webhook/`, шаг `Trigger server redeploy` из `deploy-docker.yml` и секреты `DEPLOY_HOOK_*` в репо; на сервере добавляем контейнер `containrrr/watchtower` с docker-сокетом.
+
 #### Шпаргалка деплоя на сервер `bx-shef`
 
 Реальные значения (домен, путь). Подразумевает, что `nginxproxy/nginx-proxy` + `acme-companion` уже подняты на сервере, а DNS A-записи `convert-bbocode-md.bx-shef.by` смотрит на IP сервера.

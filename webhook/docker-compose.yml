@@ -1,0 +1,31 @@
+# Server-side deploy webhook. Lives under nginxproxy/nginx-proxy + acme-companion
+# on the same Docker host as the apps it redeploys.
+#
+# Run on the server:
+#   cd /home/bitrix/webhook
+#   cp .env.example .env && nano .env       # set token + domain
+#   docker compose up -d --build
+services:
+  webhook:
+    build: .
+    container_name: deploy-hook
+    restart: unless-stopped
+    expose:
+      - "9000"
+    env_file: .env
+    environment:
+      VIRTUAL_HOST: ${VIRTUAL_HOST}
+      VIRTUAL_PORT: "9000"
+      LETSENCRYPT_HOST: ${LETSENCRYPT_HOST}
+      LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      # App directories: read-only is enough — docker compose only reads files
+      # from disk, all state changes go through the docker socket.
+      - /home/bitrix:/apps:ro
+    networks:
+      - proxy-net
+
+networks:
+  proxy-net:
+    external: true
