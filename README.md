@@ -155,6 +155,73 @@ make logs / make ps / make down
 
 `NUXT_PUBLIC_SITE_URL` / `NUXT_APP_BASE_URL` запекаются в бандл на этапе `docker build` через `--build-arg` — менять их через `.env.prod` бесполезно, нужно пересобирать образ (передать новые значения в workflow `Deploy Docker image → Run workflow`).
 
+#### Шпаргалка деплоя на сервер `bx-shef`
+
+Реальные значения (домен, путь). Подразумевает, что `nginxproxy/nginx-proxy` + `acme-companion` уже подняты на сервере, а DNS A-записи `convert-bbocode-md.bx-shef.by` смотрит на IP сервера.
+
+**Один раз — сборка образа в GHCR.**
+GitHub → **Actions → Deploy Docker image → Run workflow** на ветке `main`:
+
+| Поле | Значение |
+| :--- | :--- |
+| `site_url` | `https://convert-bbocode-md.bx-shef.by` |
+| `base_url` | `/` |
+| `tag` | `latest` |
+
+После прогона: **Code → Packages → app-convert-bbocode-md → Package settings → Change visibility → Public** (или оставить приватным и ниже сделать `docker login ghcr.io`).
+
+**Один раз — раскладка на сервере.**
+```bash
+mkdir -p /home/bitrix/convert-bbocode-md && cd /home/bitrix/convert-bbocode-md
+git clone https://github.com/bx-shef/app-convert-bbocode-md.git .
+cp .env.prod.example .env.prod        # домен и почта уже подставлены под bx-shef
+docker network inspect proxy-net >/dev/null 2>&1 || docker network create proxy-net
+# для приватного образа (если visibility != Public):
+# docker login ghcr.io                # username: GH login, password: PAT с read:packages
+```
+
+**Запуск / обновление.**
+```bash
+cd /home/bitrix/convert-bbocode-md
+make up           # pull свежего образа + up -d
+```
+
+**Проверка.**
+```bash
+# 1) контейнер healthy
+docker ps --filter name=app-convert-bbocode-md --format '{{.Names}}\t{{.Status}}'
+#    ожидаем:  app-convert-bbocode-md   Up X (healthy)
+
+# 2) nginx внутри отдаёт SPA
+docker exec app-convert-bbocode-md wget -qO- http://127.0.0.1/ | head -c 100
+
+# 3) nginx-proxy подхватил VIRTUAL_HOST
+docker exec server nginx -T 2>/dev/null | grep -A2 "server_name convert-bbocode-md"
+
+# 4) сертификат выписан
+docker logs letsencrypt --tail 50 | grep convert-bbocode-md
+
+# 5) HTTPS снаружи
+curl -I https://convert-bbocode-md.bx-shef.by/
+#    ожидаем HTTP/2 200
+```
+
+В браузере: <https://convert-bbocode-md.bx-shef.by/>.
+
+**Откат к предыдущей версии.**
+```bash
+# в .env.prod заменить DOCKER_TAG=latest → DOCKER_TAG=<sha из GHCR>
+make up
+```
+
+**Полезное.**
+```bash
+make logs    # tail логов prod-стека
+make ps      # статус
+make down    # остановить
+make restart # down + up
+```
+
 ## Развёртывание в Bitrix24
 
 Приложение работает как placement-iframe. Для локальной разработки прокиньте dev-сервер через ngrok / cloudflared и добавьте хост в `.env`:
