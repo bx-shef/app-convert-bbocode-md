@@ -90,6 +90,10 @@ if (!target || !TARGETS.includes(target)) {
 }
 
 switch (target) {
-  case 'gh-pages': deployGhPages(); break
-  case 'docker':   deployDocker(rest); break
+  case 'gh-pages':
+    deployGhPages()
+    break
+  case 'docker':
+    deployDocker(rest)
+    break
 }
