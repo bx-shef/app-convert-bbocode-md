@@ -170,15 +170,21 @@ GitHub → **Actions → Deploy Docker image → Run workflow** на ветке 
 
 После прогона: **Code → Packages → app-convert-bbocode-md → Package settings → Change visibility → Public** (или оставить приватным и ниже сделать `docker login ghcr.io`).
 
-**Один раз — раскладка на сервере.**
+**Один раз — раскладка на сервере.** На хосте нужны ровно три файла: `docker-compose.prod.yml`, `Makefile`, `.env.prod.example`. Тянем их напрямую с `main`:
+
 ```bash
 mkdir -p /home/bitrix/convert-bbocode-md && cd /home/bitrix/convert-bbocode-md
-git clone https://github.com/bx-shef/app-convert-bbocode-md.git .
+RAW=https://raw.githubusercontent.com/bx-shef/app-convert-bbocode-md/main
+for f in docker-compose.prod.yml Makefile .env.prod.example; do
+  curl -fsSL -o "$f" "$RAW/$f"
+done
 cp .env.prod.example .env.prod        # домен и почта уже подставлены под bx-shef
 docker network inspect proxy-net >/dev/null 2>&1 || docker network create proxy-net
 # для приватного образа (если visibility != Public):
 # docker login ghcr.io                # username: GH login, password: PAT с read:packages
 ```
+
+Обновить конфиг при изменениях в репо — тот же цикл `curl`-ом.
 
 **Запуск / обновление.**
 ```bash
