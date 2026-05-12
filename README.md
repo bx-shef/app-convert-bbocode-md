@@ -1,5 +1,9 @@
 # BBCode ↔ Markdown converter for Bitrix24
 
+[![CI](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/ci.yml/badge.svg)](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/ci.yml)
+[![Deploy GitHub Pages](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/deploy.yml/badge.svg)](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/deploy.yml)
+[![Deploy Docker](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/deploy-docker.yml/badge.svg)](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/deploy-docker.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Bitrix24 UI](https://img.shields.io/badge/Made%20with-Bitrix24%20UI-2fc6f6?logo=bitrix24&labelColor=020420)](https://bitrix24.github.io/b24ui/)
 
 Двусторонний live-конвертер BBCode (диалект Bitrix24) ↔ Markdown. Запускается как placement-приложение в портале Bitrix24 либо как обычный SPA в браузере.
@@ -292,6 +296,20 @@ NUXT_PUBLIC_CF_ANALYTICS_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 pnpm translate-ui
 ```
+
+## CI / автоматизация
+
+- **`ci.yml`** — на каждый PR в `main`: `pnpm install --frozen-lockfile` → `lint` → `typecheck` → `test` → `build`.
+- **`deploy.yml`** — на push в `main` собирает SPA и публикует на GitHub Pages.
+- **`deploy-docker.yml`** — на push в `main` (если затронуты файлы образа) пересобирает Docker-образ и пушит в GHCR.
+- **`dependabot.yml`** — еженедельно (понедельник) проверяет обновления npm и GitHub Actions. Bitrix24-, Nuxt-, Vue-пакеты сгруппированы; dev-зависимости (minor/patch) — в общую группу.
+
+### Branch protection для `main` (настроить разово через Settings → Branches)
+- Require pull request before merging
+- Require status checks to pass → `ci`
+- Require branches to be up to date before merging
+- Запретить force-push и удаление ветки
+- Включить «Require linear history» (по желанию)
 
 ## Лицензия
 
