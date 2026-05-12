@@ -201,7 +201,9 @@ async function makePlacement(): Promise<void> {
           // iconName here is the visible LABEL on the chip in the chat panel — not an icon class.
           // Constraints (per apidocs): ≤50 chars, Latin letters / space / hyphen only.
           iconName: p.iconName,
-          context: 'USER;CHAT;LINES',
+          // ALL = USER + CHAT + LINES + CRM (per B24 docs: when ALL is passed
+          // together with other contexts, only ALL takes effect).
+          context: 'ALL',
           role: 'USER',
           color: 'AZURE',
           // width/height: integer percentages of the popup container (per B24 docs:
