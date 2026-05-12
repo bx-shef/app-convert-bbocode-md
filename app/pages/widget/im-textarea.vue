@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { B24Frame } from '@bitrix24/b24jssdk'
-import { Text } from '@bitrix24/b24jssdk'
 import { ref, computed } from 'vue'
 import { useB24 } from '~/composables/useB24'
 import { usePrint } from '~/composables/usePrint'
@@ -22,16 +21,10 @@ const { printMarkdown } = usePrint()
 
 useHead({ title: t('page.widget.im.seo.title') })
 
-function makePrintTitle(): string {
-  const d = new Date()
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `md-${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}-${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}`
-}
-
 async function printText() {
   if (!markdown.value.trim()) return
   try {
-    await printMarkdown(markdown.value, { title: makePrintTitle() })
+    await printMarkdown(markdown.value)
   } catch {
     toast.add({ title: t('page.widget.im.printFailed'), color: 'air-primary-alert', duration: 2500 })
   }
@@ -47,14 +40,11 @@ async function sendToChat() {
   try {
     const $b24 = b24Instance.get() as B24Frame
     const bb = mdToBbcode(markdown.value, { chatMode: true })
-    await $b24.parent.message.send('im:setImTextareaContent', {
-      text: bb,
-      requestId: Text.getUuidRfc4122(),
-      withNewLine: false,
-      replace: true,
-      isSafely: true,
-      safelyTime: 1500
-    })
+    // IM_TEXTAREA exposes a `setValue` placement command: { value: string }.
+    // The previous `parent.message.send('im:setImTextareaContent', ...)` was a
+    // non-existent message — postMessage went out but Bitrix24 didn't act on
+    // it, so the success toast fired while the chat input stayed empty.
+    await $b24.placement.call('setValue', { value: bb })
     toast.add({ title: t('page.widget.im.inserted'), color: 'air-primary-success', duration: 1500 })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e)
