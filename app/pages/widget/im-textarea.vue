@@ -96,20 +96,23 @@ async function sendToChat() {
   try {
     const $b24 = b24Instance.get() as B24Frame
     const bb = mdToBbcode(markdown.value, { chatMode: true })
-    // SDK-documented IM_TEXTAREA command (see placement.mjs:92): the chat
-    // input is filled by `setValue` with `{ value: <string> }`. The legacy
-    // `im:setImTextareaContent` returns `success: true` but doesn't actually
-    // mutate the input field in current B24 portals.
-    console.info('[widget] placement.call(setValue) →', {
+    // Direct parent.message.send is the documented postMessage path; placement.call
+    // is a thin wrapper around it. For `setValue` the value must be sent raw
+    // (no JSON.stringify) — that's what `isRawValue: true` controls.
+    console.info('[widget] parent.message.send(setValue) →', {
       targetOrigin: b24Instance.targetOrigin?.(),
       bbPreview: bb.slice(0, 200)
     })
-    const response = await $b24.placement.call('setValue', { value: bb })
-    console.info('[widget] placement.call(setValue) ←', response)
+    const response = await $b24.parent.message.send('setValue', {
+      value: bb,
+      isRawValue: true,
+      isSafely: true
+    })
+    console.info('[widget] parent.message.send(setValue) ←', response)
     toast.add({ title: t('page.widget.im.inserted'), color: 'air-primary-success', duration: 1500 })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e)
-    console.error('[widget] placement.call(setValue) failed', e)
+    console.error('[widget] parent.message.send(setValue) failed', e)
     toast.add({ title: t('page.widget.im.insertFailed'), description: msg, color: 'air-primary-alert' })
   } finally {
     isBusy.value = false
