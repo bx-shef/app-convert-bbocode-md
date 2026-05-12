@@ -3,10 +3,10 @@ import type { B24Frame } from '@bitrix24/b24jssdk'
 import { Text } from '@bitrix24/b24jssdk'
 import { ref, computed } from 'vue'
 import { useB24 } from '~/composables/useB24'
-import { bbcodeToMd } from '~/utils/bbcode-to-md'
+import { usePrint } from '~/composables/usePrint'
 import { mdToBbcode } from '~/utils/md-to-bbcode'
 import SendIcon from '@bitrix24/b24icons-vue/outline/SendIcon'
-import DownloadIcon from '@bitrix24/b24icons-vue/outline/DownloadIcon'
+import PrinterIcon from '@bitrix24/b24icons-vue/outline/PrinterIcon'
 
 definePageMeta({ layout: 'widget' })
 
@@ -18,29 +18,22 @@ const isReady = computed<boolean>(() => b24Instance.isInit())
 const markdown = ref('')
 const isBusy = ref(false)
 
+const { printMarkdown } = usePrint()
+
 useHead({ title: t('page.widget.im.seo.title') })
 
-async function readFromChat() {
-  if (!isReady.value) {
-    toast.add({ title: t('page.widget.im.notInFrame'), color: 'air-primary-warning' })
-    return
-  }
-  isBusy.value = true
+function makePrintTitle(): string {
+  const d = new Date()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `md-${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}-${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}`
+}
+
+async function printText() {
+  if (!markdown.value.trim()) return
   try {
-    const $b24 = b24Instance.get() as B24Frame
-    const response = await $b24.parent.message.send('im:getImTextareaContent', {
-      requestId: Text.getUuidRfc4122(),
-      isSafely: true,
-      safelyTime: 1500
-    })
-    const text = typeof response === 'string' ? response : (response as { text?: string })?.text || ''
-    // Chat content is BBCode → convert to MD for editing
-    markdown.value = bbcodeToMd(text)
-  } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : String(e)
-    toast.add({ title: t('page.widget.im.readFailed'), description: msg, color: 'air-primary-alert' })
-  } finally {
-    isBusy.value = false
+    await printMarkdown(markdown.value, { title: makePrintTitle() })
+  } catch {
+    toast.add({ title: t('page.widget.im.printFailed'), color: 'air-primary-alert', duration: 2500 })
   }
 }
 
@@ -80,10 +73,10 @@ async function sendToChat() {
         <B24Button
           size="xs"
           color="air-secondary"
-          :icon="DownloadIcon"
-          :label="t('page.widget.im.read')"
-          :disabled="isBusy || !isReady"
-          @click="readFromChat"
+          :icon="PrinterIcon"
+          :label="t('page.widget.im.print')"
+          :disabled="isBusy || !markdown.trim()"
+          @click="printText"
         />
         <B24Button
           size="xs"

@@ -133,7 +133,7 @@ async function makePlacement(): Promise<void> {
   const $b24 = b24Instance.get() as B24Frame
 
   const HANDLER = handlerUrl.value
-  const TITLE = 'BBCode ↔ MD'
+  const TITLE = 'BBCode'
 
   const placementList = (steps.value.init?.data?.placementList as { placement: string, handler: string }[] | undefined) || []
   // Collect every existing IM_TEXTAREA binding from this app (any handler) — we may have stale
