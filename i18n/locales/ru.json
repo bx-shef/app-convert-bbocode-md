@@ -65,10 +65,10 @@
         "insertFailed": "Не удалось вставить",
         "notInFrame": "Запущено вне Bitrix24",
         "commands": {
-          "cmd1": "/command1",
-          "cmd2": "/command2",
-          "cmd3": "/command3",
-          "cmd4": "/command4"
+          "cmd1": "Команда 1",
+          "cmd2": "Команда 2",
+          "cmd3": "Команда 3",
+          "cmd4": "Команда 4"
         }
       }
     },
