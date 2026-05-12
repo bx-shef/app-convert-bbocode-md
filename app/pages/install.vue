@@ -13,7 +13,19 @@ import Market1Icon from '@bitrix24/b24icons-vue/main/Market1Icon'
 definePageMeta({ layout: 'clear' })
 
 const config = useRuntimeConfig()
-const appUrl = withoutTrailingSlash((config.public.siteUrl as string) || '')
+const configuredSiteUrl = withoutTrailingSlash((config.public.siteUrl as string) || '')
+
+// In dev we don't know the public URL ahead of time (ngrok rotates, local IPs
+// vary). Derive it from the browser address by stripping the trailing `/install`
+// off the install handler URL. In prod, use the configured site URL.
+const isDev = import.meta.env.DEV
+const appUrl = isDev && typeof window !== 'undefined'
+  ? withoutTrailingSlash(`${window.location.origin}${window.location.pathname.replace(/\/install\/?$/, '')}`)
+  : configuredSiteUrl
+
+// Stamp the placement so devs can tell which build registered it inside a
+// shared portal. Keep it Latin/space/hyphen-only — `iconName` enforces that.
+const TITLE_PREFIX = isDev ? 'dev' : 'prod'
 
 const { t } = useI18n()
 useHead({ title: t('page.install.seo.title') })
@@ -133,7 +145,7 @@ async function makePlacement(): Promise<void> {
   const $b24 = b24Instance.get() as B24Frame
 
   const HANDLER = handlerUrl.value
-  const TITLE = 'BBCode'
+  const TITLE = `${TITLE_PREFIX} BBCode`
 
   const placementList = (steps.value.init?.data?.placementList as { placement: string, handler: string }[] | undefined) || []
   // Collect every existing IM_TEXTAREA binding from this app (any handler) — we may have stale
@@ -152,7 +164,7 @@ async function makePlacement(): Promise<void> {
     OPTIONS: {
       // iconName here is the visible LABEL on the chip in the chat panel — not an icon class.
       // Constraints (per apidocs): ≤50 chars, Latin letters / space / hyphen only.
-      iconName: 'BBCode',
+      iconName: `${TITLE_PREFIX} BBCode`,
       context: 'USER;CHAT;LINES',
       role: 'USER',
       color: 'AZURE',
