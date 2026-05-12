@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { B24Frame } from '@bitrix24/b24jssdk'
 import { Text } from '@bitrix24/b24jssdk'
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useB24 } from '~/composables/useB24'
 import { usePrint } from '~/composables/usePrint'
 import { bbcodeToMd } from '~/utils/bbcode-to-md'
@@ -23,6 +23,32 @@ const isBusy = ref(false)
 const { printMarkdown } = usePrint()
 
 useHead({ title: t('page.widget.im.seo.title') })
+
+async function logPlacementInterface() {
+  if (!isReady.value) return
+  try {
+    const $b24 = b24Instance.get() as B24Frame
+    const iface = await $b24.placement.getInterface()
+    console.info('[widget] placement.getInterface() ←', iface)
+    const info = $b24.placement
+    console.info('[widget] placement.title =', info.title, '| options =', info.options)
+  } catch (e) {
+    console.error('[widget] getInterface failed', e)
+  }
+}
+
+onMounted(() => {
+  if (isReady.value) {
+    logPlacementInterface()
+  } else {
+    const stop = watch(isReady, (v) => {
+      if (v) {
+        stop()
+        logPlacementInterface()
+      }
+    })
+  }
+})
 
 async function readFromChat() {
   if (!isReady.value) {
@@ -70,26 +96,20 @@ async function sendToChat() {
   try {
     const $b24 = b24Instance.get() as B24Frame
     const bb = mdToBbcode(markdown.value, { chatMode: true })
-    const requestId = Text.getUuidRfc4122()
-    const payload = {
-      text: bb,
-      requestId,
-      withNewLine: false,
-      replace: true,
-      isSafely: true,
-      safelyTime: 1500
-    }
-    console.info('[widget] im:setImTextareaContent →', {
+    // SDK-documented IM_TEXTAREA command (see placement.mjs:92): the chat
+    // input is filled by `setValue` with `{ value: <string> }`. The legacy
+    // `im:setImTextareaContent` returns `success: true` but doesn't actually
+    // mutate the input field in current B24 portals.
+    console.info('[widget] placement.call(setValue) →', {
       targetOrigin: b24Instance.targetOrigin?.(),
-      requestId,
       bbPreview: bb.slice(0, 200)
     })
-    const response = await $b24.parent.message.send('im:setImTextareaContent', payload)
-    console.info('[widget] im:setImTextareaContent ←', response)
+    const response = await $b24.placement.call('setValue', { value: bb })
+    console.info('[widget] placement.call(setValue) ←', response)
     toast.add({ title: t('page.widget.im.inserted'), color: 'air-primary-success', duration: 1500 })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e)
-    console.error('[widget] im:setImTextareaContent failed', e)
+    console.error('[widget] placement.call(setValue) failed', e)
     toast.add({ title: t('page.widget.im.insertFailed'), description: msg, color: 'air-primary-alert' })
   } finally {
     isBusy.value = false
