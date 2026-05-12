@@ -75,22 +75,22 @@ async function sendCommand(command: string) {
 </script>
 
 <template>
-  <div class="flex flex-col gap-3 h-full">
-    <div class="flex items-center gap-3">
-      <AiSaleLogo class="size-12 shrink-0" />
-      <div class="flex flex-col">
-        <span class="text-sm font-semibold">{{ t('page.widget.keyboard.greeting') }}</span>
-        <span class="text-xs text-(--ui-color-base-3)">{{ t('page.widget.keyboard.hint') }}</span>
+  <div class="-m-2 h-full flex flex-col gap-2 p-3 bg-slate-900 text-white rounded-lg">
+    <div class="flex items-center gap-2">
+      <AiSaleLogo class="size-8 shrink-0" />
+      <div class="flex flex-col leading-tight">
+        <span class="text-xs font-semibold">{{ t('page.widget.keyboard.greeting') }}</span>
+        <span class="text-[10px] text-slate-400">{{ t('page.widget.keyboard.hint') }}</span>
       </div>
     </div>
 
-    <div class="flex flex-col gap-2">
+    <div class="flex flex-col gap-1">
       <B24Button
         v-for="c in commands"
         :key="c.key"
         block
-        size="md"
-        color="air-secondary"
+        size="xs"
+        color="air-secondary-accent"
         :label="t(`page.widget.keyboard.commands.${c.key}`)"
         :disabled="isBusy || !isReady"
         @click="sendCommand(c.command)"
