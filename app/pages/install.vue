@@ -48,18 +48,25 @@ type PlacementBinding = {
   handlerPath: string
   title: string
   iconName: string
+  width: string
+  height: string
 }
 
 const ourPlacements = computed<PlacementBinding[]>(() => [
   {
     handlerPath: '/widget/im-textarea',
     title: `${TITLE_PREFIX} BBCode`,
-    iconName: `${TITLE_PREFIX} BBCode`
+    iconName: `${TITLE_PREFIX} BBCode`,
+    width: '480',
+    height: '320'
   },
   {
     handlerPath: '/widget/im-keyboard',
     title: `${TITLE_PREFIX} Quick commands`,
-    iconName: `${TITLE_PREFIX} Quick commands`
+    iconName: `${TITLE_PREFIX} Quick commands`,
+    // Keyboard is just 4 buttons + a header — smaller iframe than BBCode editor.
+    width: '200',
+    height: '170'
   }
 ])
 
@@ -198,11 +205,11 @@ async function makePlacement(): Promise<void> {
           role: 'USER',
           color: 'AZURE',
           // width/height: integer percentages of the popup container (per B24 docs:
-          // `width >= 0`, default 100). Big values (480 / 320) reliably open the
-          // popup at its max size; small values like 80 made the placement appear
-          // tiny in the chat panel.
-          width: '480',
-          height: '320',
+          // `width >= 0`, default 100). Big values (480 / 320) open the popup at
+          // its max size; small values like 80 made it tiny. Per-placement
+          // sizing lives on the binding above.
+          width: p.width,
+          height: p.height,
           extranet: 'N'
         }
       }
