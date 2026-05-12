@@ -13,7 +13,12 @@ const isReady = computed<boolean>(() => b24Instance.isInit())
 
 const isBusy = ref(false)
 
-useHead({ title: t('page.widget.keyboard.seo.title') })
+// `dark` on <html> flips the b24ui CSS variables to their dark variants —
+// without it, `air-secondary-accent` renders as a white pill on our dark bg.
+useHead({
+  title: t('page.widget.keyboard.seo.title'),
+  htmlAttrs: { class: 'dark' }
+})
 
 const commands: { key: string, command: string }[] = [
   { key: 'cmd1', command: '/command1' },
@@ -95,7 +100,7 @@ async function sendCommand(command: string) {
         v-for="c in commands"
         :key="c.key"
         block
-        size="xs"
+        size="sm"
         color="air-secondary-accent"
         :label="t(`page.widget.keyboard.commands.${c.key}`)"
         :disabled="isBusy || !isReady"
