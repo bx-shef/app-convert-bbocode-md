@@ -48,11 +48,11 @@
         "seo": { "title": "BBCode ↔ MD" },
         "hint": "Markdown → BBCode, вставить в чат",
         "placeholder": "Пишите Markdown здесь…",
-        "read": "Загрузить",
         "send": "Вставить",
+        "print": "Распечатать",
         "inserted": "Вставлено в чат",
-        "readFailed": "Не удалось прочитать",
         "insertFailed": "Не удалось вставить",
+        "printFailed": "Не удалось распечатать",
         "notInFrame": "Запущено вне Bitrix24"
       }
     },
