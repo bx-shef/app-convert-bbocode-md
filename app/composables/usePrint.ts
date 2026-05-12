@@ -23,14 +23,17 @@ export function usePrint() {
     const cleanup = () => {
       if (cleaned) return
       cleaned = true
+      window.removeEventListener('focus', onFocus)
       try {
         iframe.remove()
       } catch {
         // iframe already gone
       }
     }
+    const onFocus = () => setTimeout(cleanup, 100)
 
-    win.addEventListener('afterprint', () => setTimeout(cleanup, 0))
+    win.addEventListener('afterprint', cleanup)
+    window.addEventListener('focus', onFocus)
 
     await new Promise<void>((resolve, reject) => {
       iframe.onload = () => {
@@ -48,7 +51,7 @@ export function usePrint() {
       doc.close()
     })
 
-    setTimeout(cleanup, 60_000)
+    setTimeout(cleanup, 5000)
   }
 
   return { printMarkdown }

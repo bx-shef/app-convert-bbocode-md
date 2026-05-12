@@ -57,11 +57,14 @@ onMounted(async () => {
     })
   } else {
     if (b24Instance.isInit()) {
-      const targetCode = (b24Instance.get() as B24Frame).getLang()
-      if (localesI18n.value.filter(i => i.code === targetCode).length > 0) {
-        await setLocale(targetCode as never)
-      } else {
-        console.error(`[i18n] Failed to load messages for locale: ${targetCode}`)
+      const targetCode = String((b24Instance.get() as B24Frame).getLang())
+      const available = localesI18n.value.map(i => String(i.code))
+      const exact = available.includes(targetCode)
+      const fuzzy = !exact ? available.find(c => targetCode.startsWith(c)) : undefined
+      const pick = exact ? targetCode : fuzzy
+      console.info('[i18n] B24 lang =', targetCode, '| picked =', pick ?? '(none, keep default)')
+      if (pick) {
+        await setLocale(pick as never)
       }
     }
   }

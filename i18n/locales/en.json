@@ -18,6 +18,7 @@
         "copyFailed": "Copy failed",
         "print": "Print",
         "printFailed": "Print failed",
+        "language": "Language",
         "chatMode": "Chat mode",
         "chatModeHint": "Render tables as bullet lists (Bitrix24 chat does not support [table]).",
         "bbcodePlaceholder": "Paste Bitrix24 BBCode here…",

@@ -156,9 +156,12 @@ async function makePlacement(): Promise<void> {
       context: 'USER;CHAT;LINES',
       role: 'USER',
       color: 'AZURE',
-      // width/height are integer percentages of the popup, NOT pixel strings.
-      width: 80,
-      height: 80,
+      // width/height: integer percentages of the popup container (per B24 docs:
+      // `width >= 0`, default 100). Big values (480 / 320) reliably open the
+      // popup at its max size; small values like 80 made the placement appear
+      // tiny in the chat panel.
+      width: '480',
+      height: '320',
       extranet: 'N'
     }
   }

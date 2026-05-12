@@ -18,6 +18,7 @@
         "copyFailed": "Не удалось скопировать",
         "print": "Распечатать",
         "printFailed": "Не удалось распечатать",
+        "language": "Язык",
         "chatMode": "Режим чата",
         "chatModeHint": "Превращать таблицы в маркированный список (чат Bitrix24 не поддерживает [table]).",
         "bbcodePlaceholder": "Вставьте BBCode Bitrix24 сюда…",
