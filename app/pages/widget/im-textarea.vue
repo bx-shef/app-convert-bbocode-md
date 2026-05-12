@@ -96,23 +96,29 @@ async function sendToChat() {
   try {
     const $b24 = b24Instance.get() as B24Frame
     const bb = mdToBbcode(markdown.value, { chatMode: true })
-    // Direct parent.message.send is the documented postMessage path; placement.call
-    // is a thin wrapper around it. For `setValue` the value must be sent raw
-    // (no JSON.stringify) — that's what `isRawValue: true` controls.
-    console.info('[widget] parent.message.send(setValue) →', {
+    // `im:setImTextareaContent` is the IM_TEXTAREA-specific message that actually
+    // mutates the chat input. `setValue` previously fired a non-existent message —
+    // postMessage went out, no answer, the safely-timer resolved as success, and
+    // the chat input stayed empty.
+    const requestId = Text.getUuidRfc4122()
+    console.info('[widget] im:setImTextareaContent →', {
+      requestId,
       targetOrigin: b24Instance.targetOrigin?.(),
       bbPreview: bb.slice(0, 200)
     })
-    const response = await $b24.parent.message.send('setValue', {
-      value: bb,
-      isRawValue: true,
-      isSafely: true
+    const response = await $b24.parent.message.send('im:setImTextareaContent', {
+      text: bb,
+      requestId,
+      withNewLine: false,
+      replace: true,
+      isSafely: true,
+      safelyTime: 1500
     })
-    console.info('[widget] parent.message.send(setValue) ←', response)
+    console.info('[widget] im:setImTextareaContent ←', response)
     toast.add({ title: t('page.widget.im.inserted'), color: 'air-primary-success', duration: 1500 })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e)
-    console.error('[widget] parent.message.send(setValue) failed', e)
+    console.error('[widget] im:setImTextareaContent failed', e)
     toast.add({ title: t('page.widget.im.insertFailed'), description: msg, color: 'air-primary-alert' })
   } finally {
     isBusy.value = false

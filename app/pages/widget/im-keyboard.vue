@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { B24Frame } from '@bitrix24/b24jssdk'
+import { Text } from '@bitrix24/b24jssdk'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useB24 } from '~/composables/useB24'
 
@@ -53,20 +54,25 @@ async function sendCommand(command: string) {
   isBusy.value = true
   try {
     const $b24 = b24Instance.get() as B24Frame
-    // Direct parent.message.send is the documented postMessage path; placement.call
-    // is a thin wrapper that ends up here anyway. For `setValue` the value must be
-    // sent raw (no JSON.stringify) — that's what `isRawValue: true` controls.
-    console.info('[widget:keyboard] parent.message.send(setValue) →', { command })
-    const response = await $b24.parent.message.send('setValue', {
-      value: command,
-      isRawValue: true,
-      isSafely: true
+    // `im:setImTextareaContent` is the IM_TEXTAREA-specific message that actually
+    // mutates the chat input. `setValue` previously fired a non-existent message —
+    // postMessage went out, no answer, the safely-timer resolved as success, and
+    // the chat input stayed empty.
+    const requestId = Text.getUuidRfc4122()
+    console.info('[widget:keyboard] im:setImTextareaContent →', { requestId, command })
+    const response = await $b24.parent.message.send('im:setImTextareaContent', {
+      text: command,
+      requestId,
+      withNewLine: false,
+      replace: true,
+      isSafely: true,
+      safelyTime: 1500
     })
-    console.info('[widget:keyboard] parent.message.send(setValue) ←', response)
+    console.info('[widget:keyboard] im:setImTextareaContent ←', response)
     toast.add({ title: t('page.widget.keyboard.inserted'), color: 'air-primary-success', duration: 1200 })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e)
-    console.error('[widget:keyboard] parent.message.send(setValue) failed', e)
+    console.error('[widget:keyboard] im:setImTextareaContent failed', e)
     toast.add({ title: t('page.widget.keyboard.insertFailed'), description: msg, color: 'air-primary-alert' })
   } finally {
     isBusy.value = false
