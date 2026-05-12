@@ -4,8 +4,10 @@ import { Text } from '@bitrix24/b24jssdk'
 import { ref, computed } from 'vue'
 import { useB24 } from '~/composables/useB24'
 import { usePrint } from '~/composables/usePrint'
+import { bbcodeToMd } from '~/utils/bbcode-to-md'
 import { mdToBbcode } from '~/utils/md-to-bbcode'
 import SendIcon from '@bitrix24/b24icons-vue/outline/SendIcon'
+import DownloadIcon from '@bitrix24/b24icons-vue/outline/DownloadIcon'
 import PrinterIcon from '@bitrix24/b24icons-vue/outline/PrinterIcon'
 
 definePageMeta({ layout: 'widget' })
@@ -21,6 +23,33 @@ const isBusy = ref(false)
 const { printMarkdown } = usePrint()
 
 useHead({ title: t('page.widget.im.seo.title') })
+
+async function readFromChat() {
+  if (!isReady.value) {
+    toast.add({ title: t('page.widget.im.notInFrame'), color: 'air-primary-warning' })
+    return
+  }
+  isBusy.value = true
+  try {
+    const $b24 = b24Instance.get() as B24Frame
+    const requestId = Text.getUuidRfc4122()
+    console.info('[widget] im:getImTextareaContent →', { requestId })
+    const response = await $b24.parent.message.send('im:getImTextareaContent', {
+      requestId,
+      isSafely: true,
+      safelyTime: 1500
+    })
+    console.info('[widget] im:getImTextareaContent ←', response)
+    const text = typeof response === 'string' ? response : (response as { text?: string })?.text || ''
+    // Chat content is BBCode → convert to MD for editing
+    markdown.value = bbcodeToMd(text)
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e)
+    toast.add({ title: t('page.widget.im.readFailed'), description: msg, color: 'air-primary-alert' })
+  } finally {
+    isBusy.value = false
+  }
+}
 
 async function printText() {
   if (!markdown.value.trim()) return
@@ -41,17 +70,26 @@ async function sendToChat() {
   try {
     const $b24 = b24Instance.get() as B24Frame
     const bb = mdToBbcode(markdown.value, { chatMode: true })
-    await $b24.parent.message.send('im:setImTextareaContent', {
+    const requestId = Text.getUuidRfc4122()
+    const payload = {
       text: bb,
-      requestId: Text.getUuidRfc4122(),
+      requestId,
       withNewLine: false,
       replace: true,
       isSafely: true,
       safelyTime: 1500
+    }
+    console.info('[widget] im:setImTextareaContent →', {
+      targetOrigin: b24Instance.targetOrigin?.(),
+      requestId,
+      bbPreview: bb.slice(0, 200)
     })
+    const response = await $b24.parent.message.send('im:setImTextareaContent', payload)
+    console.info('[widget] im:setImTextareaContent ←', response)
     toast.add({ title: t('page.widget.im.inserted'), color: 'air-primary-success', duration: 1500 })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e)
+    console.error('[widget] im:setImTextareaContent failed', e)
     toast.add({ title: t('page.widget.im.insertFailed'), description: msg, color: 'air-primary-alert' })
   } finally {
     isBusy.value = false
@@ -64,6 +102,14 @@ async function sendToChat() {
     <div class="flex items-center justify-between gap-2">
       <span class="text-xs text-(--ui-color-base-3)">{{ t('page.widget.im.hint') }}</span>
       <div class="flex gap-2">
+        <B24Button
+          size="xs"
+          color="air-secondary"
+          :icon="DownloadIcon"
+          :label="t('page.widget.im.read')"
+          :disabled="isBusy || !isReady"
+          @click="readFromChat"
+        />
         <B24Button
           size="xs"
           color="air-secondary"

@@ -48,9 +48,11 @@
         "seo": { "title": "BBCode ↔ MD" },
         "hint": "Markdown → BBCode, insert into chat",
         "placeholder": "Type Markdown here…",
+        "read": "Load",
         "send": "Insert",
         "print": "Print",
         "inserted": "Inserted into chat",
+        "readFailed": "Read failed",
         "insertFailed": "Insert failed",
         "printFailed": "Print failed",
         "notInFrame": "Not running inside Bitrix24"
