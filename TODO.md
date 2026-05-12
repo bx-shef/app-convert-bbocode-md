@@ -59,7 +59,14 @@ Black-list пунктов на проработку для проекта. Ве�
   - Self-host на своём домене
   - Настройка Local Application в B24 (URL, install URL, scopes)
 - [ ] Чек-лист «from zero to installed placement»
-- [ ] CI/CD: lint + typecheck + test + build на PR
+
+## Автоматизация репо (обязательные требования)
+- [ ] Авто-деплой: push в `main` → GitHub Pages (Actions workflow) + Docker-образ в GHCR
+- [ ] CI на каждый PR: `pnpm install` (frozen lockfile) → `lint` → `typecheck` → `test` → `build`. PR красится если что-то падает.
+- [ ] Тесты обязательны: на любой PR, который трогает `app/utils/{bbcode-parser,bbcode-to-md,md-to-bbcode}.ts`, прогон `pnpm test` зелёный — иначе merge запрещён (branch protection)
+- [ ] Авто-обновление пакетов: Dependabot или Renovate, weekly, отдельный PR на каждый minor/patch, авто-мерж при зелёном CI
+- [ ] Major bump'ы — ручной ревью (особенно `nuxt`, `@bitrix24/*`, `vue`, `vite`)
+- [ ] Бейджи в README: build / test / deploy / coverage
 
 ## Тесты
 - [ ] Не забыть `pnpm test` перед коммитом если трогаем `app/utils/bbcode-*` / `md-to-bbcode`
