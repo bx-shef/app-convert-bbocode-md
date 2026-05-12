@@ -15,7 +15,9 @@ Nuxt 4 SPA placement for Bitrix24 that converts Bitrix24 BBCode ↔ Markdown.
 
 ## Architecture
 - `app/pages/index.vue` — two-pane editor (BBCode ⇄ Markdown).
-- `app/pages/install.vue` — Bitrix24 placement install flow. Mock-mode when not in B24 frame. **Do not break** — needed for future deployment.
+- `app/pages/install.vue` — Bitrix24 placement install flow. Registers **only** the BBCode placement (`/widget/im-textarea`). Mock-mode when not in B24 frame. **Do not break** — needed for future deployment. `makePlacement` first `unbind`s every existing IM_TEXTAREA binding from this app (including the legacy `/widget/im-keyboard` handler from the two-placement era), then `bind`s the current set — so re-running install is idempotent and migrates old installations automatically.
+- `app/pages/widget/im-textarea.vue` — IM_TEXTAREA placement handler: Markdown → BBCode, insert into chat input.
+- `app/pages/widget/quick.vue` — Quick-commands handler (formerly `im-keyboard.vue`). **Not bound at install** — the admin enables/disables it via the future settings page (see Roadmap). The file exists so the bind path is valid the moment that toggle ships.
 - `app/utils/bbcode-parser.ts` — pure recursive-descent parser → `BBNode[]` AST.
 - `app/utils/bbcode-to-md.ts` — pure fn AST → Markdown string.
 - `app/utils/md-to-bbcode.ts` — pure fn `markdown-it` tokens → BBCode string.

@@ -16,7 +16,7 @@ const isBusy = ref(false)
 // `dark` on <html> flips the b24ui CSS variables to their dark variants —
 // without it, `air-secondary-accent` renders as a white pill on our dark bg.
 useHead({
-  title: t('page.widget.keyboard.seo.title'),
+  title: t('page.widget.quick.seo.title'),
   htmlAttrs: { class: 'dark' }
 })
 
@@ -32,9 +32,9 @@ async function logPlacementInterface() {
   try {
     const $b24 = b24Instance.get() as B24Frame
     const iface = await $b24.placement.getInterface()
-    console.info('[widget:keyboard] placement.getInterface() ←', iface)
+    console.info('[widget:quick] placement.getInterface() ←', iface)
   } catch (e) {
-    console.error('[widget:keyboard] getInterface failed', e)
+    console.error('[widget:quick] getInterface failed', e)
   }
 }
 
@@ -53,7 +53,7 @@ onMounted(() => {
 
 async function sendCommand(command: string) {
   if (!isReady.value) {
-    toast.add({ title: t('page.widget.keyboard.notInFrame'), color: 'air-primary-warning' })
+    toast.add({ title: t('page.widget.quick.notInFrame'), color: 'air-primary-warning' })
     return
   }
   isBusy.value = true
@@ -64,7 +64,7 @@ async function sendCommand(command: string) {
     // postMessage went out, no answer, the safely-timer resolved as success, and
     // the chat input stayed empty.
     const requestId = Text.getUuidRfc4122()
-    console.info('[widget:keyboard] im:setImTextareaContent →', { requestId, command })
+    console.info('[widget:quick] im:setImTextareaContent →', { requestId, command })
     const response = await $b24.parent.message.send('im:setImTextareaContent', {
       text: command,
       requestId,
@@ -73,12 +73,12 @@ async function sendCommand(command: string) {
       isSafely: true,
       safelyTime: 1500
     })
-    console.info('[widget:keyboard] im:setImTextareaContent ←', response)
-    toast.add({ title: t('page.widget.keyboard.inserted'), color: 'air-primary-success', duration: 1200 })
+    console.info('[widget:quick] im:setImTextareaContent ←', response)
+    toast.add({ title: t('page.widget.quick.inserted'), color: 'air-primary-success', duration: 1200 })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e)
-    console.error('[widget:keyboard] im:setImTextareaContent failed', e)
-    toast.add({ title: t('page.widget.keyboard.insertFailed'), description: msg, color: 'air-primary-alert' })
+    console.error('[widget:quick] im:setImTextareaContent failed', e)
+    toast.add({ title: t('page.widget.quick.insertFailed'), description: msg, color: 'air-primary-alert' })
   } finally {
     isBusy.value = false
   }
@@ -95,8 +95,8 @@ async function sendCommand(command: string) {
     <div class="flex items-center gap-2">
       <AiSaleLogo class="size-8 shrink-0" />
       <div class="flex flex-col leading-tight">
-        <span class="text-xs font-semibold">{{ t('page.widget.keyboard.greeting') }}</span>
-        <span class="text-[10px] text-slate-400">{{ t('page.widget.keyboard.hint') }}</span>
+        <span class="text-xs font-semibold">{{ t('page.widget.quick.greeting') }}</span>
+        <span class="text-[10px] text-slate-400">{{ t('page.widget.quick.hint') }}</span>
       </div>
     </div>
 
@@ -107,7 +107,7 @@ async function sendCommand(command: string) {
         block
         size="lg"
         color="air-secondary-accent"
-        :label="t(`page.widget.keyboard.commands.${c.key}`)"
+        :label="t(`page.widget.quick.commands.${c.key}`)"
         :disabled="isBusy || !isReady"
         @click="sendCommand(c.command)"
       />

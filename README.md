@@ -21,8 +21,8 @@
 - **Двунаправленная live-конвертация** — правка слева пересчитывает справа и наоборот, с защитой от циклов.
 - **Поддерживаемые теги (базовый набор Bitrix24):** `b, i, u, s, url, img, list (+[*], [list=1]), code (+lang), quote, h1-h6, br, hr, p`.
 - **Bitrix24 UI Kit** — нативный вид внутри портала.
-- **Готовая install-страница** для регистрации приложения как placement (сейчас mock-flow без серверной части — расширим позже).
-- **i18n** — 19 локалей унаследованы из шаблона `bitrix24/templates-dashboard`.
+- **Минимальный install** — регистрирует один placement (BBCode-конвертер) на `IM_TEXTAREA`. Quick-виджет с быстрыми командами лежит готовым (`/widget/quick`), но включается админом из настроек приложения, чтобы не навязывать лишнюю кнопку в чате.
+- **i18n** — 19 локалей унаследованы из шаблона `bitrix24/templates-dashboard`. Заголовок placement-а в Bitrix24 передаётся через `LANG_ALL`, так что в чате он показывается на языке портала.
 - **Юнит-тесты** на vitest для конвертера в обе стороны и roundtrip.
 - **Развёртывание из коробки** — единый CLI `pnpm run deploy <gh-pages|docker>` плюс готовые GitHub Actions: статический хостинг на GitHub Pages и Docker-образ в GHCR (nginx + SPA-фоллбэк, `docker compose pull && up -d` на вашем сервере).
 
@@ -56,7 +56,10 @@ pnpm lint         # eslint
 app/
 ├── pages/
 │   ├── index.vue        # two-pane converter UI
-│   └── install.vue      # Bitrix24 placement install flow
+│   ├── install.vue      # Bitrix24 placement install flow (registers BBCode only)
+│   └── widget/
+│       ├── im-textarea.vue # Markdown → BBCode chat-input widget (default placement)
+│       └── quick.vue       # Quick command buttons (admin-toggled, not bound at install)
 ├── utils/
 │   ├── bbcode-parser.ts # parser → AST
 │   ├── bbcode-to-md.ts  # AST → Markdown
@@ -251,9 +254,11 @@ make restart # down + up
 
 После сохранения нажать **«Установить»** — портал откроет страницу `/install`, она:
 1. инициализирует JSSDK,
-2. через `placement.bind` регистрирует виджет на `IM_TEXTAREA` (handler `https://convert-bbocode-md.bx-shef.by/widget/im-textarea`, контекст `USER;CHAT`, размер `480×320`).
+2. через `placement.bind` регистрирует **только** виджет BBCode-конвертера на `IM_TEXTAREA` (handler `https://convert-bbocode-md.bx-shef.by/widget/im-textarea`, контекст `ALL`, размер `480×320`). Заголовок передаётся через `LANG_ALL` с локализованным значением (en: `BBCode`, ru: `BBCode`; остальные локали — фолбэк на en).
 
-После этого в правом нижнем углу панели ввода чата появится иконка `BBCode ↔ MD` — клик открывает конвертер.
+После этого в панели ввода чата появится иконка `BBCode` — клик открывает конвертер.
+
+> **Quick-виджет.** Раньше install регистрировал второй placement `/widget/im-keyboard` («Быстрые команды»). Поведение изменилось: теперь Quick-виджет (`/widget/quick`) добавляется/убирается админом из настроек приложения (см. roadmap). При первом запуске `/install` после апдейта старая привязка `/widget/im-keyboard` автоматически снимается на этапе `makePlacement` (он сначала `unbind`-ит все IM_TEXTAREA-биндинги этого приложения, потом `bind`-ит свежий набор).
 
 > **Сменили домен / пересобрали с другим `NUXT_PUBLIC_SITE_URL`?** В `placement.list` остаётся старый handler. Откройте `/install` ещё раз — `makePlacement` сделает `unbind` старого и `bind` нового.
 
@@ -286,6 +291,7 @@ NUXT_PUBLIC_CF_ANALYTICS_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 Если переменная пустая — никакой скрипт не подключается. Токен берётся в Cloudflare → Analytics & Logs → Web Analytics → Add a site (для GitHub Pages выбирать «manual installation»). Значение запекается в бандл при сборке (через `--build-arg` для Docker / `vars` для GitHub Actions), как и `NUXT_PUBLIC_SITE_URL`.
 
 ## Roadmap
+- [ ] Страница настроек приложения (только для админа портала) — тогл Quick-виджета: вкл/выкл `placement.bind` `/widget/quick`. В будущем — редактор самого набора команд (что показывать и кому).
 - [ ] Подтягивать тексты задач/комментариев/постов из Bitrix24 REST и сохранять обратно (`useB24` уже инициализирован).
 - [ ] Bitrix-специфичные теги: `[USER=id]`, `[DISK File=id]`, `[DEPARTMENT=id]`, `[color]`, `[size]`, `[font]`.
 - [ ] Полные переводы новых i18n-ключей на 19 локалей через `pnpm translate-ui`.

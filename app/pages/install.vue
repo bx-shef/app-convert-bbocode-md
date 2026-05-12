@@ -47,27 +47,29 @@ const PLACEMENT = 'IM_TEXTAREA'
 
 type PlacementBinding = {
   handlerPath: string
-  title: string
+  // Per-locale TITLE passed via placement.bind LANG_ALL. The English value is
+  // also used as the top-level TITLE fallback for portals whose admin locale
+  // is none of the listed ones.
+  titles: Record<string, string>
   iconName: string
   width: string
   height: string
 }
 
+// Install registers only the BBCode editor. The Quick placement (former
+// `im-keyboard`) is bound on demand by an admin from the in-app settings —
+// installing it by default would put an extra button into every chat panel on
+// the portal without consent.
 const ourPlacements = computed<PlacementBinding[]>(() => [
   {
     handlerPath: '/widget/im-textarea',
-    title: `${TITLE_PREFIX}BBCode`,
+    titles: {
+      en: `${TITLE_PREFIX}BBCode`,
+      ru: `${TITLE_PREFIX}BBCode`
+    },
     iconName: `${TITLE_PREFIX}BBCode`,
     width: '480',
     height: '320'
-  },
-  {
-    handlerPath: '/widget/im-keyboard',
-    title: `${TITLE_PREFIX}Quick commands`,
-    iconName: `${TITLE_PREFIX}Quick commands`,
-    // Keyboard is just 4 buttons + a header — smaller iframe than BBCode editor.
-    width: '300',
-    height: '390'
   }
 ])
 
@@ -176,8 +178,10 @@ async function makePlacement(): Promise<void> {
 
   const placementList = (steps.value.init?.data?.placementList as { placement: string, handler: string }[] | undefined) || []
   // Collect every existing IM_TEXTAREA binding from this app (any handler) — we may have stale
-  // bindings from a previous deploy under a different domain or with broken OPTIONS. Clear them
-  // all before re-binding so we end up with exactly one clean registration per handler we want.
+  // bindings from a previous deploy under a different domain or with broken OPTIONS, or the
+  // legacy `/widget/im-keyboard` handler from when install used to register two placements at
+  // once. Clear them all before re-binding so we end up with exactly one clean registration per
+  // handler we want.
   const stale = placementList.filter(item => item.placement === PLACEMENT)
 
   const calls: { method: string, params: Record<string, unknown> }[] = []
@@ -187,17 +191,20 @@ async function makePlacement(): Promise<void> {
 
   for (const p of ourPlacements.value) {
     const HANDLER = `${appUrl}${p.handlerPath}`
-    const TITLE = p.title
+    const LANG_ALL: Record<string, { TITLE: string }> = {}
+    for (const [lang, TITLE] of Object.entries(p.titles)) {
+      LANG_ALL[lang] = { TITLE }
+    }
+    // Top-level TITLE is the fallback used by portals whose admin locale is
+    // not present in LANG_ALL. English is the most universally readable.
+    const TITLE = p.titles.en ?? Object.values(p.titles)[0] ?? ''
     calls.push({
       method: 'placement.bind',
       params: {
         PLACEMENT,
         HANDLER,
         TITLE,
-        LANG_ALL: {
-          ru: { TITLE },
-          en: { TITLE }
-        },
+        LANG_ALL,
         OPTIONS: {
           // iconName here is the visible LABEL on the chip in the chat panel — not an icon class.
           // Constraints (per apidocs): ≤50 chars, Latin letters / space / hyphen only.
