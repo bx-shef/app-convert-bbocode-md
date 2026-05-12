@@ -86,7 +86,12 @@ async function sendCommand(command: string) {
 </script>
 
 <template>
-  <div class="-m-2 h-full flex flex-col gap-2 p-3 bg-slate-900 text-white rounded-lg">
+  <!--
+    `fixed inset-0` paints the slate-900 across the entire iframe viewport,
+    including the area covered by the layout's p-2 padding — the previous
+    `-m-2 h-full` left a 8px-tall strip uncovered at the bottom edge.
+  -->
+  <div class="fixed inset-0 flex flex-col gap-2 p-3 bg-slate-900 text-white">
     <div class="flex items-center gap-2">
       <AiSaleLogo class="size-8 shrink-0" />
       <div class="flex flex-col leading-tight">
@@ -100,7 +105,7 @@ async function sendCommand(command: string) {
         v-for="c in commands"
         :key="c.key"
         block
-        size="sm"
+        size="lg"
         color="air-secondary-accent"
         :label="t(`page.widget.keyboard.commands.${c.key}`)"
         :disabled="isBusy || !isReady"

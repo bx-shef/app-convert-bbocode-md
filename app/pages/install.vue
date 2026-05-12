@@ -66,7 +66,7 @@ const ourPlacements = computed<PlacementBinding[]>(() => [
     iconName: `${TITLE_PREFIX} Quick commands`,
     // Keyboard is just 4 buttons + a header — smaller iframe than BBCode editor.
     width: '200',
-    height: '170'
+    height: '130'
   }
 ])
 
