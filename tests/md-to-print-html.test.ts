@@ -15,6 +15,12 @@ describe('mdToPrintHtml', () => {
     expect(html).toMatch(/<style>[\s\S]*@page[\s\S]*size: A4[\s\S]*<\/style>/)
   })
 
+  it('forces background colors to print (print-color-adjust)', () => {
+    const html = mdToPrintHtml('x')
+    expect(html).toContain('print-color-adjust: exact')
+    expect(html).toContain('-webkit-print-color-adjust: exact')
+  })
+
   it('uses provided title (escaped)', () => {
     const html = mdToPrintHtml('x', { title: 'My <Doc> & "stuff"' })
     expect(html).toContain('<title>My &lt;Doc&gt; &amp; &quot;stuff&quot;</title>')
@@ -49,6 +55,11 @@ describe('mdToPrintHtml', () => {
     expect(html).toContain('<li>one</li>')
     expect(html).toContain('<ol>')
     expect(html).toContain('<li>a</li>')
+  })
+
+  it('nests a 2-space-indented sublist under an ordered item', () => {
+    const html = mdToPrintHtml('1. a\n  - b\n  - c\n2. d')
+    expect(html).toMatch(/<ol>\s*<li>a\s*<ul>\s*<li>b<\/li>\s*<li>c<\/li>\s*<\/ul>\s*<\/li>\s*<li>d<\/li>\s*<\/ol>/)
   })
 
   it('renders links', () => {

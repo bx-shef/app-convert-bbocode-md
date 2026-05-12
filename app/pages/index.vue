@@ -2,7 +2,7 @@
 import type { B24Frame } from '@bitrix24/b24jssdk'
 import type { TabsItem } from '@bitrix24/b24ui-nuxt'
 import { computed, onMounted } from 'vue'
-import { useClipboard } from '@vueuse/core'
+import { useClipboard, useEventListener } from '@vueuse/core'
 import { useB24 } from '~/composables/useB24'
 import { useConverter } from '~/composables/useConverter'
 import { usePrint } from '~/composables/usePrint'
@@ -13,10 +13,13 @@ import PrinterIcon from '@bitrix24/b24icons-vue/outline/PrinterIcon'
 
 definePageMeta({ layout: 'clear' })
 
-const { t } = useI18n()
+const { t, locale, locales: localesI18n, setLocale } = useI18n()
 const toast = useToast()
 const b24Instance = useB24()
 const isUseB24 = computed<boolean>(() => b24Instance.isInit())
+
+const requiredScopes = b24Instance.getRequiredRights()
+const localeOptions = computed(() => localesI18n.value.map(l => ({ label: l.name ?? l.code, value: l.code })))
 
 const { bbcode, markdown, settings, setBb, setMd, clear } = useConverter()
 
@@ -56,10 +59,16 @@ async function copyText(value: string) {
   }
 }
 
+function makePrintTitle(): string {
+  const d = new Date()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `md-${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}-${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}`
+}
+
 async function printText(value: string) {
   if (!value) return
   try {
-    await printMarkdown(value, { title: t('page.index.seo.title') })
+    await printMarkdown(value, { title: makePrintTitle() })
   } catch {
     toast.add({
       title: t('page.index.ui.printFailed'),
@@ -68,6 +77,15 @@ async function printText(value: string) {
     })
   }
 }
+
+// Ctrl/Cmd+P → print rendered Markdown (instead of the surrounding B24 portal).
+useEventListener('keydown', (e: KeyboardEvent) => {
+  if (!(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey) return
+  if (e.key.toLowerCase() !== 'p') return
+  if (!markdown.value) return
+  e.preventDefault()
+  printText(markdown.value)
+})
 </script>
 
 <template>
@@ -80,6 +98,14 @@ async function printText(value: string) {
             :color="isUseB24 ? 'air-primary-success' : 'air-primary-warning'"
             variant="soft"
             size="sm"
+          />
+          <B24Select
+            size="sm"
+            :items="localeOptions"
+            :model-value="locale"
+            :aria-label="t('page.index.ui.language')"
+            class="min-w-32"
+            @update:model-value="(v) => setLocale(v as never)"
           />
           <B24Button
             size="sm"
@@ -181,7 +207,7 @@ async function printText(value: string) {
                 </li>
                 <li>
                   {{ t('page.index.setup.installB24Step4') }}
-                  <code class="font-mono text-xs">user_brief, im, imopenlines</code>
+                  <code class="font-mono text-xs">{{ requiredScopes.join(', ') }}</code>
                 </li>
                 <li>{{ t('page.index.setup.installB24Step5') }}</li>
               </ol>
