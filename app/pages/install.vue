@@ -23,9 +23,10 @@ const appUrl = isDev && typeof window !== 'undefined'
   ? withoutTrailingSlash(`${window.location.origin}${window.location.pathname.replace(/\/install\/?$/, '')}`)
   : configuredSiteUrl
 
-// Stamp the placement so devs can tell which build registered it inside a
-// shared portal. Keep it Latin/space/hyphen-only — `iconName` enforces that.
-const TITLE_PREFIX = isDev ? 'dev' : 'prod'
+// Stamp dev builds so the chip in the chat panel is distinguishable from prod
+// when both run in the same portal. Prod has no prefix — production placements
+// show their clean name. Keep it Latin/space/hyphen-only — `iconName` enforces that.
+const TITLE_PREFIX = isDev ? 'dev ' : ''
 
 const { t } = useI18n()
 useHead({ title: t('page.install.seo.title') })
@@ -55,15 +56,15 @@ type PlacementBinding = {
 const ourPlacements = computed<PlacementBinding[]>(() => [
   {
     handlerPath: '/widget/im-textarea',
-    title: `${TITLE_PREFIX} BBCode`,
-    iconName: `${TITLE_PREFIX} BBCode`,
+    title: `${TITLE_PREFIX}BBCode`,
+    iconName: `${TITLE_PREFIX}BBCode`,
     width: '480',
     height: '320'
   },
   {
     handlerPath: '/widget/im-keyboard',
-    title: `${TITLE_PREFIX} Quick commands`,
-    iconName: `${TITLE_PREFIX} Quick commands`,
+    title: `${TITLE_PREFIX}Quick commands`,
+    iconName: `${TITLE_PREFIX}Quick commands`,
     // Keyboard is just 4 buttons + a header — smaller iframe than BBCode editor.
     width: '200',
     height: '130'
