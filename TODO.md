@@ -77,3 +77,15 @@ Black-list пунктов на проработку для проекта. Ве�
 - [ ] Workflow: фичевая ветка → мерж в QA-ветку → деплой QA-ветки на отдельный URL/портал → ручная проверка → только потом PR в `main`
 - [ ] Чек-лист проверок: desktop B24, мобильное приложение B24 (iOS + Android), light/dark тема, разные локали, mock-режим вне фрейма
 - [ ] QA-портал не путать с прод-порталом (отдельный URL в `placement.bind`)
+
+## JSSDK миграция (technical debt после bump @bitrix24/b24jssdk 1.0.5 → 1.1.0)
+В v1.1.0 помечены deprecated и удаляются в 2.0.0:
+- `AbstractB24` низкоуровневые: `callMethod`, `callBatch`, `callBatchByChunk`, `callListMethod`, `fetchListMethod`
+- `AjaxResult` paging-хелперы: `isMore`, `hasMore`, `getNext`, `fetchNext`, `getTotal`
+
+Заменить на `b24.actions.v{2,3}.{callList,fetchList}.make` — они скрывают пагинацию для обеих версий API.
+
+- [ ] `app/pages/install.vue:129` — `$b24.callBatch({ appInfo, profile, placementList, scope })` → новое API
+- [ ] `app/pages/install.vue:222` — `$b24.callBatch(calls, false)` (placement.unbind/bind пачкой) → новое API
+- [ ] `app/pages/install.vue:226` — `$b24.callMethod('placement.get', {})` → новое API
+- [ ] Заодно: пересмотреть типы `response.getData() as { ... }` в `install.vue` — в v1.1.0 `getData()` сужен до `{ result, time }`, явные `as` касты можно убрать, если типы теперь корректные сами по себе
