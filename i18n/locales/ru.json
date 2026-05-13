@@ -1,4 +1,10 @@
 {
+  "mock": {
+    "toast": {
+      "title": "Демо-режим",
+      "description": "Изменения не будут применены."
+    }
+  },
   "page": {
     "index": {
       "seo": {
@@ -10,10 +16,31 @@
         "copy": "Копировать",
         "copied": "Скопировано в буфер обмена",
         "copyFailed": "Не удалось скопировать",
+        "print": "Распечатать",
+        "printFailed": "Не удалось распечатать",
+        "language": "Язык",
         "chatMode": "Режим чата",
         "chatModeHint": "Превращать таблицы в маркированный список (чат Bitrix24 не поддерживает [table]).",
         "bbcodePlaceholder": "Вставьте BBCode Bitrix24 сюда…",
         "markdownPlaceholder": "Вставьте Markdown сюда…"
+      },
+      "mode": {
+        "b24": "Внутри Bitrix24",
+        "standalone": "Отдельно (без B24)"
+      },
+      "setup": {
+        "installB24": "Установить в свой Bitrix24",
+        "installB24Intro": "Это приложение можно зарегистрировать как placement Bitrix24 — кнопка появится прямо в панели чата.",
+        "installB24Step1": "В портале: «Разработчикам → Иное → Локальное приложение».",
+        "installB24Step2": "Application URL:",
+        "installB24Step3": "Installation URL:",
+        "installB24Step4": "Скоупы:",
+        "installB24Step5": "Сохранить → «Установить». Страница установки сама зарегистрирует IM_TEXTAREA-виджет.",
+        "selfHost": "Развернуть свой инстанс",
+        "selfHostIntro": "Нужен свой домен или закрытый контур? Репозиторий под MIT-лицензией, в комплекте два готовых таргета развёртывания.",
+        "selfHostReadme": "Подробные инструкции — в",
+        "selfHostOption1": "GitHub Pages — одной кнопкой через встроенный GitHub Actions workflow.",
+        "selfHostOption2": "Docker — multi-stage образ в GHCR + docker compose на твоём сервере (nginx + SPA-фоллбэк)."
       }
     },
     "widget": {
@@ -23,10 +50,26 @@
         "placeholder": "Пишите Markdown здесь…",
         "read": "Загрузить",
         "send": "Вставить",
+        "print": "Распечатать",
         "inserted": "Вставлено в чат",
         "readFailed": "Не удалось прочитать",
         "insertFailed": "Не удалось вставить",
+        "printFailed": "Не удалось распечатать",
         "notInFrame": "Запущено вне Bitrix24"
+      },
+      "keyboard": {
+        "seo": { "title": "Быстрые команды" },
+        "greeting": "Привет! Я — AI-SALE",
+        "hint": "Выберите команду для вставки в чат",
+        "inserted": "Команда вставлена",
+        "insertFailed": "Не удалось вставить",
+        "notInFrame": "Запущено вне Bitrix24",
+        "commands": {
+          "cmd1": "Команда 1",
+          "cmd2": "Команда 2",
+          "cmd3": "Команда 3",
+          "cmd4": "Команда 4"
+        }
       }
     },
     "install": {
@@ -35,6 +78,17 @@
       },
       "ui": {
         "title": "Установка приложения"
+      },
+      "diagnostics": {
+        "title": "Диагностика",
+        "mode": "Режим",
+        "domain": "Домен",
+        "targetOrigin": "Target origin",
+        "handler": "Handler виджета",
+        "appCode": "Приложение",
+        "scopes": "Выданные скоупы",
+        "placements": "Привязанные placement-ы",
+        "noPlacements": "(пока нет — bind ещё не выполнялся или упал)"
       },
       "step": {
         "init": {

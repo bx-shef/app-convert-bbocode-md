@@ -16,10 +16,31 @@
         "copy": "Copy",
         "copied": "Copied to clipboard",
         "copyFailed": "Copy failed",
+        "print": "Print",
+        "printFailed": "Print failed",
+        "language": "Language",
         "chatMode": "Chat mode",
         "chatModeHint": "Render tables as bullet lists (Bitrix24 chat does not support [table]).",
         "bbcodePlaceholder": "Paste Bitrix24 BBCode here…",
         "markdownPlaceholder": "Paste Markdown here…"
+      },
+      "mode": {
+        "b24": "Inside Bitrix24",
+        "standalone": "Standalone (no B24)"
+      },
+      "setup": {
+        "installB24": "Install in your Bitrix24",
+        "installB24Intro": "This SPA can be registered as a Bitrix24 placement so you get a button right inside the chat input.",
+        "installB24Step1": "In your portal: Developer resources → Other → Local application.",
+        "installB24Step2": "Application URL:",
+        "installB24Step3": "Installation URL:",
+        "installB24Step4": "Scopes:",
+        "installB24Step5": "Save → Install. The install page will register the IM_TEXTAREA widget for you.",
+        "selfHost": "Self-host your own copy",
+        "selfHostIntro": "Want your own domain or air-gapped install? The repository is MIT-licensed and ships with two ready deploy targets.",
+        "selfHostReadme": "Full instructions are in the",
+        "selfHostOption1": "GitHub Pages — one-click via the bundled GitHub Actions workflow.",
+        "selfHostOption2": "Docker — multi-stage image in GHCR + docker compose on your server (nginx + SPA fallback)."
       }
     },
     "widget": {
@@ -29,10 +50,26 @@
         "placeholder": "Type Markdown here…",
         "read": "Load",
         "send": "Insert",
+        "print": "Print",
         "inserted": "Inserted into chat",
         "readFailed": "Read failed",
         "insertFailed": "Insert failed",
+        "printFailed": "Print failed",
         "notInFrame": "Not running inside Bitrix24"
+      },
+      "keyboard": {
+        "seo": { "title": "Quick commands" },
+        "greeting": "Hi! I'm AI-SALE",
+        "hint": "Pick a command to insert into chat",
+        "inserted": "Command inserted",
+        "insertFailed": "Insert failed",
+        "notInFrame": "Not running inside Bitrix24",
+        "commands": {
+          "cmd1": "Command 1",
+          "cmd2": "Command 2",
+          "cmd3": "Command 3",
+          "cmd4": "Command 4"
+        }
       }
     },
     "install": {
@@ -41,6 +78,17 @@
       },
       "ui": {
         "title": "Application Installation"
+      },
+      "diagnostics": {
+        "title": "Diagnostics",
+        "mode": "Mode",
+        "domain": "Domain",
+        "targetOrigin": "Target origin",
+        "handler": "Widget handler",
+        "appCode": "App",
+        "scopes": "Granted scopes",
+        "placements": "Bound placements",
+        "noPlacements": "(none — bind has not run yet or failed)"
       },
       "step": {
         "init": {

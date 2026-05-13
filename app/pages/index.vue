@@ -2,23 +2,29 @@
 import type { B24Frame } from '@bitrix24/b24jssdk'
 import type { TabsItem } from '@bitrix24/b24ui-nuxt'
 import { computed, onMounted } from 'vue'
-import { useClipboard } from '@vueuse/core'
+import { useClipboard, useEventListener } from '@vueuse/core'
 import { useB24 } from '~/composables/useB24'
 import { useConverter } from '~/composables/useConverter'
+import { usePrint } from '~/composables/usePrint'
 import BroomIcon from '@bitrix24/b24icons-vue/outline/BroomIcon'
 import CopyIcon from '@bitrix24/b24icons-vue/outline/CopyIcon'
 import CheckLIcon from '@bitrix24/b24icons-vue/outline/CheckLIcon'
+import PrinterIcon from '@bitrix24/b24icons-vue/outline/PrinterIcon'
 
 definePageMeta({ layout: 'clear' })
 
-const { t } = useI18n()
+const { t, locale, locales: localesI18n, setLocale } = useI18n()
 const toast = useToast()
 const b24Instance = useB24()
 const isUseB24 = computed<boolean>(() => b24Instance.isInit())
 
+const requiredScopes = b24Instance.getRequiredRights()
+const localeOptions = computed(() => localesI18n.value.map(l => ({ label: l.name ?? l.code, value: l.code })))
+
 const { bbcode, markdown, settings, setBb, setMd, clear } = useConverter()
 
 const { copy, copied, isSupported: clipboardSupported } = useClipboard({ legacy: true, copiedDuring: 1500 })
+const { printMarkdown } = usePrint()
 
 const tabItems = computed<TabsItem[]>(() => [
   { label: 'Markdown', value: 'md', slot: 'md' },
@@ -52,6 +58,28 @@ async function copyText(value: string) {
     })
   }
 }
+
+async function printText(value: string) {
+  if (!value) return
+  try {
+    await printMarkdown(value)
+  } catch {
+    toast.add({
+      title: t('page.index.ui.printFailed'),
+      color: 'air-primary-alert',
+      duration: 2500
+    })
+  }
+}
+
+// Ctrl/Cmd+P → print rendered Markdown (instead of the surrounding B24 portal).
+useEventListener('keydown', (e: KeyboardEvent) => {
+  if (!(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey) return
+  if (e.key.toLowerCase() !== 'p') return
+  if (!markdown.value) return
+  e.preventDefault()
+  printText(markdown.value)
+})
 </script>
 
 <template>
@@ -59,6 +87,20 @@ async function copyText(value: string) {
     <template #header>
       <B24DashboardNavbar :title="t('page.index.ui.title')">
         <template #right>
+          <B24Badge
+            :label="isUseB24 ? t('page.index.mode.b24') : t('page.index.mode.standalone')"
+            :color="isUseB24 ? 'air-primary-success' : 'air-primary-warning'"
+            variant="soft"
+            size="sm"
+          />
+          <B24Select
+            size="sm"
+            :items="localeOptions"
+            :model-value="locale"
+            :aria-label="t('page.index.ui.language')"
+            class="min-w-32"
+            @update:model-value="(v) => setLocale(v as never)"
+          />
           <B24Button
             size="sm"
             color="air-secondary"
@@ -86,14 +128,24 @@ async function copyText(value: string) {
         <div class="flex flex-col gap-2 min-h-0">
           <div class="flex items-center justify-between">
             <label class="font-semibold text-(--ui-color-base-1)">Markdown</label>
-            <B24Button
-              size="xs"
-              color="air-tertiary-no-accent"
-              :icon="copied ? CheckLIcon : CopyIcon"
-              :label="t('page.index.ui.copy')"
-              :disabled="!markdown || !clipboardSupported"
-              @click="copyText(markdown)"
-            />
+            <div class="flex items-center gap-2">
+              <B24Button
+                size="xs"
+                color="air-tertiary-no-accent"
+                :icon="PrinterIcon"
+                :label="t('page.index.ui.print')"
+                :disabled="!markdown"
+                @click="printText(markdown)"
+              />
+              <B24Button
+                size="xs"
+                color="air-tertiary-no-accent"
+                :icon="copied ? CheckLIcon : CopyIcon"
+                :label="t('page.index.ui.copy')"
+                :disabled="!markdown || !clipboardSupported"
+                @click="copyText(markdown)"
+              />
+            </div>
           </div>
           <B24Textarea
             :model-value="markdown"
@@ -125,6 +177,59 @@ async function copyText(value: string) {
         </div>
       </div>
 
+      <!-- Setup instructions (hidden inside Bitrix24 placement to keep UI clean there) -->
+      <div v-if="!isUseB24" class="hidden md:block mt-6">
+        <B24Accordion
+          :items="[
+            { label: t('page.index.setup.installB24'), value: 'install', slot: 'install' },
+            { label: t('page.index.setup.selfHost'), value: 'host', slot: 'host' }
+          ]"
+          type="multiple"
+        >
+          <template #install>
+            <div class="text-sm flex flex-col gap-2 p-2">
+              <p>{{ t('page.index.setup.installB24Intro') }}</p>
+              <ol class="list-decimal pl-6 flex flex-col gap-1">
+                <li>{{ t('page.index.setup.installB24Step1') }}</li>
+                <li>
+                  {{ t('page.index.setup.installB24Step2') }}
+                  <code class="font-mono text-xs">https://convert-bbocode-md.bx-shef.by</code>
+                </li>
+                <li>
+                  {{ t('page.index.setup.installB24Step3') }}
+                  <code class="font-mono text-xs">https://convert-bbocode-md.bx-shef.by/install</code>
+                </li>
+                <li>
+                  {{ t('page.index.setup.installB24Step4') }}
+                  <code class="font-mono text-xs">{{ requiredScopes.join(', ') }}</code>
+                </li>
+                <li>{{ t('page.index.setup.installB24Step5') }}</li>
+              </ol>
+            </div>
+          </template>
+          <template #host>
+            <div class="text-sm flex flex-col gap-2 p-2">
+              <p>{{ t('page.index.setup.selfHostIntro') }}</p>
+              <p>
+                {{ t('page.index.setup.selfHostReadme') }}
+                <a
+                  href="https://github.com/bx-shef/app-convert-bbocode-md#readme"
+                  target="_blank"
+                  rel="noopener"
+                  class="underline"
+                >
+                  README
+                </a>.
+              </p>
+              <ul class="list-disc pl-6 flex flex-col gap-1">
+                <li>{{ t('page.index.setup.selfHostOption1') }}</li>
+                <li>{{ t('page.index.setup.selfHostOption2') }}</li>
+              </ul>
+            </div>
+          </template>
+        </B24Accordion>
+      </div>
+
       <!-- Mobile: tabs -->
       <B24Tabs
         :items="tabItems"
@@ -134,7 +239,15 @@ async function copyText(value: string) {
       >
         <template #md>
           <div class="flex flex-col gap-2 h-full min-h-[60vh]">
-            <div class="flex items-center justify-end">
+            <div class="flex items-center justify-end gap-2">
+              <B24Button
+                size="xs"
+                color="air-tertiary-no-accent"
+                :icon="PrinterIcon"
+                :label="t('page.index.ui.print')"
+                :disabled="!markdown"
+                @click="printText(markdown)"
+              />
               <B24Button
                 size="xs"
                 color="air-tertiary-no-accent"
