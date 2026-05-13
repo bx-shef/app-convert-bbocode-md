@@ -334,17 +334,33 @@ pnpm translate-ui
 
 ## CI / автоматизация
 
-- **`ci.yml`** — на каждый PR в `main`: `pnpm install --frozen-lockfile` → `lint` → `typecheck` → `test` → `build`.
+- **`ci.yml`** — на каждый PR в `main`: `pnpm install --frozen-lockfile` → `lint` → `typecheck` → `test` → `build`. Финальный шаг дублирует результат в legacy commit-status API под именем `ci` — это нужно, потому что некоторые внешние инструменты (включая часть AI-ревьюеров) умеют читать только `GET /commits/{sha}/status` и не видят `check_runs`, которые пишет GitHub Actions. Чтобы этот шаг мог писать статус, у workflow выставлен `permissions.statuses: write`.
 - **`deploy.yml`** — на push в `main` собирает SPA и публикует на GitHub Pages.
 - **`deploy-docker.yml`** — на push в `main` (если затронуты файлы образа) пересобирает Docker-образ и пушит в GHCR.
 - **`dependabot.yml`** — еженедельно (понедельник) проверяет обновления npm и GitHub Actions. Bitrix24-, Nuxt-, Vue-пакеты сгруппированы; dev-зависимости (minor/patch) — в общую группу.
 
-### Branch protection для `main` (настроить разово через Settings → Branches)
-- Require pull request before merging
-- Require status checks to pass → `ci`
-- Require branches to be up to date before merging
-- Запретить force-push и удаление ветки
-- Включить «Require linear history» (по желанию)
+### Branch protection для `main` (обязательно настроить руками)
+
+CI запускается на PR, но **сам по себе не блокирует merge** — без branch protection любой коммитер может смержить красный PR. Включается разово через Settings → Branches → **Add classic branch protection rule**:
+
+1. **Branch name pattern:** `main`
+2. **Require a pull request before merging** ☑
+   - Require approvals: 1 (или 0, если работаешь один)
+   - Dismiss stale pull request approvals when new commits are pushed: опционально
+3. **Require status checks to pass before merging** ☑
+   - **Require branches to be up to date before merging** ☑
+   - Status checks that are required: добавить **`ci`**
+4. **Require conversation resolution before merging** ☑
+5. **Restrict deletions** ☑ (никто не удалит `main`)
+6. **Block force pushes** ☑ (никаких `git push --force` в `main`)
+7. **Do not allow bypassing the above settings** ☑ — иначе админ обходит правила
+8. *(опционально)* Require linear history — если хочется чистого `main` без merge-коммитов
+9. *(опционально)* Require signed commits — если есть GPG/SSH-ключи у всех контрибьюторов
+
+После этого:
+- Любой PR без зелёного `ci` → кнопка merge заблокирована.
+- Прямой push в `main` → `! [remote rejected]`.
+- Dependabot-PR прогоняются через тот же `ci` — auto-merge можно включить точечно для patch/minor групп.
 
 ## Лицензия
 
