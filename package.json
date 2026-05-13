@@ -24,7 +24,7 @@
     "@nuxtjs/i18n": "^10.2.4",
     "@unhead/vue": "^3.0.5",
     "@vueuse/core": "^14.3.0",
-    "@vueuse/nuxt": "^14.2.1",
+    "@vueuse/nuxt": "^14.3.0",
     "markdown-it": "^14.1.0",
     "nuxt": "^4.4.2",
     "tailwindcss": "^4.3.0",
