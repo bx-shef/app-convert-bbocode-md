@@ -22,7 +22,7 @@
     "@bitrix24/b24jssdk-nuxt": "^1.1.0",
     "@bitrix24/b24ui-nuxt": "^2.7.1",
     "@nuxtjs/i18n": "^10.3.0",
-    "@unhead/vue": "^3.1.0",
+    "@unhead/vue": "^3.1.1",
     "@vueuse/core": "^14.3.0",
     "@vueuse/nuxt": "^14.3.0",
     "markdown-it": "^14.1.0",
