@@ -89,3 +89,27 @@ describe('mdToBbcode — basic', () => {
     expect(mdToBbcode('just text')).toBe('just text')
   })
 })
+
+describe('mdToBbcode — raw HTML does not leak', () => {
+  it('inline b/strong → [b]', () => {
+    expect(mdToBbcode('<b>x</b>')).toBe('[b]x[/b]')
+    expect(mdToBbcode('<strong>x</strong>')).toBe('[b]x[/b]')
+  })
+  it('inline i/em → [i]', () => {
+    expect(mdToBbcode('<em>x</em>')).toBe('[i]x[/i]')
+  })
+  it('inline s/del → [s]', () => {
+    expect(mdToBbcode('<del>x</del>')).toBe('[s]x[/s]')
+  })
+  it('inline <br> → newline', () => {
+    expect(mdToBbcode('a<br>b')).toBe('a\nb')
+  })
+  it('block <ul> → [list]', () => {
+    expect(mdToBbcode('<ul>\n<li>a</li>\n<li>b</li>\n</ul>'))
+      .toBe('[list]\n[*]a\n[*]b\n[/list]')
+  })
+  it('block <table> → [table]', () => {
+    expect(mdToBbcode('<table><tr><th>A</th></tr><tr><td>1</td></tr></table>'))
+      .toBe('[table]\n[tr][th]A[/th][/tr]\n[tr][td]1[/td][/tr]\n[/table]')
+  })
+})

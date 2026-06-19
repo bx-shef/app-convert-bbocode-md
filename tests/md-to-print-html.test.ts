@@ -73,10 +73,16 @@ describe('mdToPrintHtml', () => {
     expect(html).toContain('<strong>жирный</strong>')
   })
 
-  it('escapes raw HTML in input (html: false)', () => {
-    const html = mdToPrintHtml('<script>alert(1)</script>')
-    expect(html).not.toContain('<script>alert(1)</script>')
-    expect(html).toContain('&lt;script&gt;')
+  it('strips dangerous raw HTML (script) from the body', () => {
+    const html = mdToPrintHtml('text\n\n<script>alert(1)</script>')
+    expect(html).not.toContain('<script')
+    expect(html).not.toContain('alert(1)')
+    expect(html).toContain('text')
+  })
+
+  it('renders the <u> underline fallback (safe HTML passes through)', () => {
+    const html = mdToPrintHtml('<u>under</u>')
+    expect(html).toContain('<u>under</u>')
   })
 
   it('handles empty input gracefully', () => {
