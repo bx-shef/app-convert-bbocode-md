@@ -19,7 +19,7 @@
 
 ## Возможности
 - **Двунаправленная live-конвертация** — правка слева пересчитывает справа и наоборот, с защитой от циклов.
-- **Поддерживаемые теги (базовый набор Bitrix24):** `b, i, u, s, url, img, list (+[*], [list=1]), code (+lang), quote, h1-h6, br, hr, p`.
+- **Поддерживаемые теги (базовый набор Bitrix24):** `b, i, u, s, url, img, list (+[*], [list=1]), code (+lang), quote, h1-h6, br, hr, p, table (tr/th/td)`.
 - **Bitrix24 UI Kit** — нативный вид внутри портала.
 - **Готовая install-страница** для регистрации приложения как placement (сейчас mock-flow без серверной части — расширим позже).
 - **i18n** — 19 локалей унаследованы из шаблона `bitrix24/templates-dashboard`.
@@ -55,20 +55,23 @@ pnpm lint         # eslint
 ```
 app/
 ├── pages/
-│   ├── index.vue        # two-pane converter UI
-│   └── install.vue      # Bitrix24 placement install flow
+│   ├── index.vue               # converter UI
+│   ├── install.vue             # Bitrix24 placement install flow
+│   └── widget/im-textarea.vue  # IM_TEXTAREA placement widget
 ├── utils/
-│   ├── bbcode-parser.ts # parser → AST
-│   ├── bbcode-to-md.ts  # AST → Markdown
-│   └── md-to-bbcode.ts  # markdown-it tokens → BBCode
+│   ├── bbcode-parser.ts        # BBCode → AST
+│   ├── bbcode-to-md.ts         # AST → Markdown
+│   ├── md-to-bbcode.ts         # markdown-it tokens → BBCode
+│   └── md-to-print-html.ts     # Markdown → print-ready HTML
 ├── composables/
-│   ├── useConverter.ts  # реактивная двусторонняя конвертация
-│   └── useB24.ts        # JSSdk init wrapper
-├── layouts/             # default + clear (для install)
-├── components/          # AppLogo, AppTitle, UserMenu
-└── app.vue              # init B24, SEO, locale
-i18n/locales/            # 19 локалей
-tests/                   # vitest
+│   ├── useConverter.ts         # реактивная двусторонняя конвертация
+│   ├── usePrint.ts             # печать рендера через скрытый iframe
+│   └── useB24.ts               # JSSdk init wrapper
+├── layouts/                    # clear (index/install) + widget
+├── components/                 # AppLogo
+└── app.vue                     # init B24, SEO, locale
+i18n/locales/                   # 19 локалей
+tests/                          # vitest
 ```
 
 ## Конвертация — таблица маппинга
@@ -247,7 +250,7 @@ make restart # down + up
 | **Application URL** | `https://convert-bbocode-md.bx-shef.by` |
 | **Installation URL** | `https://convert-bbocode-md.bx-shef.by/install` |
 | **Назначение** | iframe-приложение |
-| **Скоупы** | `user_brief`, `im`, `imopenlines` (для `IM_TEXTAREA`-виджета) + задел: `crm`, `tasks`, `entity` |
+| **Скоупы** | `user_brief`, `im`, `placement` (см. `getRequiredRights()` в `useB24.ts`) |
 
 После сохранения нажать **«Установить»** — портал откроет страницу `/install`, она:
 1. инициализирует JSSDK,

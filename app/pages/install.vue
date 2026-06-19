@@ -60,14 +60,6 @@ const ourPlacements = computed<PlacementBinding[]>(() => [
     iconName: `${TITLE_PREFIX}BBCode`,
     width: '480',
     height: '320'
-  },
-  {
-    handlerPath: '/widget/im-keyboard',
-    title: `${TITLE_PREFIX}Quick commands`,
-    iconName: `${TITLE_PREFIX}Quick commands`,
-    // Keyboard is just 4 buttons + a header — smaller iframe than BBCode editor.
-    width: '300',
-    height: '390'
   }
 ])
 

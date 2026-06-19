@@ -21,12 +21,14 @@ Nuxt 4 SPA placement for Bitrix24 that converts Bitrix24 BBCode ↔ Markdown.
 - `app/utils/md-to-bbcode.ts` — pure fn `markdown-it` tokens → BBCode string.
 - `app/composables/useConverter.ts` — reactive bidirectional sync; uses `lastEdited` ('bb' | 'md' | null) guard to prevent infinite watch loops; `useDebounceFn` 150ms.
 - `app/composables/useB24.ts` — JSSdk init wrapper (called from `app.vue` and `install.vue`). Module-level `$b24` singleton.
-- `app/layouts/default.vue` — sidebar with single Home link + UserMenu.
-- `app/layouts/clear.vue` — barebones (used by install).
+- `app/pages/widget/im-textarea.vue` — `IM_TEXTAREA` placement widget: load chat text → MD, edit, send MD→BBCode back to the chat input.
+- `app/composables/usePrint.ts` + `app/utils/md-to-print-html.ts` — render Markdown to a print-ready HTML document (hidden iframe → `window.print()`).
+- `app/layouts/clear.vue` — barebones full-height panel (used by index + install).
+- `app/layouts/widget.vue` — barebones wrapper for the placement widget.
 
 ## Conventions
 - **Tests are required** for any change to `app/utils/{bbcode-parser,bbcode-to-md,md-to-bbcode}.ts`. Run `pnpm test` before commit. Tests live in `tests/`:
-  - `bbcode-to-md.test.ts`, `md-to-bbcode.test.ts`, `roundtrip.test.ts`.
+  - `bbcode-to-md.test.ts`, `md-to-bbcode.test.ts`, `roundtrip.test.ts`, `md-to-print-html.test.ts`, `table.test.ts`.
 - **i18n** — when adding a new UI string, add the key to `i18n/locales/en.json` and `i18n/locales/ru.json`. Other 17 locales fall back to `en` (defaultLocale). User runs `pnpm translate-ui` later for full translation.
 - **B24 UI components only**: `B24Textarea`, `B24DashboardPanel`, `B24Button`, `B24DashboardNavbar`, `B24Progress`, etc. Auto-imported via `@bitrix24/b24ui-nuxt`.
 - **No server code.** `server/` folder was intentionally removed. No SSR API endpoints. App is pure SPA (runtime fetches go through `useB24` → Bitrix24 REST).
