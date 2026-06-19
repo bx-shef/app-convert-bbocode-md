@@ -186,7 +186,7 @@ useEventListener('keydown', (e: KeyboardEvent) => {
           </template>
           <!-- preview is sanitized in useConverter → safe to render -->
           <!-- eslint-disable-next-line vue/no-v-html -->
-          <div v-if="preview" class="preview-html min-h-[18rem] overflow-auto rounded-md border border-gray-200 p-3 text-sm dark:border-white/10" v-html="preview" />
+          <div v-if="preview" class="preview-html min-h-[18rem] overflow-auto rounded-md border border-gray-200 p-3 text-sm text-(--ui-color-base-1) dark:border-white/10" v-html="preview" />
           <div
             v-else
             class="min-h-[18rem] rounded-md border border-gray-200 p-3 text-sm text-(--ui-color-base-4) dark:border-white/10"
@@ -340,7 +340,7 @@ useEventListener('keydown', (e: KeyboardEvent) => {
               />
             </template>
             <!-- eslint-disable-next-line vue/no-v-html -->
-            <div v-if="preview" class="preview-html flex-1 min-h-0 overflow-auto rounded-md border border-gray-200 p-3 text-sm dark:border-white/10" v-html="preview" />
+            <div v-if="preview" class="preview-html flex-1 min-h-0 overflow-auto rounded-md border border-gray-200 p-3 text-sm text-(--ui-color-base-1) dark:border-white/10" v-html="preview" />
             <div
               v-else
               class="flex-1 min-h-0 rounded-md border border-gray-200 p-3 text-sm text-(--ui-color-base-4) dark:border-white/10"
