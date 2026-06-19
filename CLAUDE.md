@@ -63,9 +63,12 @@ See `README.md` § Конвертация for the full table. Key rules:
 ## Commands
 ```
 pnpm dev          # http://localhost:3000
-pnpm test         # run vitest once
+pnpm test         # run vitest once (unit; tests/**/*.test.ts only)
 pnpm test:watch   # watch mode
+pnpm test:e2e     # Playwright visual/e2e (e2e/*.spec.ts) — run `pnpm build` first
 pnpm typecheck
 pnpm lint
 pnpm build
 ```
+
+**Visual/e2e**: `e2e/` holds Playwright specs run against the built server. Assertions are functional + a dark-mode contrast guard (no flaky pixel baselines); screenshots land in `e2e/output/` (gitignored) and upload as CI artifacts. Runs in CI after `build`.
