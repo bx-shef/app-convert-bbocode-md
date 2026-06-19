@@ -16,6 +16,8 @@ const { t } = useI18n()
 const toast = useToast()
 const b24Instance = useB24()
 const isReady = computed<boolean>(() => b24Instance.isInit())
+// Print via window.print() does not work in the Bitrix24 mobile app — hide it there.
+const { isBitrixMobile } = useDevice()
 
 const markdown = ref('')
 const isBusy = ref(false)
@@ -140,6 +142,7 @@ async function sendToChat() {
           @click="readFromChat"
         />
         <B24Button
+          v-if="!isBitrixMobile"
           size="xs"
           color="air-secondary"
           :icon="PrinterIcon"

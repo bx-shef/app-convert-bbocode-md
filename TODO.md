@@ -8,11 +8,13 @@ Black-list пунктов на проработку для проекта. Ве�
 - [ ] Проверить RTL для `ar`
 
 ## Тёмный режим / мобилка
-- [ ] Auto-detect темы B24 через JSSDK (вместо `htmlAttrs: { class: 'dark' }` хардкода в виджетах)
-- [ ] Detect mobile через `placement.getInterface()`
+- [x] Убран хардкод `htmlAttrs: { class: 'dark' }` (вместе с удалённым `im-keyboard`). `colorMode: 'auto'` следует за ОС.
+- [ ] Auto-detect темы B24 через JSSDK — **заблокировано**: `@bitrix24/b24jssdk` 1.1.0 не экспонирует тему портала (нет `theme`/`colorScheme` в API). Нужен иной сигнал (placement options / postMessage) — отдельная задача.
+- [x] Detect mobile — через `useDevice().isBitrixMobile` (b24ui).
 - [ ] Прозрачный/наследуемый фон в моб-виджетах
 - [ ] Решить: десктоп тоже слушает тему B24 или нет
-- [ ] Print в моб-приложении B24 не работает — это нормально, скрывать кнопку Print в моб-режиме (не чинить)
+- [x] Print в моб-приложении B24 не работает — кнопка Print скрыта в `im-textarea` при `isBitrixMobile`.
+- [ ] Скрывать Print и в `index.vue` (моб-вкладки) при `isBitrixMobile` — мелочь, не приоритет.
 - [ ] Подумать про PDF — возможно, делать его не через `window.print()`, а другим способом (не приоритет)
 
 ## UX
@@ -73,7 +75,8 @@ Black-list пунктов на проработку для проекта. Ве�
 
 Заменить на `b24.actions.v{2,3}.{callList,fetchList}.make` — они скрывают пагинацию для обеих версий API.
 
-- [ ] `app/pages/install.vue:129` — `$b24.callBatch({ appInfo, profile, placementList, scope })` → новое API
-- [ ] `app/pages/install.vue:222` — `$b24.callBatch(calls, false)` (placement.unbind/bind пачкой) → новое API
-- [ ] `app/pages/install.vue:226` — `$b24.callMethod('placement.get', {})` → новое API
-- [ ] Заодно: пересмотреть типы `response.getData() as { ... }` в `install.vue` — в v1.1.0 `getData()` сужен до `{ result, time }`, явные `as` касты можно убрать, если типы теперь корректные сами по себе
+- [x] `install.vue` makeInit — `callBatch({…})` → `actions.v2.batch.make({ calls: {…} })`
+- [x] `install.vue` makePlacement — `callBatch(calls, false)` → `actions.v2.batch.make({ calls, options: { isHaltOnError: false } })`
+- [x] `install.vue` makePlacement — `callMethod('placement.get')` → `actions.v2.call.make({ method })`, читаем `getData().result`
+- [ ] Низкоуровневые/paging-хелперы в другом коде (если появятся) — на `actions.v{2,3}` по мере необходимости
+- [ ] `as`-касты в `install.vue` оставлены намеренно (типы `getData()` дженерик-`unknown`); сузить при типизации batch-ответов

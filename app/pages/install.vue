@@ -118,11 +118,13 @@ async function makeInit(): Promise<void> {
   $b24.parent.setTitle(t('page.install.seo.title'))
 
   if (!steps.value.init) return
-  const response = await $b24.callBatch({
-    appInfo: { method: 'app.info' },
-    profile: { method: 'profile' },
-    placementList: { method: 'placement.get' },
-    scope: { method: 'scope' }
+  const response = await $b24.actions.v2.batch.make({
+    calls: {
+      appInfo: { method: 'app.info' },
+      profile: { method: 'profile' },
+      placementList: { method: 'placement.get' },
+      scope: { method: 'scope' }
+    }
   })
 
   steps.value.init.data = response.getData() as {
@@ -211,13 +213,13 @@ async function makePlacement(): Promise<void> {
     })
   }
 
-  const result = await $b24.callBatch(calls, false)
+  const result = await $b24.actions.v2.batch.make({ calls, options: { isHaltOnError: false } })
   console.info('[install] placement.bind result:', result.getData())
 
   // Refresh placement list so the diagnostic panel reflects the new state.
-  const after = await $b24.callMethod('placement.get', {})
+  const after = await $b24.actions.v2.call.make({ method: 'placement.get' })
   if (steps.value.init?.data) {
-    steps.value.init.data.placementList = after.getData() as never
+    steps.value.init.data.placementList = ((after.getData() as { result?: unknown })?.result ?? []) as never
   }
 }
 
