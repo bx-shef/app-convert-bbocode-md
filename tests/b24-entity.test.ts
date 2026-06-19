@@ -4,7 +4,14 @@ import {
   pickTask,
   readTaskDescription,
   taskDescriptionToMarkdown,
-  buildTaskUpdateFields
+  buildTaskUpdateFields,
+  pickComment,
+  commentToMarkdown,
+  buildCommentUpdateFields,
+  pickPost,
+  readPostTitle,
+  postToMarkdown,
+  buildPostUpdateFields
 } from '../app/utils/b24-entity'
 
 describe('isBbcodeFlag', () => {
@@ -58,5 +65,37 @@ describe('taskDescriptionToMarkdown', () => {
 describe('buildTaskUpdateFields', () => {
   it('MD → BBCode description fields', () => {
     expect(buildTaskUpdateFields('**Hi**')).toEqual({ DESCRIPTION: '[b]Hi[/b]', DESCRIPTION_IN_BBCODE: 'Y' })
+  })
+})
+
+describe('CRM comment', () => {
+  it('pickComment from { result }', () => {
+    expect(pickComment({ result: { COMMENT: 'x' } })).toEqual({ COMMENT: 'x' })
+  })
+  it('commentToMarkdown (BBCode)', () => {
+    expect(commentToMarkdown({ COMMENT: '[b]Hi[/b]' })).toBe('**Hi**')
+  })
+  it('buildCommentUpdateFields', () => {
+    expect(buildCommentUpdateFields('*x*')).toEqual({ COMMENT: '[i]x[/i]' })
+  })
+})
+
+describe('Live Feed post', () => {
+  it('pickPost takes the first item of the result array', () => {
+    expect(pickPost({ result: [{ DETAIL_TEXT: 'a', TITLE: 'T' }, { DETAIL_TEXT: 'b' }] }))
+      .toEqual({ DETAIL_TEXT: 'a', TITLE: 'T' })
+  })
+  it('pickPost tolerates a single object', () => {
+    expect(pickPost({ result: { DETAIL_TEXT: 'a' } })).toEqual({ DETAIL_TEXT: 'a' })
+  })
+  it('readPostTitle', () => {
+    expect(readPostTitle({ TITLE: 'Hello' })).toBe('Hello')
+  })
+  it('postToMarkdown (BBCode)', () => {
+    expect(postToMarkdown({ DETAIL_TEXT: '[s]x[/s]' })).toBe('~~x~~')
+  })
+  it('buildPostUpdateFields keeps the title', () => {
+    expect(buildPostUpdateFields('**Hi**', 'My title'))
+      .toEqual({ POST_MESSAGE: '[b]Hi[/b]', POST_TITLE: 'My title' })
   })
 })

@@ -46,14 +46,19 @@
         "selfHostOption2": "Docker — multi-stage image in GHCR + docker compose on your server (nginx + SPA fallback)."
       },
       "b24": {
-        "task": "Task",
-        "taskIdPlaceholder": "ID",
+        "kind": {
+          "task": "Task",
+          "crmComment": "CRM comment",
+          "feedPost": "Feed post"
+        },
+        "selectKind": "Entity",
+        "idPlaceholder": "ID",
         "load": "Load",
         "save": "Save",
-        "loaded": "Loaded task #{id}",
-        "saved": "Saved task #{id}",
-        "loadFailed": "Failed to load task",
-        "saveFailed": "Failed to save task"
+        "loaded": "Loaded #{id}",
+        "saved": "Saved #{id}",
+        "loadFailed": "Failed to load",
+        "saveFailed": "Failed to save"
       }
     },
     "widget": {

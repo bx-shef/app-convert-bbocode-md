@@ -5,6 +5,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useClipboard, useEventListener } from '@vueuse/core'
 import { useB24 } from '~/composables/useB24'
 import { useB24Rest } from '~/composables/useB24Rest'
+import { ENTITY_KINDS, type EntityKind } from '~/utils/b24-entity'
 import { useConverter } from '~/composables/useConverter'
 import { usePrint } from '~/composables/usePrint'
 import BroomIcon from '@bitrix24/b24icons-vue/outline/BroomIcon'
@@ -33,9 +34,11 @@ const rest = useB24Rest()
 
 const currentYear = new Date().getFullYear()
 
-// Bitrix24 task load/save (REST). Standalone shows a demo notice.
-const taskId = ref('')
+// Bitrix24 entity load/save (REST). Standalone shows a demo notice.
+const entityKind = ref<EntityKind>('task')
+const entityId = ref('')
 const b24Busy = ref(false)
+const entityKindOptions = computed(() => ENTITY_KINDS.map(k => ({ label: t(`page.index.b24.kind.${k}`), value: k })))
 
 // The three editable formats. Markdown carries the print action (it is the
 // canonical document the preview/print are rendered from).
@@ -102,13 +105,13 @@ function notifyDemo() {
   })
 }
 
-async function loadFromTask() {
-  const id = Number(taskId.value)
+async function loadFromB24() {
+  const id = Number(entityId.value)
   if (!id) return
   if (!isUseB24.value) return notifyDemo()
   b24Busy.value = true
   try {
-    setMd(await rest.loadTaskMarkdown(id))
+    setMd(await rest.loadMarkdown(entityKind.value, id))
     toast.add({ title: t('page.index.b24.loaded', { id }), color: 'air-primary-success', icon: CheckLIcon, duration: 1500 })
   } catch (e) {
     toast.add({ title: t('page.index.b24.loadFailed'), description: e instanceof Error ? e.message : String(e), color: 'air-primary-alert', duration: 3000 })
@@ -117,13 +120,13 @@ async function loadFromTask() {
   }
 }
 
-async function saveToTask() {
-  const id = Number(taskId.value)
+async function saveToB24() {
+  const id = Number(entityId.value)
   if (!id || !markdown.value) return
   if (!isUseB24.value) return notifyDemo()
   b24Busy.value = true
   try {
-    await rest.saveTaskMarkdown(id, markdown.value)
+    await rest.saveMarkdown(entityKind.value, id, markdown.value)
     toast.add({ title: t('page.index.b24.saved', { id }), color: 'air-primary-success', icon: CheckLIcon, duration: 1500 })
   } catch (e) {
     toast.add({ title: t('page.index.b24.saveFailed'), description: e instanceof Error ? e.message : String(e), color: 'air-primary-alert', duration: 3000 })
@@ -182,15 +185,21 @@ useEventListener('keydown', (e: KeyboardEvent) => {
           />
         </template>
         <template #right>
-          <!-- Load/save a Bitrix24 task description over REST (demo notice when standalone). -->
+          <!-- Load/save a Bitrix24 entity text field over REST (demo notice when standalone). -->
           <div class="flex items-center gap-2">
-            <span class="text-xs text-(--ui-color-base-3) whitespace-nowrap">{{ t('page.index.b24.task') }}</span>
+            <B24Select
+              v-model="entityKind"
+              size="sm"
+              :items="entityKindOptions"
+              :aria-label="t('page.index.b24.selectKind')"
+              class="min-w-32"
+            />
             <B24Input
-              v-model="taskId"
+              v-model="entityId"
               type="number"
               size="sm"
-              :placeholder="t('page.index.b24.taskIdPlaceholder')"
-              class="w-24"
+              :placeholder="t('page.index.b24.idPlaceholder')"
+              class="w-20"
             />
             <B24Button
               size="sm"
@@ -198,8 +207,8 @@ useEventListener('keydown', (e: KeyboardEvent) => {
               :icon="DownloadIcon"
               :label="t('page.index.b24.load')"
               :loading="b24Busy"
-              :disabled="!taskId || b24Busy"
-              @click="loadFromTask"
+              :disabled="!entityId || b24Busy"
+              @click="loadFromB24"
             />
             <B24Button
               size="sm"
@@ -207,8 +216,8 @@ useEventListener('keydown', (e: KeyboardEvent) => {
               :icon="SendIcon"
               :label="t('page.index.b24.save')"
               :loading="b24Busy"
-              :disabled="!taskId || !markdown || b24Busy"
-              @click="saveToTask"
+              :disabled="!entityId || !markdown || b24Busy"
+              @click="saveToB24"
             />
           </div>
         </template>

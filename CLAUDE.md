@@ -5,7 +5,7 @@ Nuxt 4 SPA placement for Bitrix24 that converts Bitrix24 BBCode ↔ Markdown.
 ## Stack
 - Nuxt 4 (SPA inside Bitrix24 iframe), Vue 3
 - `@bitrix24/b24ui-nuxt` (UI components — use these, do NOT bring other UI libs)
-- `@bitrix24/b24jssdk-nuxt` + `@bitrix24/b24jssdk` (JS SDK; init + Tasks REST via `actions.v2` — see `useB24Rest`)
+- `@bitrix24/b24jssdk-nuxt` + `@bitrix24/b24jssdk` (JS SDK; init + REST via `actions.v2` — see `useB24Rest`)
 - Custom BBCode parser at `app/utils/bbcode-parser.ts` (no external lib — full control over `[*]` and code-literal)
 - `markdown-it` for Markdown tokens / rendering (built-in strikethrough is enabled by default in v14)
 - `htmlparser2` for HTML → MD parsing and the allow-list HTML sanitizer (node-native, no DOM)
@@ -28,8 +28,8 @@ Nuxt 4 SPA placement for Bitrix24 that converts Bitrix24 BBCode ↔ Markdown.
 - `app/utils/convert.ts` — facade: `toMarkdown` / `fromMarkdown` / `convert(from,to)` over the MD pivot.
 - `app/composables/useConverter.ts` — reactive three-way sync (bb/md/html) over the MD pivot; `preview` = sanitized rendered HTML; `lastEdited` ('bb' | 'md' | 'html' | null) guard prevents watch loops; `useDebounceFn` 150ms.
 - `app/composables/useB24.ts` — JSSdk init wrapper (called from `app.vue` and `install.vue`). Module-level `$b24` singleton.
-- `app/composables/useB24Rest.ts` — REST wrappers (`actions.v2.call.make`): load/save a task description ↔ editor Markdown.
-- `app/utils/b24-entity.ts` — pure entity mapping (task description ↔ MD; tolerant to field casing + BBCode/HTML flag).
+- `app/composables/useB24Rest.ts` — REST wrappers (`actions.v2.call.make`): `loadMarkdown`/`saveMarkdown(kind, id)` for task / CRM comment / Feed post.
+- `app/utils/b24-entity.ts` — pure entity mapping (task `DESCRIPTION` ±BBCode flag, CRM `COMMENT`, Feed `DETAIL_TEXT`/`POST_MESSAGE`) ↔ MD; tolerant to field casing/envelope shape.
 - `app/pages/widget/im-textarea.vue` — `IM_TEXTAREA` placement widget: load chat text → MD, edit, send MD→BBCode back to the chat input.
 - `app/composables/usePrint.ts` + `app/utils/md-to-print-html.ts` — render Markdown to a print-ready HTML document (hidden iframe → `window.print()`).
 - `app/layouts/clear.vue` — barebones full-height panel (used by index + install).
@@ -50,7 +50,7 @@ Nuxt 4 SPA placement for Bitrix24 that converts Bitrix24 BBCode ↔ Markdown.
 - `nuxt.config.ts` — `vite.server.allowedHosts` reads `NUXT_ALLOWED_HOSTS` for ngrok.
 
 ## Out of scope (current state)
-- REST: Tasks load/save **done** (`useB24Rest` + the index toolbar bar). CRM comments / Feed posts are the next slice (they need owner context).
+- REST load/save **done** for task / CRM comment / Feed post (`useB24Rest` + the index toolbar bar; scopes `task`, `crm`, `log`). Live behaviour needs hands-on portal QA.
 - Bitrix-specific BBCode tags (`[USER=id]`, `[DISK File=id]`, `[DEPARTMENT=id]`, `[color]`, `[size]`, `[font]`).
 - Server-side handlers (`server/` deliberately absent).
 

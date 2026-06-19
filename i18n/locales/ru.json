@@ -46,14 +46,19 @@
         "selfHostOption2": "Docker — multi-stage образ в GHCR + docker compose на твоём сервере (nginx + SPA-фоллбэк)."
       },
       "b24": {
-        "task": "Задача",
-        "taskIdPlaceholder": "ID",
+        "kind": {
+          "task": "Задача",
+          "crmComment": "Комментарий CRM",
+          "feedPost": "Пост Ленты"
+        },
+        "selectKind": "Объект",
+        "idPlaceholder": "ID",
         "load": "Загрузить",
         "save": "Сохранить",
-        "loaded": "Загружена задача #{id}",
-        "saved": "Сохранена задача #{id}",
-        "loadFailed": "Не удалось загрузить задачу",
-        "saveFailed": "Не удалось сохранить задачу"
+        "loaded": "Загружено #{id}",
+        "saved": "Сохранено #{id}",
+        "loadFailed": "Не удалось загрузить",
+        "saveFailed": "Не удалось сохранить"
       }
     },
     "widget": {
