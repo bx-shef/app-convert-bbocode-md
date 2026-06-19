@@ -91,4 +91,7 @@ describe('htmlToMd — robustness', () => {
     expect(htmlToMd('<span style="position:fixed">x</span>')).toBe('x')
     expect(htmlToMd('<span>x</span>')).toBe('x')
   })
+  it('preserves entity-mention data attributes', () => {
+    expect(htmlToMd('<span data-bb-user="123">John</span>')).toBe('<span data-bb-user="123">John</span>')
+  })
 })

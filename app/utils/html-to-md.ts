@@ -71,6 +71,20 @@ function filterSpanStyle(style: string): string {
     .join('; ')
 }
 
+function idVal(v: string): string {
+  return v.replace(/["<>]/g, '').trim()
+}
+
+/** Attributes worth preserving on a `<span>`: safe style + entity carriers. */
+function spanCarrier(attribs: Record<string, string>): string {
+  const parts: string[] = []
+  const style = filterSpanStyle(attribs.style || '')
+  if (style) parts.push(`style="${style}"`)
+  if (attribs['data-bb-user']) parts.push(`data-bb-user="${idVal(attribs['data-bb-user'])}"`)
+  if (attribs['data-bb-dept']) parts.push(`data-bb-dept="${idVal(attribs['data-bb-dept'])}"`)
+  return parts.join(' ')
+}
+
 function renderNode(node: HNode): string {
   if (node.type === 'text') {
     return (node.data ?? '').replace(/\s+/g, ' ')
@@ -93,10 +107,10 @@ function renderNode(node: HNode): string {
       return c.trim() ? `<u>${c}</u>` : c
     }
     case 'span': {
-      // Preserve color/size/font styling as raw HTML so MD → BBCode can map it.
-      const style = filterSpanStyle(node.attribs?.style || '')
+      // Preserve color/size/font + entity carriers as raw HTML so MD → BBCode maps them.
+      const carrier = spanCarrier(node.attribs || {})
       const c = inner()
-      return style && c.trim() ? `<span style="${style}">${c}</span>` : c
+      return carrier ? `<span ${carrier}>${c}</span>` : c
     }
     case 's':
     case 'strike':

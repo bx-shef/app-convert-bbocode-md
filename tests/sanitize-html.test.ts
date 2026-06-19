@@ -61,4 +61,9 @@ describe('sanitizeHtml', () => {
     expect(sanitizeHtml('<span style="background-color:url(javascript:alert(1))">x</span>'))
       .toBe('x')
   })
+
+  it('keeps entity-mention data attributes on span', () => {
+    expect(sanitizeHtml('<span data-bb-user="123">John</span>')).toBe('<span data-bb-user="123">John</span>')
+    expect(sanitizeHtml('<span data-bb-dept="5">Sales</span>')).toBe('<span data-bb-dept="5">Sales</span>')
+  })
 })

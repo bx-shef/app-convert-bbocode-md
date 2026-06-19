@@ -27,7 +27,7 @@ const ALLOWED: Record<string, Set<string>> = {
   br: new Set(), hr: new Set(), p: new Set(),
   table: new Set(), thead: new Set(), tbody: new Set(),
   tr: new Set(), th: new Set(), td: new Set(),
-  span: new Set(['style'])
+  span: new Set(['style', 'data-bb-user', 'data-bb-dept'])
 }
 
 /** CSS properties allowed in a sanitized `style` attribute (Bitrix [color]/[size]/[font]). */
