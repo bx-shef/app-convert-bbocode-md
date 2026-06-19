@@ -65,6 +65,15 @@ test.describe('dark theme (desktop)', () => {
   })
 })
 
+test.describe('Bitrix24 task bar (standalone)', () => {
+  test('shows a demo notice when loading outside Bitrix24', async ({ page }) => {
+    await page.goto('/')
+    await page.locator('input[type="number"]').first().fill('11')
+    await page.getByRole('button', { name: /^Load$|Загрузить/ }).click()
+    await expect(page.getByText(/Demo Mode|Демо-режим/).first()).toBeVisible()
+  })
+})
+
 test.describe('mobile', () => {
   test.use({ viewport: { width: 390, height: 844 } })
 
