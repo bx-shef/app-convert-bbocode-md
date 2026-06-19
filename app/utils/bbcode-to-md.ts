@@ -92,6 +92,8 @@ function renderTag(n: TagNode, ctx: RenderCtx): string {
       const px = parseInt(n.primary || '', 10)
       return Number.isFinite(px) ? `<span style="font-size:${px}px">${inner()}</span>` : inner()
     }
+    case 'user': return n.primary ? `<span data-bb-user="${idVal(n.primary)}">${inner()}</span>` : inner()
+    case 'department': return n.primary ? `<span data-bb-dept="${idVal(n.primary)}">${inner()}</span>` : inner()
     case 'br': return '\n'
     case 'hr': return '\n---\n'
     case 'p': return '\n\n' + inner() + '\n\n'
@@ -153,6 +155,11 @@ function padRow(cells: string[], n: number): string[] {
 /** Strip characters that would break out of a `style="…"` attribute. */
 function styleVal(v: string): string {
   return v.replace(/["<>;]/g, '').trim()
+}
+
+/** Strip characters that would break out of an HTML attribute value. */
+function idVal(v: string): string {
+  return v.replace(/["<>]/g, '').trim()
 }
 
 function collapseBlankLines(s: string): string {

@@ -70,6 +70,13 @@
   text-align: left;
 }
 .preview-html img { max-width: 100%; height: auto; }
+.preview-html [data-bb-user], .preview-html [data-bb-dept] {
+  background: color-mix(in srgb, var(--ui-color-accent-main-primary, #2fc6f6) 16%, transparent);
+  border-radius: 4px;
+  padding: 0 0.3em;
+  white-space: nowrap;
+}
+.preview-html [data-bb-user]::before { content: "@"; opacity: 0.6; }
 
 /* @todo move to b24ui */
 .ui-btn.--air.ui-btn-lg {

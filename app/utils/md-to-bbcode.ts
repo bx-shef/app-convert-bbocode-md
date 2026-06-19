@@ -48,21 +48,45 @@ function quoteIfNeeded(v: string): string {
   return /\s/.test(v) ? `"${v}"` : v
 }
 
+/** Read a double/single-quoted attribute value from a tag string. */
+function attrOf(openTag: string, name: string): string | null {
+  const m = openTag.match(new RegExp(`${name}\\s*=\\s*("([^"]*)"|'([^']*)')`, 'i'))
+  return m ? (m[2] ?? m[3] ?? '') : null
+}
+
 /**
- * Map inline raw HTML to BBCode. `<span style="…">` carries the Bitrix styling
- * tags (`[color]/[size]/[font]`); a per-inline `spanStack` records which tags
- * each span opened so the matching `</span>` closes them in reverse.
+ * The BBCode tags a `<span>` carrier maps to, as open/close string pairs.
+ * Entity mentions (`data-bb-user`/`data-bb-dept`) take precedence; otherwise the
+ * `style` attribute yields `[color]`/`[size]`/`[font]`.
+ */
+function parseSpan(openTag: string): { open: string, close: string }[] {
+  const tags: { open: string, close: string }[] = []
+  // Entity mentions first, then styles — a span may carry both (pasted HTML);
+  // empty ids are skipped (truthy check) so we never emit invalid `[USER=]`.
+  const user = attrOf(openTag, 'data-bb-user')
+  if (user) tags.push({ open: `[USER=${user}]`, close: '[/USER]' })
+  const dept = attrOf(openTag, 'data-bb-dept')
+  if (dept) tags.push({ open: `[DEPARTMENT=${dept}]`, close: '[/DEPARTMENT]' })
+  for (const t of parseSpanStyle(openTag)) {
+    tags.push({ open: `[${t.name}=${quoteIfNeeded(t.primary)}]`, close: `[/${t.name}]` })
+  }
+  return tags
+}
+
+/**
+ * Map inline raw HTML to BBCode. `<span>` carries Bitrix styling/entity tags; a
+ * per-inline `spanStack` records each span's close strings so the matching
+ * `</span>` emits them in reverse.
  */
 function renderInlineHtml(raw: string, spanStack: string[][]): string {
   const lower = raw.trim().toLowerCase()
   if (lower.startsWith('<span')) {
-    const tags = parseSpanStyle(raw)
-    spanStack.push(tags.map(t => t.name))
-    return tags.map(t => `[${t.name}=${quoteIfNeeded(t.primary)}]`).join('')
+    const tags = parseSpan(raw)
+    spanStack.push(tags.map(t => t.close))
+    return tags.map(t => t.open).join('')
   }
   if (lower === '</span>') {
-    const tags = spanStack.pop() || []
-    return tags.slice().reverse().map(n => `[/${n}]`).join('')
+    return (spanStack.pop() || []).slice().reverse().join('')
   }
   return mapInlineHtml(raw)
 }

@@ -51,13 +51,14 @@ Nuxt 4 SPA placement for Bitrix24 that converts Bitrix24 BBCode ↔ Markdown.
 
 ## Out of scope (current state)
 - REST load/save **done** for task / CRM comment / Feed post (`useB24Rest` + the index toolbar bar; scopes `task`, `crm`, `log`). Live behaviour needs hands-on portal QA.
-- Entity-reference BBCode tags (`[USER=id]`, `[DISK File=id]`, `[DEPARTMENT=id]`) — currently pass through as literal text (lossless round-trip, not rendered). Styling tags `[color]`/`[size]`/`[font]` are **done** (via `<span style>` carrier).
+- Entity mentions `[USER=id]`/`[DEPARTMENT=id]` are **done** (round-trip via `<span data-bb-*>` carrier; preview renders a chip; name comes from the tag — no REST resolve). `[DISK File=id]` still passes through as literal text (special format). Styling tags `[color]`/`[size]`/`[font]` are **done** (via `<span style>` carrier).
 - Server-side handlers (`server/` deliberately absent).
 
 ## Conversion mapping
 See `README.md` § Конвертация for the full table. Key rules:
 - `[u]` ↔ `<u>` (Markdown has no native underline; HTML fallback).
 - `[color]`/`[size]`/`[font]` ↔ `<span style="color:… | font-size:…px | font-family:…">` (MD carries the span; `md-to-bbcode` parses the style back, `sanitize-html` allow-lists a few safe CSS props).
+- `[USER=id]`/`[DEPARTMENT=id]` ↔ `<span data-bb-user|data-bb-dept="id">Name</span>` (round-trip carrier; preview renders a chip via `.preview-html [data-bb-*]`).
 - `[code]` content is **literal** — no nested parsing.
 - `[*]` is self-closing; content of an item runs until next `[*]` or `[/list]`.
 - Autolink `<https://x>` ↔ `[url]https://x[/url]`; named link `[X](url)` ↔ `[url=url]X[/url]`.

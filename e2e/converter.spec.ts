@@ -76,6 +76,14 @@ test.describe('Bitrix styling tags', () => {
     await expect(span).toHaveText('красный')
     expect(await span.evaluate(el => getComputedStyle(el).color)).toBe('rgb(255, 0, 0)')
   })
+
+  test('[USER] mention renders as a chip in the preview', async ({ page }) => {
+    await page.goto('/')
+    const bb = page.locator('textarea').nth(1)
+    await bb.click()
+    await bb.fill('[USER=7]Ann[/USER]')
+    await expect(page.locator('.preview-html:visible [data-bb-user="7"]')).toHaveText('Ann')
+  })
 })
 
 test.describe('Bitrix24 task bar (standalone)', () => {

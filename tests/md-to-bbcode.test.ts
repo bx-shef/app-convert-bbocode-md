@@ -136,3 +136,19 @@ describe('mdToBbcode — span style → color/size/font', () => {
     expect(mdToBbcode('<span style="position:fixed">x</span>')).toBe('x')
   })
 })
+
+describe('mdToBbcode — entity mention spans', () => {
+  it('data-bb-user → [USER]', () => {
+    expect(mdToBbcode('<span data-bb-user="123">John</span>')).toBe('[USER=123]John[/USER]')
+  })
+  it('data-bb-dept → [DEPARTMENT]', () => {
+    expect(mdToBbcode('<span data-bb-dept="5">Sales</span>')).toBe('[DEPARTMENT=5]Sales[/DEPARTMENT]')
+  })
+  it('span with both mention and style keeps both', () => {
+    expect(mdToBbcode('<span style="color:red" data-bb-user="7">Ann</span>'))
+      .toBe('[USER=7][color=red]Ann[/color][/USER]')
+  })
+  it('empty mention id is dropped (no invalid [USER=])', () => {
+    expect(mdToBbcode('<span data-bb-user="">Ann</span>')).toBe('Ann')
+  })
+})

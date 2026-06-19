@@ -20,6 +20,12 @@ describe('convert — facade across formats (Markdown pivot)', () => {
   it('html span → bb color', () => {
     expect(convert('html', 'bb', '<span style="color:red">x</span>')).toBe('[color=red]x[/color]')
   })
+  it('bb user mention → html span', () => {
+    expect(convert('bb', 'html', '[USER=7]Ann[/USER]')).toBe('<p><span data-bb-user="7">Ann</span></p>')
+  })
+  it('html mention span → bb user', () => {
+    expect(convert('html', 'bb', '<span data-bb-user="7">Ann</span>')).toBe('[USER=7]Ann[/USER]')
+  })
   it('same format is identity', () => {
     expect(convert('md', 'md', '**x**')).toBe('**x**')
   })

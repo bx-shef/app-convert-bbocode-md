@@ -15,7 +15,9 @@ describe('roundtrip BBCode → MD → BBCode', () => {
     '[hr]',
     '[color=red]x[/color]',
     '[size=14]x[/size]',
-    '[font=Arial]x[/font]'
+    '[font=Arial]x[/font]',
+    '[USER=123]John[/USER]',
+    '[DEPARTMENT=5]Sales[/DEPARTMENT]'
   ]
   for (const c of cases) {
     it(`stable: ${c}`, () => {

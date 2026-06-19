@@ -121,3 +121,15 @@ describe('bbcodeToMd — color / size / font (→ <span style>)', () => {
     expect(bbcodeToMd('[color=red][b]x[/b][/color]')).toBe('<span style="color:red">**x**</span>')
   })
 })
+
+describe('bbcodeToMd — entity mentions (→ <span data-bb-*>)', () => {
+  it('user', () => {
+    expect(bbcodeToMd('[USER=123]John[/USER]')).toBe('<span data-bb-user="123">John</span>')
+  })
+  it('department', () => {
+    expect(bbcodeToMd('[DEPARTMENT=5]Sales[/DEPARTMENT]')).toBe('<span data-bb-dept="5">Sales</span>')
+  })
+  it('user without id → unwrapped', () => {
+    expect(bbcodeToMd('[USER]John[/USER]')).toBe('John')
+  })
+})
