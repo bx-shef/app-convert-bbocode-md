@@ -60,11 +60,17 @@ function attrOf(openTag: string, name: string): string | null {
  * `style` attribute yields `[color]`/`[size]`/`[font]`.
  */
 function parseSpan(openTag: string): { open: string, close: string }[] {
+  const tags: { open: string, close: string }[] = []
+  // Entity mentions first, then styles — a span may carry both (pasted HTML);
+  // empty ids are skipped (truthy check) so we never emit invalid `[USER=]`.
   const user = attrOf(openTag, 'data-bb-user')
-  if (user !== null) return [{ open: `[USER=${user}]`, close: '[/USER]' }]
+  if (user) tags.push({ open: `[USER=${user}]`, close: '[/USER]' })
   const dept = attrOf(openTag, 'data-bb-dept')
-  if (dept !== null) return [{ open: `[DEPARTMENT=${dept}]`, close: '[/DEPARTMENT]' }]
-  return parseSpanStyle(openTag).map(t => ({ open: `[${t.name}=${quoteIfNeeded(t.primary)}]`, close: `[/${t.name}]` }))
+  if (dept) tags.push({ open: `[DEPARTMENT=${dept}]`, close: '[/DEPARTMENT]' })
+  for (const t of parseSpanStyle(openTag)) {
+    tags.push({ open: `[${t.name}=${quoteIfNeeded(t.primary)}]`, close: `[/${t.name}]` })
+  }
+  return tags
 }
 
 /**
