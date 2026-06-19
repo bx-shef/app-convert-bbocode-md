@@ -113,3 +113,26 @@ describe('mdToBbcode — raw HTML does not leak', () => {
       .toBe('[table]\n[tr][th]A[/th][/tr]\n[tr][td]1[/td][/tr]\n[/table]')
   })
 })
+
+describe('mdToBbcode — span style → color/size/font', () => {
+  it('color', () => {
+    expect(mdToBbcode('<span style="color:red">x</span>')).toBe('[color=red]x[/color]')
+  })
+  it('font-size → [size]', () => {
+    expect(mdToBbcode('<span style="font-size:14px">x</span>')).toBe('[size=14]x[/size]')
+  })
+  it('font-family → [font]', () => {
+    expect(mdToBbcode('<span style="font-family:Arial">x</span>')).toBe('[font=Arial]x[/font]')
+  })
+  it('font-family with spaces → quoted', () => {
+    expect(mdToBbcode('<span style="font-family:Times New Roman">x</span>'))
+      .toBe('[font="Times New Roman"]x[/font]')
+  })
+  it('multiple styles nest, close in reverse', () => {
+    expect(mdToBbcode('<span style="color:red;font-size:14px">x</span>'))
+      .toBe('[color=red][size=14]x[/size][/color]')
+  })
+  it('span without recognized style is dropped (inner kept)', () => {
+    expect(mdToBbcode('<span style="position:fixed">x</span>')).toBe('x')
+  })
+})

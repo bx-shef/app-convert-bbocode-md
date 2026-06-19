@@ -17,7 +17,8 @@ const KNOWN_TAGS = new Set([
   'code', 'quote',
   'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
   'br', 'hr', 'p',
-  'table', 'tr', 'th', 'td'
+  'table', 'tr', 'th', 'td',
+  'color', 'size', 'font'
 ])
 
 const TAG_OPEN_RE = /^([a-zA-Z*][a-zA-Z0-9_*]*)(=("[^"]*"|'[^']*'|[^\s\]]+))?(\s+([^\]]+))?\/?$/

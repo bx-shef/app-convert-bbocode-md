@@ -97,3 +97,27 @@ describe('bbcodeToMd — basic tags', () => {
     expect(bbcodeToMd('[b]hi')).toBe('**hi**')
   })
 })
+
+describe('bbcodeToMd — color / size / font (→ <span style>)', () => {
+  it('color', () => {
+    expect(bbcodeToMd('[color=red]x[/color]')).toBe('<span style="color:red">x</span>')
+  })
+  it('color hex', () => {
+    expect(bbcodeToMd('[color=#ff0000]x[/color]')).toBe('<span style="color:#ff0000">x</span>')
+  })
+  it('size → px', () => {
+    expect(bbcodeToMd('[size=14]x[/size]')).toBe('<span style="font-size:14px">x</span>')
+  })
+  it('size non-numeric → unwrapped', () => {
+    expect(bbcodeToMd('[size=big]x[/size]')).toBe('x')
+  })
+  it('font', () => {
+    expect(bbcodeToMd('[font=Arial]x[/font]')).toBe('<span style="font-family:Arial">x</span>')
+  })
+  it('font with spaces (quoted)', () => {
+    expect(bbcodeToMd('[font="Times New Roman"]x[/font]')).toBe('<span style="font-family:Times New Roman">x</span>')
+  })
+  it('nested formatting inside color', () => {
+    expect(bbcodeToMd('[color=red][b]x[/b][/color]')).toBe('<span style="color:red">**x**</span>')
+  })
+})

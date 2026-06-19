@@ -58,6 +58,19 @@ function wrapInline(marker: string, inner: string): string {
   return `${m[1]}${marker}${m[2]}${marker}${m[3]}`
 }
 
+/** CSS declarations carried on a `<span>` (Bitrix [color]/[size]/[font]). */
+const SPAN_STYLE_PROPS = new Set(['color', 'font-size', 'font-family'])
+function filterSpanStyle(style: string): string {
+  return style
+    .split(';')
+    .map(d => d.trim().replace(/["<>]/g, ''))
+    .filter((d) => {
+      const i = d.indexOf(':')
+      return i > 0 && SPAN_STYLE_PROPS.has(d.slice(0, i).trim().toLowerCase())
+    })
+    .join('; ')
+}
+
 function renderNode(node: HNode): string {
   if (node.type === 'text') {
     return (node.data ?? '').replace(/\s+/g, ' ')
@@ -78,6 +91,12 @@ function renderNode(node: HNode): string {
     case 'u': {
       const c = inner()
       return c.trim() ? `<u>${c}</u>` : c
+    }
+    case 'span': {
+      // Preserve color/size/font styling as raw HTML so MD → BBCode can map it.
+      const style = filterSpanStyle(node.attribs?.style || '')
+      const c = inner()
+      return style && c.trim() ? `<span style="${style}">${c}</span>` : c
     }
     case 's':
     case 'strike':

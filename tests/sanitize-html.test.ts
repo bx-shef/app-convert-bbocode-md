@@ -46,4 +46,19 @@ describe('sanitizeHtml', () => {
   it('empty input', () => {
     expect(sanitizeHtml('')).toBe('')
   })
+
+  it('keeps span with safe style (color/size/font)', () => {
+    expect(sanitizeHtml('<span style="color:red">x</span>')).toBe('<span style="color:red">x</span>')
+    expect(sanitizeHtml('<span style="font-size:14px">x</span>')).toBe('<span style="font-size:14px">x</span>')
+  })
+
+  it('drops disallowed style props, keeps allowed ones', () => {
+    expect(sanitizeHtml('<span style="color:red;position:fixed">x</span>'))
+      .toBe('<span style="color:red">x</span>')
+  })
+
+  it('drops dangerous style values (url/expression) → span unwrapped', () => {
+    expect(sanitizeHtml('<span style="background-color:url(javascript:alert(1))">x</span>'))
+      .toBe('x')
+  })
 })

@@ -26,7 +26,30 @@ const ALLOWED: Record<string, Set<string>> = {
   h1: new Set(), h2: new Set(), h3: new Set(), h4: new Set(), h5: new Set(), h6: new Set(),
   br: new Set(), hr: new Set(), p: new Set(),
   table: new Set(), thead: new Set(), tbody: new Set(),
-  tr: new Set(), th: new Set(), td: new Set()
+  tr: new Set(), th: new Set(), td: new Set(),
+  span: new Set(['style'])
+}
+
+/** CSS properties allowed in a sanitized `style` attribute (Bitrix [color]/[size]/[font]). */
+const STYLE_PROPS = new Set([
+  'color', 'background-color', 'font-size', 'font-family', 'font-weight', 'font-style', 'text-align', 'text-decoration'
+])
+
+/** Keep only allow-listed, value-safe CSS declarations; drop the rest. */
+function sanitizeStyle(value: string): string {
+  return value
+    .split(';')
+    .map((decl) => {
+      const idx = decl.indexOf(':')
+      if (idx < 0) return ''
+      const prop = decl.slice(0, idx).trim().toLowerCase()
+      const val = decl.slice(idx + 1).trim()
+      if (!STYLE_PROPS.has(prop) || !val) return ''
+      if (/url\(|expression|[<>"]|[a-z]+:/i.test(val)) return '' // no url()/scheme/expression/markup
+      return `${prop}:${val}`
+    })
+    .filter(Boolean)
+    .join('; ')
 }
 
 /** Elements that never have a closing tag. */
@@ -60,6 +83,8 @@ export function sanitizeHtml(input: string): string {
   let out = ''
   // Number of currently-open ancestors whose whole content must be dropped.
   let dropDepth = 0
+  // Per-open-<span> flag: true = unwrapped (no surviving style), skip its close.
+  const spanStack: boolean[] = []
 
   const parser = new Parser({
     onopentag(name, attribs) {
@@ -77,7 +102,17 @@ export function sanitizeHtml(input: string): string {
         const key = rawKey.toLowerCase()
         if (!allowedAttrs.has(key)) continue
         if ((key === 'href' || key === 'src') && !isSafeUrl(rawVal)) continue
+        if (key === 'style') {
+          const safe = sanitizeStyle(rawVal)
+          if (safe) attrStr += ` style="${escapeAttr(safe)}"`
+          continue
+        }
         attrStr += ` ${key}="${escapeAttr(rawVal)}"`
+      }
+      // A <span> with no surviving style is noise — unwrap it (keep its text).
+      if (tag === 'span') {
+        spanStack.push(!attrStr)
+        if (!attrStr) return
       }
       out += `<${tag}${attrStr}>`
     },
@@ -92,6 +127,11 @@ export function sanitizeHtml(input: string): string {
         return
       }
       if (dropDepth > 0) return
+      if (tag === 'span') {
+        if (spanStack.pop()) return // was unwrapped at open
+        out += '</span>'
+        return
+      }
       if (!ALLOWED[tag] || VOID.has(tag)) return
       out += `</${tag}>`
     }
