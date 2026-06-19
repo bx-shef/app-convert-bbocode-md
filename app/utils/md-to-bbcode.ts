@@ -1,4 +1,23 @@
 import MarkdownIt from 'markdown-it'
+import { htmlToMd } from './html-to-md'
+
+/**
+ * Common inline raw-HTML tags users paste into Markdown, mapped to BBCode so
+ * they do not leak through untranslated. `<u>` is the underline fallback this
+ * converter itself emits; the rest are convenience.
+ */
+const INLINE_HTML_MAP: Record<string, string> = {
+  '<u>': '[u]', '</u>': '[/u]',
+  '<b>': '[b]', '</b>': '[/b]', '<strong>': '[b]', '</strong>': '[/b]',
+  '<i>': '[i]', '</i>': '[/i]', '<em>': '[i]', '</em>': '[/i]',
+  '<s>': '[s]', '</s>': '[/s]', '<del>': '[s]', '</del>': '[/s]', '<strike>': '[s]', '</strike>': '[/s]',
+  '<br>': '\n', '<br/>': '\n', '<br />': '\n'
+}
+
+function mapInlineHtml(raw: string): string {
+  const key = raw.trim().toLowerCase()
+  return key in INLINE_HTML_MAP ? INLINE_HTML_MAP[key]! : raw
+}
 
 type Token = ReturnType<MarkdownIt['parse']>[number]
 
@@ -90,7 +109,10 @@ function renderToken(tk: Token): string {
     case 'blockquote_close':
       return '[/quote]\n'
     case 'html_block':
-      return tk.content
+      // Block-level raw HTML (pasted <ul>, <table>, <div>…): route it through
+      // the HTML→MD→BBCode pipeline instead of leaking the markup. (chatMode is
+      // not propagated here — block HTML tables are a rare edge.)
+      return tk.content.trim() ? mdToBbcode(htmlToMd(tk.content)) : ''
     default:
       return ''
   }
@@ -134,12 +156,8 @@ function renderInlineToken(tk: Token): string {
       const src = tk.attrGet('src') || ''
       return `[img]${src}[/img]`
     }
-    case 'html_inline': {
-      const c = tk.content.toLowerCase()
-      if (c === '<u>') return '[u]'
-      if (c === '</u>') return '[/u]'
-      return tk.content
-    }
+    case 'html_inline':
+      return mapInlineHtml(tk.content)
     default:
       return ''
   }

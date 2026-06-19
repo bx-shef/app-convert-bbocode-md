@@ -1,4 +1,6 @@
-# BBCode ↔ Markdown converter for Bitrix24
+# BBCode ↔ Markdown ↔ HTML converter for Bitrix24
+
+> Last reviewed: 2026-06-19
 
 [![CI](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/ci.yml/badge.svg)](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/ci.yml)
 [![Deploy GitHub Pages](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/deploy.yml/badge.svg)](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/deploy.yml)
@@ -6,24 +8,25 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Bitrix24 UI](https://img.shields.io/badge/Made%20with-Bitrix24%20UI-2fc6f6?logo=bitrix24&labelColor=020420)](https://bitrix24.github.io/b24ui/)
 
-Двусторонний live-конвертер BBCode (диалект Bitrix24) ↔ Markdown. Запускается как placement-приложение в портале Bitrix24 либо как обычный SPA в браузере.
+Live-конвертер BBCode (диалект Bitrix24) ⇄ Markdown ⇄ HTML с живым превью. Запускается как placement-приложение в портале Bitrix24 либо как обычный SPA в браузере.
 
 ```
-┌─────────────────────────────┬─────────────────────────────┐
-│           BBCode            │           Markdown           │
-│  [b]Hello[/b]               │  **Hello**                   │
-│  [list][*]a[*]b[/list]      │  - a                         │
-│                             │  - b                         │
-└─────────────────────────────┴─────────────────────────────┘
+┌──────────────┬──────────────┬──────────────┬──────────────┐
+│   Markdown   │    BBCode    │     HTML     │   Превью     │
+│  **Hello**   │ [b]Hello[/b] │ <strong>…    │  Hello       │
+└──────────────┴──────────────┴──────────────┴──────────────┘
 ```
 
 ## Возможности
-- **Двунаправленная live-конвертация** — правка слева пересчитывает справа и наоборот, с защитой от циклов.
-- **Поддерживаемые теги (базовый набор Bitrix24):** `b, i, u, s, url, img, list (+[*], [list=1]), code (+lang), quote, h1-h6, br, hr, p`.
-- **Bitrix24 UI Kit** — нативный вид внутри портала.
-- **Готовая install-страница** для регистрации приложения как placement (сейчас mock-flow без серверной части — расширим позже).
-- **i18n** — 19 локалей унаследованы из шаблона `bitrix24/templates-dashboard`.
-- **Юнит-тесты** на vitest для конвертера в обе стороны и roundtrip.
+- **Трёхсторонняя live-конвертация** — BBCode ⇄ Markdown ⇄ HTML; правка любого формата пересчитывает остальные (pivot = Markdown), с защитой от циклов.
+- **Живое превью** — отрендеренный (и санитизированный) результат рядом с исходниками.
+- **Поддерживаемые теги (базовый набор Bitrix24):** `b, i, u, s, url, img, list (+[*], [list=1]), code (+lang), quote, h1-h6, br, hr, p, table (tr/th/td)`.
+- **Вставленный raw-HTML не протекает** — инлайн (`<b>/<i>/<s>/<u>/<br>`) и блочный (`<ul>`, `<table>`, …) HTML конвертируется в BBCode, а не вставляется как текст.
+- **Печать** — Markdown → готовый к печати HTML-документ через скрытый iframe (`<u>` печатается, `<script>` вырезается санитайзером).
+- **Bitrix24 UI Kit** — нативный вид внутри портала; виджет `IM_TEXTAREA` для вставки в чат.
+- **Готовая install-страница** для регистрации приложения как placement (mock-flow без серверной части).
+- **i18n** — 19 локалей (EN+RU поддерживаются вручную, остальные — fallback на EN + `pnpm translate-ui`).
+- **Юнит-тесты** — 152 теста на vitest (обе стороны, HTML, санитайзер, roundtrip).
 - **Развёртывание из коробки** — единый CLI `pnpm run deploy <gh-pages|docker>` плюс готовые GitHub Actions: статический хостинг на GitHub Pages и Docker-образ в GHCR (nginx + SPA-фоллбэк, `docker compose pull && up -d` на вашем сервере).
 
 ## Стек
@@ -31,7 +34,8 @@
 - [Vue 3](https://vuejs.org)
 - [@bitrix24/b24ui-nuxt](https://bitrix24.github.io/b24ui/) — компоненты
 - [@bitrix24/b24jssdk-nuxt](https://bitrix24.github.io/b24jssdk/) — JS SDK Bitrix24 (инициализация; REST-вызовы — следующий этап)
-- [markdown-it](https://github.com/markdown-it/markdown-it) — парсер Markdown
+- [markdown-it](https://github.com/markdown-it/markdown-it) — парсер/рендер Markdown
+- [htmlparser2](https://github.com/fb55/htmlparser2) — парсинг HTML→MD и алло-листный санитайзер (node-native, без DOM)
 - Собственный парсер BBCode (`app/utils/bbcode-parser.ts`) — лёгкий, без зависимостей
 - [vitest](https://vitest.dev) — тесты
 - [@nuxtjs/i18n](https://i18n.nuxtjs.org) — локализация
@@ -55,20 +59,27 @@ pnpm lint         # eslint
 ```
 app/
 ├── pages/
-│   ├── index.vue        # two-pane converter UI
-│   └── install.vue      # Bitrix24 placement install flow
+│   ├── index.vue               # converter UI
+│   ├── install.vue             # Bitrix24 placement install flow
+│   └── widget/im-textarea.vue  # IM_TEXTAREA placement widget
 ├── utils/
-│   ├── bbcode-parser.ts # parser → AST
-│   ├── bbcode-to-md.ts  # AST → Markdown
-│   └── md-to-bbcode.ts  # markdown-it tokens → BBCode
+│   ├── bbcode-parser.ts        # BBCode → AST
+│   ├── bbcode-to-md.ts         # AST → Markdown
+│   ├── md-to-bbcode.ts         # markdown-it tokens → BBCode (+ raw-HTML maps)
+│   ├── md-to-html.ts           # Markdown → HTML fragment
+│   ├── html-to-md.ts           # HTML → Markdown (htmlparser2)
+│   ├── sanitize-html.ts        # allow-list HTML sanitizer
+│   ├── convert.ts              # facade over the Markdown pivot
+│   └── md-to-print-html.ts     # Markdown → print-ready HTML
 ├── composables/
-│   ├── useConverter.ts  # реактивная двусторонняя конвертация
-│   └── useB24.ts        # JSSdk init wrapper
-├── layouts/             # default + clear (для install)
-├── components/          # AppLogo, AppTitle, UserMenu
-└── app.vue              # init B24, SEO, locale
-i18n/locales/            # 19 локалей
-tests/                   # vitest
+│   ├── useConverter.ts         # реактивная 3-сторонняя конвертация + превью
+│   ├── usePrint.ts             # печать рендера через скрытый iframe
+│   └── useB24.ts               # JSSdk init wrapper
+├── layouts/                    # clear (index/install) + widget
+├── components/                 # AppLogo, ConverterPane
+└── app.vue                     # init B24, SEO, locale
+i18n/locales/                   # 19 локалей
+tests/                          # vitest
 ```
 
 ## Конвертация — таблица маппинга
@@ -247,7 +258,7 @@ make restart # down + up
 | **Application URL** | `https://convert-bbocode-md.bx-shef.by` |
 | **Installation URL** | `https://convert-bbocode-md.bx-shef.by/install` |
 | **Назначение** | iframe-приложение |
-| **Скоупы** | `user_brief`, `im`, `imopenlines` (для `IM_TEXTAREA`-виджета) + задел: `crm`, `tasks`, `entity` |
+| **Скоупы** | `user_brief`, `im`, `placement` (см. `getRequiredRights()` в `useB24.ts`) |
 
 После сохранения нажать **«Установить»** — портал откроет страницу `/install`, она:
 1. инициализирует JSSDK,

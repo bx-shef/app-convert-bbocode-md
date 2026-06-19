@@ -22,7 +22,10 @@
         "chatMode": "Режим чата",
         "chatModeHint": "Превращать таблицы в маркированный список (чат Bitrix24 не поддерживает [table]).",
         "bbcodePlaceholder": "Вставьте BBCode Bitrix24 сюда…",
-        "markdownPlaceholder": "Вставьте Markdown сюда…"
+        "markdownPlaceholder": "Вставьте Markdown сюда…",
+        "htmlPlaceholder": "Вставьте HTML сюда…",
+        "preview": "Превью",
+        "previewEmpty": "Здесь появится отрендеренный результат"
       },
       "mode": {
         "b24": "Внутри Bitrix24",
@@ -56,20 +59,6 @@
         "insertFailed": "Не удалось вставить",
         "printFailed": "Не удалось распечатать",
         "notInFrame": "Запущено вне Bitrix24"
-      },
-      "keyboard": {
-        "seo": { "title": "Быстрые команды" },
-        "greeting": "Привет! Я — AI-SALE",
-        "hint": "Выберите команду для вставки в чат",
-        "inserted": "Команда вставлена",
-        "insertFailed": "Не удалось вставить",
-        "notInFrame": "Запущено вне Bitrix24",
-        "commands": {
-          "cmd1": "Команда 1",
-          "cmd2": "Команда 2",
-          "cmd3": "Команда 3",
-          "cmd4": "Команда 4"
-        }
       }
     },
     "install": {
@@ -94,23 +83,8 @@
         "init": {
           "caption": "Нужно немного подождать..."
         },
-        "demo": {
-          "caption": "Примеры..."
-        },
-        "events": {
-          "caption": "События..."
-        },
         "placement": {
           "caption": "Виджеты..."
-        },
-        "userFields": {
-          "caption": "Uf..."
-        },
-        "crm": {
-          "caption": "CRM..."
-        },
-        "serverSide": {
-          "caption": "Серверные скрипты..."
         },
         "finish": {
           "caption": "Завершение"

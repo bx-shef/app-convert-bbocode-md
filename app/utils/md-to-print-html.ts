@@ -1,10 +1,9 @@
-import MarkdownIt from 'markdown-it'
+import { mdToHtml } from './md-to-html'
+import { sanitizeHtml } from './sanitize-html'
 
 export interface MdToPrintHtmlOptions {
   title?: string
 }
-
-const md = new MarkdownIt({ html: false, linkify: true, breaks: false, typographer: false })
 
 const PRINT_CSS = `
   *,*::before,*::after { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -63,9 +62,15 @@ const PRINT_CSS = `
   }
 `
 
+/**
+ * Render Markdown to a standalone, print-ready HTML document.
+ *
+ * The body shares the canonical `mdToHtml` renderer (so `<u>` and other safe
+ * inline HTML print correctly) and is run through `sanitizeHtml`, which strips
+ * `<script>` and other dangerous markup before it reaches the print iframe.
+ */
 export function mdToPrintHtml(input: string, options: MdToPrintHtmlOptions = {}): string {
-  const normalized = input ? normalizeListIndent(input) : ''
-  const body = normalized ? md.render(normalized) : ''
+  const body = input ? sanitizeHtml(mdToHtml(input)) : ''
   const title = escapeHtml(options.title ?? 'Document')
   return `<!DOCTYPE html>
 <html lang="en">
@@ -79,15 +84,6 @@ export function mdToPrintHtml(input: string, options: MdToPrintHtmlOptions = {})
 ${body}
 </body>
 </html>`
-}
-
-/**
- * CommonMark requires 3-space indent for nesting under an ordered-list item
- * like `1. `, but many users intuitively use 2. Promote 2-space indent on list
- * markers to 3 so nested lists render as expected.
- */
-function normalizeListIndent(md: string): string {
-  return md.replace(/^( {2})([-*+] |\d+\. )/gm, '   $2')
 }
 
 function escapeHtml(s: string): string {
