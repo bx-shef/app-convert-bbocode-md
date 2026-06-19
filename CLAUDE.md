@@ -16,7 +16,8 @@ Nuxt 4 SPA placement for Bitrix24 that converts Bitrix24 BBCode ↔ Markdown.
 - pnpm 10
 
 ## Architecture
-- `app/pages/index.vue` — two-pane editor (BBCode ⇄ Markdown).
+- `app/pages/index.vue` — three-format editor (Markdown / BBCode / HTML) + live preview; 2×2 panes on desktop (md+), tabs on mobile. Theme toggle + credits footer only standalone.
+- `app/components/ConverterPane.vue` — pane shell (label row + action-button slot + content slot).
 - `app/pages/install.vue` — Bitrix24 placement install flow. Mock-mode when not in B24 frame. **Do not break** — needed for future deployment.
 - `app/utils/bbcode-parser.ts` — pure recursive-descent parser → `BBNode[]` AST.
 - `app/utils/bbcode-to-md.ts` — pure fn AST → Markdown string.
@@ -25,7 +26,7 @@ Nuxt 4 SPA placement for Bitrix24 that converts Bitrix24 BBCode ↔ Markdown.
 - `app/utils/html-to-md.ts` — pure fn HTML → MD (`htmlparser2`); forgiving, mirrors `bbcode-to-md` conventions.
 - `app/utils/sanitize-html.ts` — allow-list HTML sanitizer; run before any HTML reaches the DOM (preview/print).
 - `app/utils/convert.ts` — facade: `toMarkdown` / `fromMarkdown` / `convert(from,to)` over the MD pivot.
-- `app/composables/useConverter.ts` — reactive bidirectional sync; uses `lastEdited` ('bb' | 'md' | null) guard to prevent infinite watch loops; `useDebounceFn` 150ms.
+- `app/composables/useConverter.ts` — reactive three-way sync (bb/md/html) over the MD pivot; `preview` = sanitized rendered HTML; `lastEdited` ('bb' | 'md' | 'html' | null) guard prevents watch loops; `useDebounceFn` 150ms.
 - `app/composables/useB24.ts` — JSSdk init wrapper (called from `app.vue` and `install.vue`). Module-level `$b24` singleton.
 - `app/pages/widget/im-textarea.vue` — `IM_TEXTAREA` placement widget: load chat text → MD, edit, send MD→BBCode back to the chat input.
 - `app/composables/usePrint.ts` + `app/utils/md-to-print-html.ts` — render Markdown to a print-ready HTML document (hidden iframe → `window.print()`).

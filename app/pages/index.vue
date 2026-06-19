@@ -10,6 +10,7 @@ import BroomIcon from '@bitrix24/b24icons-vue/outline/BroomIcon'
 import CopyIcon from '@bitrix24/b24icons-vue/outline/CopyIcon'
 import CheckLIcon from '@bitrix24/b24icons-vue/outline/CheckLIcon'
 import PrinterIcon from '@bitrix24/b24icons-vue/outline/PrinterIcon'
+import GitHubIcon from '@bitrix24/b24icons-vue/social/GitHubIcon'
 
 definePageMeta({ layout: 'clear' })
 
@@ -21,14 +22,26 @@ const isUseB24 = computed<boolean>(() => b24Instance.isInit())
 const requiredScopes = b24Instance.getRequiredRights()
 const localeOptions = computed(() => localesI18n.value.map(l => ({ label: l.name ?? l.code, value: l.code })))
 
-const { bbcode, markdown, settings, setBb, setMd, clear } = useConverter()
+const { bbcode, markdown, html, preview, settings, setBb, setMd, setHtml, clear } = useConverter()
 
 const { copy, copied, isSupported: clipboardSupported } = useClipboard({ legacy: true, copiedDuring: 1500 })
 const { printMarkdown } = usePrint()
 
+const currentYear = new Date().getFullYear()
+
+// The three editable formats. Markdown carries the print action (it is the
+// canonical document the preview/print are rendered from).
+const editablePanes = [
+  { key: 'md', label: 'Markdown', model: markdown, set: setMd, placeholderKey: 'markdownPlaceholder', canPrint: true },
+  { key: 'bb', label: 'BBCode', model: bbcode, set: setBb, placeholderKey: 'bbcodePlaceholder', canPrint: false },
+  { key: 'html', label: 'HTML', model: html, set: setHtml, placeholderKey: 'htmlPlaceholder', canPrint: false }
+] as const
+
 const tabItems = computed<TabsItem[]>(() => [
   { label: 'Markdown', value: 'md', slot: 'md' },
-  { label: 'BBCode', value: 'bb', slot: 'bb' }
+  { label: 'BBCode', value: 'bb', slot: 'bb' },
+  { label: 'HTML', value: 'html', slot: 'html' },
+  { label: t('page.index.ui.preview'), value: 'preview', slot: 'preview' }
 ])
 
 useHead({ title: t('page.index.seo.title') })
@@ -101,6 +114,8 @@ useEventListener('keydown', (e: KeyboardEvent) => {
             class="min-w-32"
             @update:model-value="(v) => setLocale(v as never)"
           />
+          <!-- Theme toggle only standalone: inside B24 the theme follows the portal. -->
+          <B24ColorModeButton v-if="!isUseB24" size="sm" />
           <B24Button
             size="sm"
             color="air-secondary"
@@ -123,58 +138,62 @@ useEventListener('keydown', (e: KeyboardEvent) => {
     </template>
 
     <template #body>
-      <!-- Desktop: two-pane grid -->
-      <div class="hidden md:grid grid-cols-2 gap-4 h-full">
-        <div class="flex flex-col gap-2 min-h-0">
-          <div class="flex items-center justify-between">
-            <label class="font-semibold text-(--ui-color-base-1)">Markdown</label>
-            <div class="flex items-center gap-2">
-              <B24Button
-                size="xs"
-                color="air-tertiary-no-accent"
-                :icon="PrinterIcon"
-                :label="t('page.index.ui.print')"
-                :disabled="!markdown"
-                @click="printText(markdown)"
-              />
-              <B24Button
-                size="xs"
-                color="air-tertiary-no-accent"
-                :icon="copied ? CheckLIcon : CopyIcon"
-                :label="t('page.index.ui.copy')"
-                :disabled="!markdown || !clipboardSupported"
-                @click="copyText(markdown)"
-              />
-            </div>
-          </div>
-          <B24Textarea
-            :model-value="markdown"
-            class="flex-1 font-mono text-sm [&_textarea]:h-full [&_textarea]:resize-none"
-            :rows="20"
-            :placeholder="t('page.index.ui.markdownPlaceholder')"
-            @update:model-value="(v: string | number) => setMd(String(v))"
-          />
-        </div>
-        <div class="flex flex-col gap-2 min-h-0">
-          <div class="flex items-center justify-between">
-            <label class="font-semibold text-(--ui-color-base-1)">BBCode</label>
+      <!-- Desktop: 2×2 panes — Markdown / BBCode / HTML / Preview -->
+      <div class="hidden md:grid grid-cols-2 gap-4">
+        <ConverterPane
+          v-for="pane in editablePanes"
+          :key="pane.key"
+          :label="pane.label"
+        >
+          <template #actions>
+            <B24Button
+              v-if="pane.canPrint"
+              size="xs"
+              color="air-tertiary-no-accent"
+              :icon="PrinterIcon"
+              :label="t('page.index.ui.print')"
+              :disabled="!markdown"
+              @click="printText(markdown)"
+            />
             <B24Button
               size="xs"
               color="air-tertiary-no-accent"
               :icon="copied ? CheckLIcon : CopyIcon"
               :label="t('page.index.ui.copy')"
-              :disabled="!bbcode || !clipboardSupported"
-              @click="copyText(bbcode)"
+              :disabled="!pane.model.value || !clipboardSupported"
+              @click="copyText(pane.model.value)"
             />
-          </div>
+          </template>
           <B24Textarea
-            :model-value="bbcode"
-            class="flex-1 font-mono text-sm [&_textarea]:h-full [&_textarea]:resize-none"
-            :rows="20"
-            :placeholder="t('page.index.ui.bbcodePlaceholder')"
-            @update:model-value="(v: string | number) => setBb(String(v))"
+            :model-value="pane.model.value"
+            class="font-mono text-sm [&_textarea]:resize-none"
+            :rows="12"
+            :placeholder="t(`page.index.ui.${pane.placeholderKey}`)"
+            @update:model-value="(v: string | number) => pane.set(String(v))"
           />
-        </div>
+        </ConverterPane>
+
+        <ConverterPane :label="t('page.index.ui.preview')">
+          <template #actions>
+            <B24Button
+              size="xs"
+              color="air-tertiary-no-accent"
+              :icon="PrinterIcon"
+              :label="t('page.index.ui.print')"
+              :disabled="!markdown"
+              @click="printText(markdown)"
+            />
+          </template>
+          <!-- preview is sanitized in useConverter → safe to render -->
+          <!-- eslint-disable-next-line vue/no-v-html -->
+          <div v-if="preview" class="preview-html min-h-[18rem] overflow-auto rounded-md border border-gray-200 p-3 text-sm dark:border-white/10" v-html="preview" />
+          <div
+            v-else
+            class="min-h-[18rem] rounded-md border border-gray-200 p-3 text-sm text-(--ui-color-base-4) dark:border-white/10"
+          >
+            {{ t('page.index.ui.previewEmpty') }}
+          </div>
+        </ConverterPane>
       </div>
 
       <!-- Setup instructions (hidden inside Bitrix24 placement to keep UI clean there) -->
@@ -238,8 +257,8 @@ useEventListener('keydown', (e: KeyboardEvent) => {
         :b24ui="{ root: 'h-full', content: 'flex-1 min-h-0 mt-2' }"
       >
         <template #md>
-          <div class="flex flex-col gap-2 h-full min-h-[60vh]">
-            <div class="flex items-center justify-end gap-2">
+          <ConverterPane label="Markdown" class="h-full min-h-[60vh]">
+            <template #actions>
               <B24Button
                 size="xs"
                 color="air-tertiary-no-accent"
@@ -256,7 +275,7 @@ useEventListener('keydown', (e: KeyboardEvent) => {
                 :disabled="!markdown || !clipboardSupported"
                 @click="copyText(markdown)"
               />
-            </div>
+            </template>
             <B24Textarea
               :model-value="markdown"
               class="flex-1 font-mono text-sm [&_textarea]:h-full [&_textarea]:resize-none"
@@ -264,11 +283,11 @@ useEventListener('keydown', (e: KeyboardEvent) => {
               :placeholder="t('page.index.ui.markdownPlaceholder')"
               @update:model-value="(v: string | number) => setMd(String(v))"
             />
-          </div>
+          </ConverterPane>
         </template>
         <template #bb>
-          <div class="flex flex-col gap-2 h-full min-h-[60vh]">
-            <div class="flex items-center justify-end">
+          <ConverterPane label="BBCode" class="h-full min-h-[60vh]">
+            <template #actions>
               <B24Button
                 size="xs"
                 color="air-tertiary-no-accent"
@@ -277,7 +296,7 @@ useEventListener('keydown', (e: KeyboardEvent) => {
                 :disabled="!bbcode || !clipboardSupported"
                 @click="copyText(bbcode)"
               />
-            </div>
+            </template>
             <B24Textarea
               :model-value="bbcode"
               class="flex-1 font-mono text-sm [&_textarea]:h-full [&_textarea]:resize-none"
@@ -285,9 +304,73 @@ useEventListener('keydown', (e: KeyboardEvent) => {
               :placeholder="t('page.index.ui.bbcodePlaceholder')"
               @update:model-value="(v: string | number) => setBb(String(v))"
             />
-          </div>
+          </ConverterPane>
+        </template>
+        <template #html>
+          <ConverterPane label="HTML" class="h-full min-h-[60vh]">
+            <template #actions>
+              <B24Button
+                size="xs"
+                color="air-tertiary-no-accent"
+                :icon="copied ? CheckLIcon : CopyIcon"
+                :label="t('page.index.ui.copy')"
+                :disabled="!html || !clipboardSupported"
+                @click="copyText(html)"
+              />
+            </template>
+            <B24Textarea
+              :model-value="html"
+              class="flex-1 font-mono text-sm [&_textarea]:h-full [&_textarea]:resize-none"
+              :rows="14"
+              :placeholder="t('page.index.ui.htmlPlaceholder')"
+              @update:model-value="(v: string | number) => setHtml(String(v))"
+            />
+          </ConverterPane>
+        </template>
+        <template #preview>
+          <ConverterPane :label="t('page.index.ui.preview')" class="h-full min-h-[60vh]">
+            <template #actions>
+              <B24Button
+                size="xs"
+                color="air-tertiary-no-accent"
+                :icon="PrinterIcon"
+                :label="t('page.index.ui.print')"
+                :disabled="!markdown"
+                @click="printText(markdown)"
+              />
+            </template>
+            <!-- eslint-disable-next-line vue/no-v-html -->
+            <div v-if="preview" class="preview-html flex-1 min-h-0 overflow-auto rounded-md border border-gray-200 p-3 text-sm dark:border-white/10" v-html="preview" />
+            <div
+              v-else
+              class="flex-1 min-h-0 rounded-md border border-gray-200 p-3 text-sm text-(--ui-color-base-4) dark:border-white/10"
+            >
+              {{ t('page.index.ui.previewEmpty') }}
+            </div>
+          </ConverterPane>
         </template>
       </B24Tabs>
+    </template>
+
+    <!-- Standalone footer — credits + links, unified with the currency-converter sibling app -->
+    <template v-if="!isUseB24" #footer>
+      <nav class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 px-4 py-2 text-xs text-(--ui-color-base-4)">
+        <span>© {{ currentYear }} ИП Шевчик И. С</span>
+        <a
+          href="https://offer.bx-shef.by/"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="hover:underline"
+        >offer.bx-shef.by</a>
+        <a
+          href="https://github.com/bx-shef/app-convert-bbocode-md"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-1 hover:underline"
+        >
+          <GitHubIcon class="size-3.5" />GitHub
+        </a>
+      </nav>
     </template>
   </B24DashboardPanel>
 </template>

@@ -22,7 +22,10 @@
         "chatMode": "Режим чата",
         "chatModeHint": "Превращать таблицы в маркированный список (чат Bitrix24 не поддерживает [table]).",
         "bbcodePlaceholder": "Вставьте BBCode Bitrix24 сюда…",
-        "markdownPlaceholder": "Вставьте Markdown сюда…"
+        "markdownPlaceholder": "Вставьте Markdown сюда…",
+        "htmlPlaceholder": "Вставьте HTML сюда…",
+        "preview": "Превью",
+        "previewEmpty": "Здесь появится отрендеренный результат"
       },
       "mode": {
         "b24": "Внутри Bitrix24",

@@ -22,7 +22,10 @@
         "chatMode": "Chat mode",
         "chatModeHint": "Render tables as bullet lists (Bitrix24 chat does not support [table]).",
         "bbcodePlaceholder": "Paste Bitrix24 BBCode here…",
-        "markdownPlaceholder": "Paste Markdown here…"
+        "markdownPlaceholder": "Paste Markdown here…",
+        "htmlPlaceholder": "Paste HTML here…",
+        "preview": "Preview",
+        "previewEmpty": "Rendered output appears here"
       },
       "mode": {
         "b24": "Inside Bitrix24",
