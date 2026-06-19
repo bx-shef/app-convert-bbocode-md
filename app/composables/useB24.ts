@@ -116,7 +116,8 @@ export const useB24 = () => {
     return [
       'user_brief',
       'im',
-      'placement'
+      'placement',
+      'task'
     ]
   }
 

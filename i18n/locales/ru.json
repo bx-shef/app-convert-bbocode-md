@@ -44,6 +44,16 @@
         "selfHostReadme": "Подробные инструкции — в",
         "selfHostOption1": "GitHub Pages — одной кнопкой через встроенный GitHub Actions workflow.",
         "selfHostOption2": "Docker — multi-stage образ в GHCR + docker compose на твоём сервере (nginx + SPA-фоллбэк)."
+      },
+      "b24": {
+        "task": "Задача",
+        "taskIdPlaceholder": "ID",
+        "load": "Загрузить",
+        "save": "Сохранить",
+        "loaded": "Загружена задача #{id}",
+        "saved": "Сохранена задача #{id}",
+        "loadFailed": "Не удалось загрузить задачу",
+        "saveFailed": "Не удалось сохранить задачу"
       }
     },
     "widget": {

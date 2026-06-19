@@ -44,6 +44,16 @@
         "selfHostReadme": "Full instructions are in the",
         "selfHostOption1": "GitHub Pages — one-click via the bundled GitHub Actions workflow.",
         "selfHostOption2": "Docker — multi-stage image in GHCR + docker compose on your server (nginx + SPA fallback)."
+      },
+      "b24": {
+        "task": "Task",
+        "taskIdPlaceholder": "ID",
+        "load": "Load",
+        "save": "Save",
+        "loaded": "Loaded task #{id}",
+        "saved": "Saved task #{id}",
+        "loadFailed": "Failed to load task",
+        "saveFailed": "Failed to save task"
       }
     },
     "widget": {

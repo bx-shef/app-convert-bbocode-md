@@ -23,6 +23,7 @@ Live-конвертер BBCode (диалект Bitrix24) ⇄ Markdown ⇄ HTML �
 - **Поддерживаемые теги (базовый набор Bitrix24):** `b, i, u, s, url, img, list (+[*], [list=1]), code (+lang), quote, h1-h6, br, hr, p, table (tr/th/td)`.
 - **Вставленный raw-HTML не протекает** — инлайн (`<b>/<i>/<s>/<u>/<br>`) и блочный (`<ul>`, `<table>`, …) HTML конвертируется в BBCode, а не вставляется как текст.
 - **Печать** — Markdown → готовый к печати HTML-документ через скрытый iframe (`<u>` печатается, `<script>` вырезается санитайзером).
+- **Bitrix24 REST (задачи)** — загрузка описания задачи в редактор и сохранение обратно (BBCode/HTML ↔ MD) прямо из тулбара (`useB24Rest`, `actions.v2`). Вне портала — демо-уведомление.
 - **Bitrix24 UI Kit** — нативный вид внутри портала; виджет `IM_TEXTAREA` для вставки в чат.
 - **Готовая install-страница** для регистрации приложения как placement (mock-flow без серверной части).
 - **i18n** — 19 локалей (EN+RU поддерживаются вручную, остальные — fallback на EN + `pnpm translate-ui`).
@@ -33,7 +34,7 @@ Live-конвертер BBCode (диалект Bitrix24) ⇄ Markdown ⇄ HTML �
 - [Nuxt 4](https://nuxt.com)
 - [Vue 3](https://vuejs.org)
 - [@bitrix24/b24ui-nuxt](https://bitrix24.github.io/b24ui/) — компоненты
-- [@bitrix24/b24jssdk-nuxt](https://bitrix24.github.io/b24jssdk/) — JS SDK Bitrix24 (инициализация; REST-вызовы — следующий этап)
+- [@bitrix24/b24jssdk-nuxt](https://bitrix24.github.io/b24jssdk/) — JS SDK Bitrix24 (инициализация + REST задач через `actions.v2`)
 - [markdown-it](https://github.com/markdown-it/markdown-it) — парсер/рендер Markdown
 - [htmlparser2](https://github.com/fb55/htmlparser2) — парсинг HTML→MD и алло-листный санитайзер (node-native, без DOM)
 - Собственный парсер BBCode (`app/utils/bbcode-parser.ts`) — лёгкий, без зависимостей
@@ -70,11 +71,13 @@ app/
 │   ├── html-to-md.ts           # HTML → Markdown (htmlparser2)
 │   ├── sanitize-html.ts        # allow-list HTML sanitizer
 │   ├── convert.ts              # facade over the Markdown pivot
+│   ├── b24-entity.ts           # task description ↔ MD (pure)
 │   └── md-to-print-html.ts     # Markdown → print-ready HTML
 ├── composables/
 │   ├── useConverter.ts         # реактивная 3-сторонняя конвертация + превью
 │   ├── usePrint.ts             # печать рендера через скрытый iframe
-│   └── useB24.ts               # JSSdk init wrapper
+│   ├── useB24.ts               # JSSdk init wrapper
+│   └── useB24Rest.ts           # REST задач (actions.v2): load/save
 ├── layouts/                    # clear (index/install) + widget
 ├── components/                 # AppLogo, ConverterPane
 └── app.vue                     # init B24, SEO, locale
@@ -258,7 +261,7 @@ make restart # down + up
 | **Application URL** | `https://convert-bbocode-md.bx-shef.by` |
 | **Installation URL** | `https://convert-bbocode-md.bx-shef.by/install` |
 | **Назначение** | iframe-приложение |
-| **Скоупы** | `user_brief`, `im`, `placement` (см. `getRequiredRights()` в `useB24.ts`) |
+| **Скоупы** | `user_brief`, `im`, `placement`, `task` (см. `getRequiredRights()` в `useB24.ts`) |
 
 После сохранения нажать **«Установить»** — портал откроет страницу `/install`, она:
 1. инициализирует JSSDK,
@@ -297,7 +300,8 @@ NUXT_PUBLIC_CF_ANALYTICS_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 Если переменная пустая — никакой скрипт не подключается. Токен берётся в Cloudflare → Analytics & Logs → Web Analytics → Add a site (для GitHub Pages выбирать «manual installation»). Значение запекается в бандл при сборке (через `--build-arg` для Docker / `vars` для GitHub Actions), как и `NUXT_PUBLIC_SITE_URL`.
 
 ## Roadmap
-- [ ] Подтягивать тексты задач/комментариев/постов из Bitrix24 REST и сохранять обратно (`useB24` уже инициализирован).
+- [x] Задачи: загрузка/сохранение описания через REST (`useB24Rest`, `actions.v2`). **Требуется ручной QA в портале.**
+- [ ] CRM-комментарии и посты Живой ленты по REST (нужен owner-контекст: `ownerTypeId`/`ownerId`).
 - [ ] Bitrix-специфичные теги: `[USER=id]`, `[DISK File=id]`, `[DEPARTMENT=id]`, `[color]`, `[size]`, `[font]`.
 - [ ] Полные переводы новых i18n-ключей на 19 локалей через `pnpm translate-ui`.
 
