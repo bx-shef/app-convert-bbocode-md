@@ -14,6 +14,12 @@ describe('convert — facade across formats (Markdown pivot)', () => {
   it('html → md', () => {
     expect(convert('html', 'md', '<em>x</em>')).toBe('*x*')
   })
+  it('bb color → html span', () => {
+    expect(convert('bb', 'html', '[color=red]x[/color]')).toBe('<p><span style="color:red">x</span></p>')
+  })
+  it('html span → bb color', () => {
+    expect(convert('html', 'bb', '<span style="color:red">x</span>')).toBe('[color=red]x[/color]')
+  })
   it('same format is identity', () => {
     expect(convert('md', 'md', '**x**')).toBe('**x**')
   })

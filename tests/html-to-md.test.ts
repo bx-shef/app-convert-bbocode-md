@@ -84,4 +84,11 @@ describe('htmlToMd — robustness', () => {
     expect(htmlToMd('')).toBe('')
     expect(htmlToMd('   ')).toBe('')
   })
+  it('preserves span color/size/font style', () => {
+    expect(htmlToMd('<span style="color:red">x</span>')).toBe('<span style="color:red">x</span>')
+  })
+  it('unwraps span without recognized style', () => {
+    expect(htmlToMd('<span style="position:fixed">x</span>')).toBe('x')
+    expect(htmlToMd('<span>x</span>')).toBe('x')
+  })
 })

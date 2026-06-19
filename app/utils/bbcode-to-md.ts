@@ -86,6 +86,12 @@ function renderTag(n: TagNode, ctx: RenderCtx): string {
       const level = Number(n.name[1])
       return '\n' + '#'.repeat(level) + ' ' + inner() + '\n'
     }
+    case 'color': return n.primary ? `<span style="color:${styleVal(n.primary)}">${inner()}</span>` : inner()
+    case 'font': return n.primary ? `<span style="font-family:${styleVal(n.primary)}">${inner()}</span>` : inner()
+    case 'size': {
+      const px = parseInt(n.primary || '', 10)
+      return Number.isFinite(px) ? `<span style="font-size:${px}px">${inner()}</span>` : inner()
+    }
     case 'br': return '\n'
     case 'hr': return '\n---\n'
     case 'p': return '\n\n' + inner() + '\n\n'
@@ -142,6 +148,11 @@ function padRow(cells: string[], n: number): string[] {
   const out = cells.slice()
   while (out.length < n) out.push('')
   return out
+}
+
+/** Strip characters that would break out of a `style="…"` attribute. */
+function styleVal(v: string): string {
+  return v.replace(/["<>;]/g, '').trim()
 }
 
 function collapseBlankLines(s: string): string {

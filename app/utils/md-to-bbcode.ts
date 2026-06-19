@@ -19,6 +19,54 @@ function mapInlineHtml(raw: string): string {
   return key in INLINE_HTML_MAP ? INLINE_HTML_MAP[key]! : raw
 }
 
+/** CSS property → Bitrix styling tag (`[color]`/`[size]`/`[font]`). */
+const STYLE_TO_BB: Record<string, 'color' | 'size' | 'font'> = {
+  'color': 'color',
+  'font-size': 'size',
+  'font-family': 'font'
+}
+
+/** Extract `[color]/[size]/[font]` tags from a `<span style="…">` opening tag. */
+function parseSpanStyle(openTag: string): { name: 'color' | 'size' | 'font', primary: string }[] {
+  const m = openTag.match(/style\s*=\s*("([^"]*)"|'([^']*)')/i)
+  const style = m?.[2] ?? m?.[3] ?? ''
+  const tags: { name: 'color' | 'size' | 'font', primary: string }[] = []
+  for (const decl of style.split(';')) {
+    const idx = decl.indexOf(':')
+    if (idx < 0) continue
+    const prop = decl.slice(0, idx).trim().toLowerCase()
+    const name = STYLE_TO_BB[prop]
+    if (!name) continue
+    let val = decl.slice(idx + 1).trim()
+    if (name === 'size') val = val.replace(/px$/i, '').trim()
+    if (val) tags.push({ name, primary: val })
+  }
+  return tags
+}
+
+function quoteIfNeeded(v: string): string {
+  return /\s/.test(v) ? `"${v}"` : v
+}
+
+/**
+ * Map inline raw HTML to BBCode. `<span style="…">` carries the Bitrix styling
+ * tags (`[color]/[size]/[font]`); a per-inline `spanStack` records which tags
+ * each span opened so the matching `</span>` closes them in reverse.
+ */
+function renderInlineHtml(raw: string, spanStack: string[][]): string {
+  const lower = raw.trim().toLowerCase()
+  if (lower.startsWith('<span')) {
+    const tags = parseSpanStyle(raw)
+    spanStack.push(tags.map(t => t.name))
+    return tags.map(t => `[${t.name}=${quoteIfNeeded(t.primary)}]`).join('')
+  }
+  if (lower === '</span>') {
+    const tags = spanStack.pop() || []
+    return tags.slice().reverse().map(n => `[/${n}]`).join('')
+  }
+  return mapInlineHtml(raw)
+}
+
 type Token = ReturnType<MarkdownIt['parse']>[number]
 
 export interface MdToBBCodeOptions {
@@ -120,7 +168,11 @@ function renderToken(tk: Token): string {
 
 function renderInline(children: Token[]): string {
   let out = ''
-  for (const c of children) out += renderInlineToken(c)
+  const spanStack: string[][] = []
+  for (const c of children) {
+    if (c.type === 'html_inline') out += renderInlineHtml(c.content, spanStack)
+    else out += renderInlineToken(c)
+  }
   return out
 }
 

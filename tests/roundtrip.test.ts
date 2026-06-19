@@ -12,7 +12,10 @@ describe('roundtrip BBCode → MD → BBCode', () => {
     '[img]https://x.com/a.png[/img]',
     '[h1]T[/h1]',
     '[h3]Heading[/h3]',
-    '[hr]'
+    '[hr]',
+    '[color=red]x[/color]',
+    '[size=14]x[/size]',
+    '[font=Arial]x[/font]'
   ]
   for (const c of cases) {
     it(`stable: ${c}`, () => {

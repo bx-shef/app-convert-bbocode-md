@@ -65,6 +65,19 @@ test.describe('dark theme (desktop)', () => {
   })
 })
 
+test.describe('Bitrix styling tags', () => {
+  test('[color] from BBCode renders coloured in the preview', async ({ page }) => {
+    await page.goto('/')
+    // Desktop grid: 0 = Markdown, 1 = BBCode.
+    const bb = page.locator('textarea').nth(1)
+    await bb.click()
+    await bb.fill('[color=#ff0000]красный[/color]')
+    const span = page.locator('.preview-html:visible span')
+    await expect(span).toHaveText('красный')
+    expect(await span.evaluate(el => getComputedStyle(el).color)).toBe('rgb(255, 0, 0)')
+  })
+})
+
 test.describe('Bitrix24 task bar (standalone)', () => {
   test('shows a demo notice when loading outside Bitrix24', async ({ page }) => {
     await page.goto('/')
