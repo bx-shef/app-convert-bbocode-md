@@ -1,7 +1,12 @@
 import type { B24Frame } from '@bitrix24/b24jssdk'
 import { Text } from '@bitrix24/b24jssdk'
 import { useB24 } from './useB24'
-import { taskDescriptionToMarkdown, buildTaskUpdateFields, pickTask } from '~/utils/b24-entity'
+import {
+  type EntityKind,
+  pickTask, taskDescriptionToMarkdown, buildTaskUpdateFields,
+  pickComment, commentToMarkdown, buildCommentUpdateFields,
+  pickPost, postToMarkdown, readPostTitle, buildPostUpdateFields
+} from '~/utils/b24-entity'
 
 /** Thrown when a REST action is attempted outside a Bitrix24 frame. */
 export class B24NotReadyError extends Error {
@@ -12,12 +17,13 @@ export class B24NotReadyError extends Error {
 }
 
 /**
- * REST wrappers over the (non-deprecated) `actions.v2.call.make` API.
+ * REST wrappers over the (non-deprecated) `actions.v2.call.make` API for the
+ * three supported entities (task / CRM comment / Feed post). Each loads the
+ * entity's text field into editor Markdown and saves it back as BBCode.
  *
- * Tasks first: load a task's description into the editor as Markdown and save
- * the edited Markdown back as BBCode. Pure parsing/building lives in
- * `app/utils/b24-entity.ts` (unit-tested); this composable only does the call
- * and error mapping. Live behaviour needs hands-on QA in a real portal.
+ * Pure parsing/building lives in `app/utils/b24-entity.ts` (unit-tested); this
+ * composable only does the call + error mapping. Call shapes are verified
+ * against the documented REST API, but live behaviour needs hands-on portal QA.
  */
 export function useB24Rest() {
   const b24 = useB24()
@@ -27,30 +33,63 @@ export function useB24Rest() {
     return b24.get() as B24Frame
   }
 
-  /** Load a task description and return it converted to Markdown. */
-  async function loadTaskMarkdown(id: number): Promise<string> {
+  async function call(method: string, params: Record<string, unknown>): Promise<unknown> {
     const $b24 = frame()
-    const res = await $b24.actions.v2.call.make({
-      method: 'tasks.task.get',
-      params: { taskId: id },
-      requestId: Text.getUuidRfc4122()
-    })
+    const res = await $b24.actions.v2.call.make({ method, params, requestId: Text.getUuidRfc4122() })
     if (!res.isSuccess) throw new Error(res.getErrorMessages().join('; '))
-    const task = pickTask(res.getData())
+    return res.getData()
+  }
+
+  // --- task ------------------------------------------------------------------
+  async function loadTask(id: number): Promise<string> {
+    const task = pickTask(await call('tasks.task.get', { taskId: id }))
     if (!task) throw new Error(`Task #${id} not found`)
     return taskDescriptionToMarkdown(task)
   }
-
-  /** Save Markdown back to a task description (stored as BBCode). */
-  async function saveTaskMarkdown(id: number, markdown: string): Promise<void> {
-    const $b24 = frame()
-    const res = await $b24.actions.v2.call.make({
-      method: 'tasks.task.update',
-      params: { taskId: id, fields: buildTaskUpdateFields(markdown) },
-      requestId: Text.getUuidRfc4122()
-    })
-    if (!res.isSuccess) throw new Error(res.getErrorMessages().join('; '))
+  async function saveTask(id: number, markdown: string): Promise<void> {
+    await call('tasks.task.update', { taskId: id, fields: buildTaskUpdateFields(markdown) })
   }
 
-  return { loadTaskMarkdown, saveTaskMarkdown }
+  // --- CRM timeline comment --------------------------------------------------
+  async function loadComment(id: number): Promise<string> {
+    const comment = pickComment(await call('crm.timeline.comment.get', { id }))
+    if (!comment) throw new Error(`Comment #${id} not found`)
+    return commentToMarkdown(comment)
+  }
+  async function saveComment(id: number, markdown: string): Promise<void> {
+    await call('crm.timeline.comment.update', { id, fields: buildCommentUpdateFields(markdown) })
+  }
+
+  // --- Live Feed post --------------------------------------------------------
+  async function loadPost(id: number): Promise<string> {
+    const post = pickPost(await call('log.blogpost.get', { POST_ID: id }))
+    if (!post) throw new Error(`Post #${id} not found`)
+    return postToMarkdown(post)
+  }
+  async function savePost(id: number, markdown: string): Promise<void> {
+    // Re-send the original title, or Bitrix24 drops it (EMPTY_TITLE).
+    const post = pickPost(await call('log.blogpost.get', { POST_ID: id }))
+    const title = post ? readPostTitle(post) : ''
+    await call('log.blogpost.update', { POST_ID: id, ...buildPostUpdateFields(markdown, title) })
+  }
+
+  /** Load an entity's text field as Markdown. */
+  function loadMarkdown(kind: EntityKind, id: number): Promise<string> {
+    switch (kind) {
+      case 'task': return loadTask(id)
+      case 'crmComment': return loadComment(id)
+      case 'feedPost': return loadPost(id)
+    }
+  }
+
+  /** Save Markdown back to an entity's text field (as BBCode). */
+  function saveMarkdown(kind: EntityKind, id: number, markdown: string): Promise<void> {
+    switch (kind) {
+      case 'task': return saveTask(id, markdown)
+      case 'crmComment': return saveComment(id, markdown)
+      case 'feedPost': return savePost(id, markdown)
+    }
+  }
+
+  return { loadMarkdown, saveMarkdown }
 }

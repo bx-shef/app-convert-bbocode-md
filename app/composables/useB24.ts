@@ -117,7 +117,9 @@ export const useB24 = () => {
       'user_brief',
       'im',
       'placement',
-      'task'
+      'task',
+      'crm',
+      'log'
     ]
   }
 

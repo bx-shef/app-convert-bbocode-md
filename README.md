@@ -23,18 +23,36 @@ Live-конвертер BBCode (диалект Bitrix24) ⇄ Markdown ⇄ HTML �
 - **Поддерживаемые теги (базовый набор Bitrix24):** `b, i, u, s, url, img, list (+[*], [list=1]), code (+lang), quote, h1-h6, br, hr, p, table (tr/th/td)`.
 - **Вставленный raw-HTML не протекает** — инлайн (`<b>/<i>/<s>/<u>/<br>`) и блочный (`<ul>`, `<table>`, …) HTML конвертируется в BBCode, а не вставляется как текст.
 - **Печать** — Markdown → готовый к печати HTML-документ через скрытый iframe (`<u>` печатается, `<script>` вырезается санитайзером).
-- **Bitrix24 REST (задачи)** — загрузка описания задачи в редактор и сохранение обратно (BBCode/HTML ↔ MD) прямо из тулбара (`useB24Rest`, `actions.v2`). Вне портала — демо-уведомление.
+- **Bitrix24 REST** — загрузка текста объекта в редактор и сохранение обратно (BBCode/HTML ↔ MD) прямо из тулбара: **задачи** (`DESCRIPTION`), **CRM-комментарии** (`COMMENT`), **посты Живой ленты** (`DETAIL_TEXT`). На `useB24Rest` + `actions.v2`; вне портала — демо-уведомление.
 - **Bitrix24 UI Kit** — нативный вид внутри портала; виджет `IM_TEXTAREA` для вставки в чат.
 - **Готовая install-страница** для регистрации приложения как placement (mock-flow без серверной части).
 - **i18n** — 19 локалей (EN+RU поддерживаются вручную, остальные — fallback на EN + `pnpm translate-ui`).
 - **Юнит-тесты** — 152 теста на vitest (обе стороны, HTML, санитайзер, roundtrip).
 - **Развёртывание из коробки** — единый CLI `pnpm run deploy <gh-pages|docker>` плюс готовые GitHub Actions: статический хостинг на GitHub Pages и Docker-образ в GHCR (nginx + SPA-фоллбэк, `docker compose pull && up -d` на вашем сервере).
 
+## Статус и план
+
+> Что сделано и что в работе. Живые REST-сценарии **проверяются вручную в портале** — из CI/среды разработки их не протестировать.
+
+**Готово**
+- Конвертер BBCode ⇄ Markdown ⇄ HTML + живое превью, печать, HTML-санитайзер.
+- Виджет `IM_TEXTAREA` (чтение/вставка в чат), install-flow, миграция JSSDK на `actions.v2`.
+- Единый бренд-стиль с конвертером валют; тёмная тема; постоянная визуальная проверка (Playwright e2e в CI).
+- REST: **задачи**, **CRM-комментарии**, **посты Живой ленты** — загрузка текста в редактор и сохранение обратно из тулбара.
+
+**Требует ручной проверки в портале**
+- Load/Save для каждого типа: задача (`DESCRIPTION` + флаг BBCode/HTML), CRM-комментарий (`COMMENT`), пост Ленты (`DETAIL_TEXT`; заголовок сохраняется через get-перед-update).
+- Что выданы скоупы `task`, `crm`, `log` (см. install-страницу).
+
+**Дальше**
+- Bitrix-специфичные теги: `[USER=id]`, `[DISK File=id]`, `[DEPARTMENT=id]`, `[color]`, `[size]`, `[font]`.
+- Переводы новых i18n-ключей на 17 остальных локалей (`pnpm translate-ui`).
+
 ## Стек
 - [Nuxt 4](https://nuxt.com)
 - [Vue 3](https://vuejs.org)
 - [@bitrix24/b24ui-nuxt](https://bitrix24.github.io/b24ui/) — компоненты
-- [@bitrix24/b24jssdk-nuxt](https://bitrix24.github.io/b24jssdk/) — JS SDK Bitrix24 (инициализация + REST задач через `actions.v2`)
+- [@bitrix24/b24jssdk-nuxt](https://bitrix24.github.io/b24jssdk/) — JS SDK Bitrix24 (инициализация + REST через `actions.v2`)
 - [markdown-it](https://github.com/markdown-it/markdown-it) — парсер/рендер Markdown
 - [htmlparser2](https://github.com/fb55/htmlparser2) — парсинг HTML→MD и алло-листный санитайзер (node-native, без DOM)
 - Собственный парсер BBCode (`app/utils/bbcode-parser.ts`) — лёгкий, без зависимостей
@@ -261,7 +279,7 @@ make restart # down + up
 | **Application URL** | `https://convert-bbocode-md.bx-shef.by` |
 | **Installation URL** | `https://convert-bbocode-md.bx-shef.by/install` |
 | **Назначение** | iframe-приложение |
-| **Скоупы** | `user_brief`, `im`, `placement`, `task` (см. `getRequiredRights()` в `useB24.ts`) |
+| **Скоупы** | `user_brief`, `im`, `placement`, `task`, `crm`, `log` (см. `getRequiredRights()` в `useB24.ts`) |
 
 После сохранения нажать **«Установить»** — портал откроет страницу `/install`, она:
 1. инициализирует JSSDK,
@@ -300,8 +318,7 @@ NUXT_PUBLIC_CF_ANALYTICS_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 Если переменная пустая — никакой скрипт не подключается. Токен берётся в Cloudflare → Analytics & Logs → Web Analytics → Add a site (для GitHub Pages выбирать «manual installation»). Значение запекается в бандл при сборке (через `--build-arg` для Docker / `vars` для GitHub Actions), как и `NUXT_PUBLIC_SITE_URL`.
 
 ## Roadmap
-- [x] Задачи: загрузка/сохранение описания через REST (`useB24Rest`, `actions.v2`). **Требуется ручной QA в портале.**
-- [ ] CRM-комментарии и посты Живой ленты по REST (нужен owner-контекст: `ownerTypeId`/`ownerId`).
+- [x] REST: задачи, CRM-комментарии, посты Живой ленты — загрузка/сохранение текста (`useB24Rest`, `actions.v2`). **Требуется ручной QA в портале.**
 - [ ] Bitrix-специфичные теги: `[USER=id]`, `[DISK File=id]`, `[DEPARTMENT=id]`, `[color]`, `[size]`, `[font]`.
 - [ ] Полные переводы новых i18n-ключей на 19 локалей через `pnpm translate-ui`.
 
