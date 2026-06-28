@@ -28,6 +28,18 @@ services:
           memory: 32M
     networks:
       - proxy-net
+    labels:
+      # Auto-update opt-in: the host's shared Watchtower (ONE per host, with
+      # --label-enable) pulls a fresh GHCR image and restarts this container
+      # (~5 min) after CI pushes. Replaces the manual `docker compose pull && up -d`
+      # and the temporary webhook of PR #8.
+      #
+      # We intentionally do NOT declare a `watchtower` service here: the sibling
+      # stack `currency-converter` already runs one on this host, and a second
+      # would collide on `container_name: watchtower` and double-scan the daemon.
+      # On a host with no Watchtower yet, bring up a single shared instance — see
+      # currency-converter/docker-compose.prod.yml (pinned image + docker.sock).
+      - "com.centurylinklabs.watchtower.enable=true"
 
 networks:
   proxy-net:
