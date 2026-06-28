@@ -230,6 +230,15 @@ cd /home/bitrix/convert-bbocode-md
 make up           # pull свежего образа + up -d
 ```
 
+> **Авто-обновление (Watchtower).** Контейнер помечен меткой
+> `com.centurylinklabs.watchtower.enable=true`, и общий **один на хост** Watchtower
+> (его поднимает соседний стек `currency-converter`) раз в ~5 мин подтягивает свежий
+> образ из GHCR и перезапускает контейнер. Свой `watchtower` этот стек **не** поднимает —
+> второй на том же хосте конфликтует по `container_name`. Для штатного обновления
+> `make up` руками больше не нужен (остаётся для отката и первого запуска). Грабли и
+> установка одного Watchtower на хост — в
+> [`currency-converter/docs/AI_DEPLOY_GUIDE.md`](https://github.com/bx-shef/currency-converter/blob/main/docs/AI_DEPLOY_GUIDE.md).
+
 **Проверка.**
 ```bash
 # 1) контейнер healthy
