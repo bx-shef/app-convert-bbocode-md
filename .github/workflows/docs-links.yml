@@ -1,0 +1,34 @@
+name: docs-links
+
+# Проверяет документацию в docs/ и README.md через scripts/check-docs.sh:
+# относительные ссылки между документами и на изображения, маркеры конфликтов
+# слияния и запрещённую эмодзи. Ссылки на исходный код приложений (*.php, *.vue,
+# ../lib, local/apps) и внешние URL не проверяются — см.
+# .github/scripts/check_doc_links.py. Навыки — scripts/check-skills.sh, отправщик Telegram (без сети) — scripts/check-tg.sh.
+
+on:
+  pull_request:
+    paths:
+      - "**/*.md"
+      - "scripts/**"
+      - ".github/scripts/check_doc_links.py"
+      - ".github/workflows/docs-links.yml"
+  push:
+    branches: [main]
+    paths:
+      - "**/*.md"
+      - "scripts/**"
+      - ".github/scripts/check_doc_links.py"
+      - ".github/workflows/docs-links.yml"
+
+jobs:
+  check-links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Проверить документацию (ссылки, конфликты слияния, эмодзи)
+        run: bash scripts/check-docs.sh
+      - name: Проверить навыки (frontmatter + идентичность промптам)
+        run: bash scripts/check-skills.sh
+      - name: Проверить отправщик Telegram (без сети)
+        run: bash scripts/check-tg.sh

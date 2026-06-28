@@ -76,3 +76,45 @@ pnpm build
 ```
 
 **Visual/e2e**: `e2e/` holds Playwright specs run against the built server. Assertions are functional + a dark-mode contrast guard (no flaky pixel baselines); screenshots land in `e2e/output/` (gitignored) and upload as CI artifacts. Runs in CI after `build`.
+
+## Операционная дисциплина и отчётность (reporting-kit)
+
+Набор перенесён из базы знаний `bx-shef/ai-agent` (`reporting-kit`). Полное
+описание — [`docs/reports/README.md`](docs/reports/README.md) и
+[`docs/project-map.md`](docs/project-map.md).
+
+### Отчёты в Telegram
+- Навыки/команды готовят текст отчёта: `/report-status` (срез по `docs/project-map.md`),
+  `/report-digest` (дайджест по репозиториям за период), `/report-questions` (вопросник заказчику).
+- Отправляет **только** `scripts/tg-send.sh` и **только по явной команде «шли»** — не раньше.
+  Без `TG_BOT_TOKEN`/`TG_CHAT_ID` скрипт намеренно отказывает. Секреты — в `.env` (в git не коммитим).
+- Промпты в `docs/reports/` — **канон**; тела `.claude/skills/*/SKILL.md` — их зеркало.
+  При правке промпта синхронно обновляй `SKILL.md` (и наоборот). Идентичность проверяет
+  `scripts/check-skills.sh` и CI (`docs-links.yml`). Перед коммитом доков:
+  `bash scripts/check-tg.sh && bash scripts/check-skills.sh && bash scripts/check-docs.sh`.
+
+### Ветки, PR, merge
+- В `main` напрямую не пушим. Работа — в ветке, изменения через Pull Request (описание на русском: что/зачем/на что влияет).
+- В один PR — одна логическая задача. **Мержит владелец сам** (автомерж/force-merge не используем); PR не мержится без явного сигнала владельца.
+- После смерженного PR синхронно обновляем `docs/` — документация не отстаёт от состояния.
+
+### Review — 5 проверяющих
+Перед правками привлекаем `/review` + параллельно 5 ролей (модель Sonnet; предупреждаем, что проект большой — не падать по таймауту):
+1. **Документация / Skill** — оценка доков и файлов навыков.
+2. **Программист** — адекватность решений, JSDoc, типизация TS и пр.
+3. **Тестировщик** — покрытие тестами и сами тесты.
+4. **Безопасность** — отдел ИБ.
+5. **Тех-директор** — общая инженерная оценка.
+
+Отчёт о проверке — на русском, кратко: кто · что · почему · как исправить. Правки вносим в этом же PR; вынос в отдельный issue/PR — только по согласованию.
+
+### Связанные репозитории
+| Репо | Роль |
+|---|---|
+| `bx-shef/app-convert-bbocode-md` | это приложение (конвертер BBCode ↔ MD ↔ HTML) |
+| `bx-shef/ai-agent` | база знаний и `reporting-kit` (источник этого набора) |
+| `bx-shef/currency-converter` | соседнее приложение (единый бренд-стиль) |
+
+### Bitrix24 через хук
+Для setup/проверки портала используем входящий вебхук `B24_HOOK___SUFFIX` (свой суффикс под портал).
+Хук с максимальными правами — секрет: храним в окружении/секретах, не в git/логах; для рантайма — отдельный хук с минимальными правами.
