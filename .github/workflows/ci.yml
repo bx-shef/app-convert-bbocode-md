@@ -79,7 +79,7 @@ jobs:
       # Runs last so `job.status` reflects every prior step (incl. e2e).
       - name: Mirror check_run to commit status (legacy API)
         if: always()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             const sha = context.payload.pull_request?.head?.sha || context.sha
