@@ -37,7 +37,7 @@
     "@nuxt/eslint": "^1.16.0",
     "@playwright/test": "^1.61.1",
     "@types/markdown-it": "^14.1.2",
-    "@types/node": "^25.9.4",
+    "@types/node": "^26.0.1",
     "@vitest/ui": "^3.2.6",
     "dotenv": "^17.4.2",
     "eslint": "^10.6.0",
