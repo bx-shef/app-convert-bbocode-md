@@ -31,6 +31,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      # Validate the production nginx config in the real nginx image. The Docker
+      # image is built only on push→main (deploy-docker.yml), so without this a
+      # broken docker/nginx.conf would surface only at deploy. `nginx -t` parses
+      # it inside the full http{} context.
+      - name: Validate nginx config (docker/nginx.conf)
+        run: docker run --rm -v "${{ github.workspace }}/docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro" nginx:1.27-alpine nginx -t
+
       - name: Install pnpm
         uses: pnpm/action-setup@v6
 

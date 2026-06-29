@@ -154,6 +154,8 @@ Base URL подхватывается автоматически из конте
 
 `Dockerfile` — multi-stage сборка: `pnpm generate` внутри `node:22-alpine`, статический `dist/` отдаёт `nginx:1.27-alpine` со SPA-фоллбэком на `index.html` (`docker/nginx.conf`).
 
+`docker/nginx.conf` отдаёт и security-заголовки: HSTS, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy` и CSP, адаптированный под iframe Bitrix24 (`frame-ancestors` — облачные порталы Б24, **без** `X-Frame-Options`; коробочный портал на своём домене добавляет свой origin в `frame-ancestors`+`connect-src`). CSP пока в режиме **Report-Only** — после портального QA с чистой консолью переключается на enforce (имя заголовка → `Content-Security-Policy`). Конфиг проверяется в CI через `nginx -t`.
+
 Workflow: `.github/workflows/deploy-docker.yml`. Триггерится **автоматически** на push в `main`, если затронуты файлы, влияющие на образ (`app/`, `public/`, `i18n/`, `docker/`, `Dockerfile`, `package.json`, `pnpm-lock.yaml`, `nuxt.config.ts`, `tsconfig.json` и сам workflow). Чисто документационные коммиты сборку не вызывают. Можно также запустить руками: **Actions → Deploy Docker image → Run workflow** с переопределением `site_url`, `base_url`, `tag`.
 
 Образ публикуется в **GHCR** под именем `ghcr.io/<owner>/<repo>` с тегами `latest` и `<sha>`. Отдельные секреты не нужны — аутентификация через `GITHUB_TOKEN`. `NUXT_PUBLIC_SITE_URL` берётся из **GitHub Variable** `NUXT_PUBLIC_SITE_URL` (см. шпаргалку ниже).
@@ -344,7 +346,7 @@ pnpm translate-ui
 
 ## CI / автоматизация
 
-- **`ci.yml`** — на каждый PR в `main`: `pnpm install --frozen-lockfile` → `lint` → `typecheck` → `test` → `build`. Финальный шаг дублирует результат в legacy commit-status API под именем `ci` — это нужно, потому что некоторые внешние инструменты (включая часть AI-ревьюеров) умеют читать только `GET /commits/{sha}/status` и не видят `check_runs`, которые пишет GitHub Actions. Чтобы этот шаг мог писать статус, у workflow выставлен `permissions.statuses: write`.
+- **`ci.yml`** — на каждый PR в `main`: валидирует `docker/nginx.conf` через `nginx -t` (в образе `nginx:1.27-alpine`) → `pnpm install --frozen-lockfile` → `lint` → `typecheck` → `test` → `build`. Финальный шаг дублирует результат в legacy commit-status API под именем `ci` — это нужно, потому что некоторые внешние инструменты (включая часть AI-ревьюеров) умеют читать только `GET /commits/{sha}/status` и не видят `check_runs`, которые пишет GitHub Actions. Чтобы этот шаг мог писать статус, у workflow выставлен `permissions.statuses: write`.
 - **`deploy.yml`** — на push в `main` собирает SPA и публикует на GitHub Pages.
 - **`deploy-docker.yml`** — на push в `main` (если затронуты файлы образа) пересобирает Docker-образ и пушит в GHCR.
 - **`dependabot.yml`** — еженедельно (понедельник) проверяет обновления npm, GitHub Actions и базовых Docker-образов. Bitrix24-, Nuxt-, Vue-пакеты сгруппированы; dev-зависимости (minor/patch) — в общую группу; все action-бампы и образы приходят по одному сгруппированному PR на экосистему. Node-major у образов игнорируется намеренно (corepack убран из `node:25+`).
