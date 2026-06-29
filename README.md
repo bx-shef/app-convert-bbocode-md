@@ -348,6 +348,7 @@ pnpm translate-ui
 - **`deploy.yml`** — на push в `main` собирает SPA и публикует на GitHub Pages.
 - **`deploy-docker.yml`** — на push в `main` (если затронуты файлы образа) пересобирает Docker-образ и пушит в GHCR.
 - **`dependabot.yml`** — еженедельно (понедельник) проверяет обновления npm и GitHub Actions. Bitrix24-, Nuxt-, Vue-пакеты сгруппированы; dev-зависимости (minor/patch) — в общую группу.
+- **`docs-links.yml`** — на PR/push с изменениями в `**/*.md` или `scripts/**`: гоняет проверки набора **reporting-kit** (`scripts/check-docs.sh` ссылки/конфликты/эмодзи, `check-skills.sh` навыки↔канон, `check-tg.sh` отправщик Telegram без сети). Отчётность в Telegram — см. [`docs/reports/`](docs/reports/README.md) и раздел «Операционная дисциплина» в `CLAUDE.md`.
 
 ### Branch protection для `main` (обязательно настроить руками)
 
