@@ -43,3 +43,34 @@ updates:
       - ci
     commit-message:
       prefix: chore(ci)
+    groups:
+      # One grouped PR for all action bumps instead of PR-per-action
+      # (that's why checkout/pnpm/upload-artifact/deploy-pages arrived as 4
+      # separate PRs). Forward-proof: a new action auto-joins this group.
+      actions:
+        patterns:
+          - "*"
+
+  # --- Base Docker images in the Dockerfile (node:*-alpine, nginx:*-alpine) ---
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    labels:
+      - deps
+      - docker
+    commit-message:
+      prefix: chore(docker)
+    groups:
+      docker:
+        patterns:
+          - "*"
+    # node major is ignored ON PURPOSE: Node 25+ dropped corepack from the
+    # official images (`RUN corepack enable` → exit 127, see Dockerfile). We stay
+    # on the LTS line; the major bump is done by hand with a corepack fix.
+    # minor/patch of node:<LTS>-alpine and nginx:*-alpine keep coming automatically.
+    ignore:
+      - dependency-name: "node"
+        update-types:
+          - "version-update:semver-major"
