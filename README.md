@@ -347,7 +347,7 @@ pnpm translate-ui
 - **`ci.yml`** — на каждый PR в `main`: `pnpm install --frozen-lockfile` → `lint` → `typecheck` → `test` → `build`. Финальный шаг дублирует результат в legacy commit-status API под именем `ci` — это нужно, потому что некоторые внешние инструменты (включая часть AI-ревьюеров) умеют читать только `GET /commits/{sha}/status` и не видят `check_runs`, которые пишет GitHub Actions. Чтобы этот шаг мог писать статус, у workflow выставлен `permissions.statuses: write`.
 - **`deploy.yml`** — на push в `main` собирает SPA и публикует на GitHub Pages.
 - **`deploy-docker.yml`** — на push в `main` (если затронуты файлы образа) пересобирает Docker-образ и пушит в GHCR.
-- **`dependabot.yml`** — еженедельно (понедельник) проверяет обновления npm и GitHub Actions. Bitrix24-, Nuxt-, Vue-пакеты сгруппированы; dev-зависимости (minor/patch) — в общую группу.
+- **`dependabot.yml`** — еженедельно (понедельник) проверяет обновления npm, GitHub Actions и базовых Docker-образов. Bitrix24-, Nuxt-, Vue-пакеты сгруппированы; dev-зависимости (minor/patch) — в общую группу; все action-бампы и образы приходят по одному сгруппированному PR на экосистему. Node-major у образов игнорируется намеренно (corepack убран из `node:25+`).
 - **`docs-links.yml`** — на PR/push с изменениями в `**/*.md` или `scripts/**`: гоняет проверки набора **reporting-kit** (`scripts/check-docs.sh` ссылки/конфликты/эмодзи, `check-skills.sh` навыки↔канон, `check-tg.sh` отправщик Telegram без сети). Отчётность в Telegram — см. [`docs/reports/`](docs/reports/README.md) и раздел «Операционная дисциплина» в `CLAUDE.md`.
 
 ### Branch protection для `main` (обязательно настроить руками)
