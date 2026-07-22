@@ -160,7 +160,7 @@ zero-width) — **server-agnostic, переносится как есть**. UI 
 |---|---|---|---|
 | **SessionStart-хук** (`.claude/hooks/session-start.sh` + `.claude/settings.json`): в веб-сессии Claude Code сразу `corepack enable` + `pnpm install --frozen-lockfile` + `nuxt prepare` → lint/typecheck/test/build работают с первого хода. Образец — `ai-price-import/.claude/hooks/session-start.sh`; в окружении есть навык `session-start-hook` | **P0** | S | ✅ #95 |
 | Честная **легенда статусов** (эта, ✅/🧪/📝/⛔) в `docs/project-map.md` вместо `✅/🟨/⬜` — у нас реальный зазор «сделано vs проверено в портале» (REST Load/Save) | **P1** | S | ✅ #96 |
-| Штамп **`> Last reviewed: YYYY-MM-DD`** под H1 во всех `docs/*.md` (сейчас только `README.md`) + тест-энфорсер по образцу `currency-converter/tests/mdReviewStamp.test.ts` | **P1** | S | ⬜ |
+| Штамп **`> Last reviewed: YYYY-MM-DD`** под H1 во всех `docs/*.md` (сейчас только `README.md`) + тест-энфорсер по образцу `currency-converter/tests/mdReviewStamp.test.ts` | **P1** | S | ✅ #98 |
 | Агрегат **`pnpm check`** (= lint+typecheck+test) в `package.json` + цели `make dev/check` (сейчас `Makefile` только прод-докер; сделано в #95) | **P1** | S | ✅ #95 |
 | Мини-методология тестов (L1 smoke / L2 happy / L3 со всех сторон) + **чек-лист портального QA** (install, Load/Save, IM_TEXTAREA) — образец `docs/redesign/07-testing.md`, `10-qa-checklist.md` | P2 | M | ⬜ |
 | Норма «посмотри на пиксели» (DoD после UI-правки) в `CLAUDE.md` — образец `docs/redesign/VISUAL_VERIFICATION.md` | P2 | S | ⬜ |
