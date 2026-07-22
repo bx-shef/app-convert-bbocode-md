@@ -11,6 +11,7 @@
     "lint": "eslint .",
     "typecheck": "nuxt typecheck",
     "test": "vitest run",
+    "check": "pnpm lint && pnpm typecheck && pnpm test",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:e2e": "playwright test",

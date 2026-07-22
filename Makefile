@@ -1,9 +1,11 @@
-.PHONY: help up down logs ps pull restart status init-network init-proxy down-proxy clean
+.PHONY: help dev check up down logs ps pull restart status init-network init-proxy down-proxy clean
 
 PROD := docker compose -f docker-compose.prod.yml --env-file .env.prod
 
 help:
 	@echo "Targets:"
+	@echo "  dev           pnpm dev (local dev server)"
+	@echo "  check         pnpm lint + typecheck + test (full gate before push)"
 	@echo "  up            pull + up -d  (prod stack, behind nginx-proxy)"
 	@echo "  down          stop & remove the prod stack"
 	@echo "  restart       down + up"
@@ -15,6 +17,13 @@ help:
 	@echo "  init-proxy    bring up nginx-proxy + acme-companion (expects ./compose/proxy.yml)"
 	@echo "  down-proxy    stop nginx-proxy stack"
 	@echo "  clean         docker system prune"
+
+# --- Development ---
+dev:
+	pnpm dev
+
+check:
+	pnpm check
 
 # --- Production app ---
 up:

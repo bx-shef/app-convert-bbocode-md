@@ -72,6 +72,7 @@ pnpm build        # production-сборка
 pnpm preview      # локальный preview production
 pnpm typecheck    # проверка типов
 pnpm lint         # eslint
+pnpm check        # lint + typecheck + test — полный прогон перед пушем (или `make check`)
 ```
 
 ## Структура
