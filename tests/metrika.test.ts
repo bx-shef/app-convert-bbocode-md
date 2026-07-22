@@ -25,6 +25,15 @@ describe('reachMetrikaGoal', () => {
     expect(ym).not.toHaveBeenCalled()
   })
 
+  it('is a no-op for a negative or fractional counter (must be a positive integer)', () => {
+    const ym = vi.fn()
+    expect(reachMetrikaGoal(ym, '-5', 'g')).toBe(false)
+    expect(reachMetrikaGoal(ym, -5, 'g')).toBe(false)
+    expect(reachMetrikaGoal(ym, '123.45', 'g')).toBe(false)
+    expect(reachMetrikaGoal(ym, 123.45, 'g')).toBe(false)
+    expect(ym).not.toHaveBeenCalled()
+  })
+
   it('is a no-op when ym is not a function (Metrika not loaded — e.g. muted in the B24 iframe)', () => {
     expect(reachMetrikaGoal(undefined, '123', 'g')).toBe(false)
     expect(reachMetrikaGoal(null, '123', 'g')).toBe(false)

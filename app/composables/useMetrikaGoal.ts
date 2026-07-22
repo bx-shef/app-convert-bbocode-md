@@ -19,7 +19,7 @@ export function useMetrikaGoal() {
   function reachGoal(goal: string) {
     if (!import.meta.client) return
     const w = window as Window & { ym?: unknown }
-    reachMetrikaGoal(w.ym, config.public.yandexCounterId as string, goal)
+    reachMetrikaGoal(w.ym, String(config.public.yandexCounterId ?? ''), goal)
   }
   return { reachGoal }
 }

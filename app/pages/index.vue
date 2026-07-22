@@ -68,6 +68,10 @@ useHead({ title: t('page.index.seo.title') })
 // users are never tracked (analytics principle #4). Static /metrika.js (no inline
 // script, CSP-friendly); the counter id passes via <meta> and is re-validated
 // there. Empty/invalid counter → nothing is injected (analytics off, fail-safe).
+// Deliberately NO <noscript> tracking pixel: it would fire whenever JS is off
+// regardless of iframe context, bypassing the self-mute — the one hole in the
+// "OFF inside the portal" guarantee. This is a JS-required SPA, so a JS-disabled
+// visitor can't use it anyway; dropping the pixel keeps principle #4 airtight.
 const rawCounterId = String(config.public.yandexCounterId ?? '')
 const yandexCounterId = /^\d+$/.test(rawCounterId) ? rawCounterId : ''
 if (yandexCounterId) {
@@ -77,12 +81,6 @@ if (yandexCounterId) {
     ],
     script: [
       { key: 'yandex-metrika', src: `${config.app.baseURL}metrika.js`, defer: true }
-    ],
-    noscript: [
-      {
-        // No script execution — just a tracking pixel; counter id is digit-only.
-        innerHTML: `<div><img src="https://mc.yandex.ru/watch/${yandexCounterId}" style="position:absolute; left:-9999px;" alt="" /></div>`
-      }
     ]
   })
 }
@@ -115,7 +113,9 @@ async function copyText(value: string) {
 }
 
 async function printText(value: string) {
-  if (!value) return
+  // Guard on trimmed value: printMarkdown() no-ops on whitespace-only input, so
+  // without this the `print` goal would fire for a print that never happened.
+  if (!value.trim()) return
   try {
     await printMarkdown(value)
     reachGoal('print')

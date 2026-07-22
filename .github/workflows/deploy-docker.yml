@@ -47,6 +47,8 @@ jobs:
       TAG: ${{ github.event.inputs.tag || 'latest' }}
       NUXT_PUBLIC_SITE_URL: ${{ github.event.inputs.site_url || vars.NUXT_PUBLIC_SITE_URL }}
       NUXT_APP_BASE_URL: ${{ github.event.inputs.base_url || '/' }}
+      # Yandex.Metrika counter id (repo variable). Empty = analytics off (fail-safe).
+      NUXT_PUBLIC_YANDEX_COUNTER_ID: ${{ vars.NUXT_PUBLIC_YANDEX_COUNTER_ID }}
 
     steps:
       - name: Checkout
@@ -73,5 +75,6 @@ jobs:
           build-args: |
             NUXT_PUBLIC_SITE_URL=${{ env.NUXT_PUBLIC_SITE_URL }}
             NUXT_APP_BASE_URL=${{ env.NUXT_APP_BASE_URL }}
+            NUXT_PUBLIC_YANDEX_COUNTER_ID=${{ env.NUXT_PUBLIC_YANDEX_COUNTER_ID }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

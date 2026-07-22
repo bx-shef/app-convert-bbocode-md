@@ -10,11 +10,15 @@ RUN pnpm install --frozen-lockfile
 
 COPY . .
 
-# Base URL bakes into the static bundle, so it must be known at build time.
+# Public config bakes into the static bundle, so it must be known at build time.
+# NUXT_PUBLIC_YANDEX_COUNTER_ID is empty by default → analytics stays off unless
+# the build passes a counter id (fail-safe).
 ARG NUXT_PUBLIC_SITE_URL=
 ARG NUXT_APP_BASE_URL=/
+ARG NUXT_PUBLIC_YANDEX_COUNTER_ID=
 ENV NUXT_PUBLIC_SITE_URL=${NUXT_PUBLIC_SITE_URL} \
-    NUXT_APP_BASE_URL=${NUXT_APP_BASE_URL}
+    NUXT_APP_BASE_URL=${NUXT_APP_BASE_URL} \
+    NUXT_PUBLIC_YANDEX_COUNTER_ID=${NUXT_PUBLIC_YANDEX_COUNTER_ID}
 RUN pnpm run generate
 
 FROM nginx:1.27-alpine AS runtime

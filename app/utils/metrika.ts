@@ -12,8 +12,8 @@
  * @param ym         The global `window.ym` function injected by metrika.js
  *                   (unknown-typed: it may be absent when analytics is off or
  *                   the beacon is muted in the portal iframe).
- * @param counterId  Numeric Metrika counter id (string or number). Blank,
- *                   non-numeric, or ≤ 0 → tracking is treated as disabled.
+ * @param counterId  Metrika counter id (string or number). Blank, non-integer,
+ *                   negative, or ≤ 0 → tracking is treated as disabled.
  * @param goal       Fixed goal identifier (e.g. `'copy'`, `'print'`).
  * @returns `true` if the goal was actually reported, `false` on any no-op.
  */
@@ -23,7 +23,10 @@ export function reachMetrikaGoal(
   goal: string
 ): boolean {
   const id = Number(counterId)
-  if (!Number.isFinite(id) || id <= 0) return false
+  // Positive integer only: Metrika counter ids are whole numbers. This rejects
+  // fractional/negative/NaN, matching the strict /^\d+$/ used where the id is
+  // injected (index.vue) and re-validated (public/metrika.js).
+  if (!Number.isInteger(id) || id <= 0) return false
   if (typeof ym !== 'function') return false
   ;(ym as (...args: unknown[]) => void)(id, 'reachGoal', goal)
   return true
