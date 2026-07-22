@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+> Last reviewed: 2026-07-22
+
 Nuxt 4 SPA placement for Bitrix24 that converts Bitrix24 BBCode ↔ Markdown.
 
 ## Stack
@@ -43,6 +45,7 @@ Nuxt 4 SPA placement for Bitrix24 that converts Bitrix24 BBCode ↔ Markdown.
 - **No server code.** `server/` folder was intentionally removed. No SSR API endpoints. App is pure SPA (runtime fetches go through `useB24` → Bitrix24 REST).
 - **Analytics/telemetry** — client-side only, opt-in via env-gate (`NUXT_PUBLIC_CF_ANALYTICS_TOKEN`, empty = off). No server-side OTel (pure SPA). Principles (mirroring `ai-price-import`, see `docs/IMPROVEMENT_PLAN.md` § Телеметрия): (1) collect **shape/counters only, never content** — the user's textarea text must never leave the browser **via analytics/telemetry** (explicit REST save / insert-to-chat are separate, user-initiated); (2) if an event is ever tagged by portal, **hash (salted)** `member_id`/domain, never raw; (3) errors = **class, not message text**; (4) analytics must be kept **OFF inside the B24 iframe** — forward-principle, **not yet wired** (the CF beacon is third-party and injected unconditionally; needs a client-side inject-guard before enabling the token). Precedent: `currency-converter/public/metrika.js`.
 - BBCode tag set is **closed** — see `KNOWN_TAGS` in `app/utils/bbcode-parser.ts`. Unknown tags pass through as text. To support a new tag (e.g. `[USER=id]`), add it to `KNOWN_TAGS` and handle it in both `bbcode-to-md.ts` and `md-to-bbcode.ts`.
+- **Review stamp** — every tracked `.md` in the repo root and `docs/` carries `> Last reviewed: YYYY-MM-DD` (ISO date) as a blockquote under its H1; bump it on substantive review. Enforced by `tests/mdReviewStamp.test.ts`; the reporting-kit bundle (`docs/reports/`, `.claude/`) and `tests/` fixtures are exempt.
 
 ## What NOT to touch without need
 - `app/pages/install.vue` — Bitrix24 placement contract.
