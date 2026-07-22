@@ -84,6 +84,8 @@ pnpm build
 
 **Visual/e2e**: `e2e/` holds Playwright specs run against the built server. Assertions are functional + a dark-mode contrast guard (no flaky pixel baselines); screenshots land in `e2e/output/` (gitignored) and upload as CI artifacts. Runs in CI after `build`.
 
+**DoD for UI changes**: after any UI change, run the e2e and **look at** `e2e/output/` before calling it done — don't trust "built without errors". When building interfaces, cross-check the Bitrix24 UI docs: https://bitrix24.github.io/b24ui/. Full test plan + portal QA checklist: `docs/TESTING.md`.
+
 ## Операционная дисциплина и отчётность (reporting-kit)
 
 Набор перенесён из базы знаний `bx-shef/ai-agent` (`reporting-kit`). Полное
