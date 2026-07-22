@@ -72,8 +72,11 @@ pnpm test:watch   # watch mode
 pnpm test:e2e     # Playwright visual/e2e (e2e/*.spec.ts) — run `pnpm build` first
 pnpm typecheck
 pnpm lint
+pnpm check        # lint + typecheck + test — full gate before push (also `make check`)
 pnpm build
 ```
+
+**Web sessions**: `.claude/hooks/session-start.sh` (via `.claude/settings.json`) installs deps + runs `nuxt prepare` on start, so the commands above work from the first turn. No-op in local sessions.
 
 **Visual/e2e**: `e2e/` holds Playwright specs run against the built server. Assertions are functional + a dark-mode contrast guard (no flaky pixel baselines); screenshots land in `e2e/output/` (gitignored) and upload as CI artifacts. Runs in CI after `build`.
 
