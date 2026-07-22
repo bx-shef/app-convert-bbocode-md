@@ -8,6 +8,7 @@ import { useB24Rest } from '~/composables/useB24Rest'
 import { ENTITY_KINDS, type EntityKind } from '~/utils/b24-entity'
 import { useConverter } from '~/composables/useConverter'
 import { usePrint } from '~/composables/usePrint'
+import { useMetrikaGoal } from '~/composables/useMetrikaGoal'
 import BroomIcon from '@bitrix24/b24icons-vue/outline/BroomIcon'
 import CopyIcon from '@bitrix24/b24icons-vue/outline/CopyIcon'
 import CheckLIcon from '@bitrix24/b24icons-vue/outline/CheckLIcon'
@@ -31,6 +32,9 @@ const { bbcode, markdown, html, preview, settings, setBb, setMd, setHtml, clear 
 const { copy, copied, isSupported: clipboardSupported } = useClipboard({ legacy: true, copiedDuring: 1500 })
 const { printMarkdown } = usePrint()
 const rest = useB24Rest()
+
+const config = useRuntimeConfig()
+const { reachGoal } = useMetrikaGoal()
 
 const currentYear = new Date().getFullYear()
 
@@ -57,6 +61,32 @@ const tabItems = computed<TabsItem[]>(() => [
 
 useHead({ title: t('page.index.seo.title') })
 
+// Yandex.Metrika is injected here — only on the standalone converter page, NOT
+// app-wide — so it never loads on the portal-only /install or /widget surfaces.
+// The converter is dual-mode (also opens as a B24 placement), so metrika.js
+// additionally self-mutes inside the iframe (window.self !== window.top): portal
+// users are never tracked (analytics principle #4). Static /metrika.js (no inline
+// script, CSP-friendly); the counter id passes via <meta> and is re-validated
+// there. Empty/invalid counter → nothing is injected (analytics off, fail-safe).
+const rawCounterId = String(config.public.yandexCounterId ?? '')
+const yandexCounterId = /^\d+$/.test(rawCounterId) ? rawCounterId : ''
+if (yandexCounterId) {
+  useHead({
+    meta: [
+      { name: 'yandex-metrika-id', content: yandexCounterId }
+    ],
+    script: [
+      { key: 'yandex-metrika', src: `${config.app.baseURL}metrika.js`, defer: true }
+    ],
+    noscript: [
+      {
+        // No script execution — just a tracking pixel; counter id is digit-only.
+        innerHTML: `<div><img src="https://mc.yandex.ru/watch/${yandexCounterId}" style="position:absolute; left:-9999px;" alt="" /></div>`
+      }
+    ]
+  })
+}
+
 onMounted(() => {
   if (isUseB24.value) {
     const $b24 = b24Instance.get() as B24Frame
@@ -68,6 +98,7 @@ async function copyText(value: string) {
   if (!value) return
   try {
     await copy(value)
+    reachGoal('copy')
     toast.add({
       title: t('page.index.ui.copied'),
       color: 'air-primary-success',
@@ -87,6 +118,7 @@ async function printText(value: string) {
   if (!value) return
   try {
     await printMarkdown(value)
+    reachGoal('print')
   } catch {
     toast.add({
       title: t('page.index.ui.printFailed'),
