@@ -29,7 +29,7 @@
 | Визуальный e2e | `pnpm build && pnpm test:e2e` | Playwright зелёный + dark-mode contrast-guard; скриншоты в `e2e/output/` |
 | Конвертация | вставить BBCode → смотреть MD/HTML/превью | Все панели пересчитываются; превью санитизировано и корректно |
 | Печать | кнопка печати | Открывается системный print-preview (скрытый iframe) |
-| REST вне портала | тулбар Load/Save | Демо-уведомление (`B24NotReadyError`), не падает |
+| REST вне портала | тулбар Load/Save | Демо-уведомление (гард `isUseB24` → `notifyDemo`), не падает (`B24NotReadyError` — предохранитель в `useB24Rest` при REST без init) |
 
 ## Уровень 3 — со всех сторон (полное покрытие)
 
@@ -52,6 +52,7 @@
 - [ ] **Load/Save CRM-комментарий** — `COMMENT` ↔ MD, сохранение обратно.
 - [ ] **Load/Save пост Ленты** — `DETAIL_TEXT`; заголовок сохраняется (get-перед-update).
 - [ ] **Виджет IM_TEXTAREA** — панель над полем ввода чата: загрузить текст чата → MD → правка → «Вставить» → MD→BBCode уходит в поле ввода.
+- [ ] **Мобильное приложение Б24 (WebView)** — виджет открывается в мобильном портале; чтение/вставка работают; кнопка «Печать» скрыта (в WebView нет print/Clipboard — `isBitrixMobile`).
 - [ ] **Mixed-Content / редирект** — `/widget/im-textarea` открывается по `https` без Mixed-Content (фикс `absolute_redirect off`, #74). В консоли нет `http://…` редиректов.
 - [ ] **POST-обработчик** — приложение открывается из портала (POST) без белого «405» (`error_page 405 =200`).
 - [ ] **CSP** — консоль без `Refused to…`/CSP-violations на `/`, `/install/`, `/widget/im-textarea` (сейчас CSP в Report-Only, #78 — при флипе на enforce перепроверить; при включённой аналитике проверить `connect-src`/`script-src`).
