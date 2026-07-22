@@ -24,6 +24,8 @@ jobs:
       # Yandex.Metrika counter id (repo variable). Empty = analytics off (fail-safe).
       # deployGhPages() passes process.env through to `nuxt generate`, so this bakes in.
       NUXT_PUBLIC_YANDEX_COUNTER_ID: ${{ vars.NUXT_PUBLIC_YANDEX_COUNTER_ID }}
+      # Feedback worker URL (repo variable). Empty = feedback feature hidden (fail-safe).
+      NUXT_PUBLIC_FEEDBACK_URL: ${{ vars.NUXT_PUBLIC_FEEDBACK_URL }}
 
     steps:
       - name: Checkout

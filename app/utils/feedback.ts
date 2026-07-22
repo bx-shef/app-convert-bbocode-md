@@ -26,6 +26,8 @@ export interface FeedbackContext {
   output?: string
   /** Fenced-block language hint for the output. */
   outputFormat?: string
+  /** Extra labelled snapshots (e.g. all editor panes), attached only on consent. */
+  attachments?: ReadonlyArray<{ label: string, format?: string, content: string }>
 }
 
 export interface FeedbackInput {
@@ -119,9 +121,16 @@ export function buildFeedbackIssue(input: FeedbackInput): FeedbackIssue {
   const cleanComment = comment ? sanitizeReportText(comment).trim() : ''
   lines.push('', '**Comment:**', cleanComment || '_(none)_')
 
-  if (includeSource && context?.source) {
-    const src = truncate(sanitizeReportText(context.source))
-    lines.push('', `**Source${src.truncated ? ' (truncated)' : ''}:**`, fencedBlock(src.text, context.sourceFormat ?? ''))
+  const hasPayload = Boolean(includeSource && (context?.source || context?.attachments?.length || context?.output))
+  if (hasPayload && context) {
+    if (context.source) {
+      const src = truncate(sanitizeReportText(context.source))
+      lines.push('', `**Source${src.truncated ? ' (truncated)' : ''}:**`, fencedBlock(src.text, context.sourceFormat ?? ''))
+    }
+    for (const a of context.attachments ?? []) {
+      const at = truncate(sanitizeReportText(a.content))
+      lines.push('', `**${sanitizeReportText(a.label)}${at.truncated ? ' (truncated)' : ''}:**`, fencedBlock(at.text, a.format ?? ''))
+    }
     if (context.output) {
       const out = truncate(sanitizeReportText(context.output))
       lines.push('', `**Produced output${out.truncated ? ' (truncated)' : ''}:**`, fencedBlock(out.text, context.outputFormat ?? ''))

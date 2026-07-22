@@ -302,6 +302,13 @@ useEventListener('keydown', (e: KeyboardEvent) => {
               :disabled="!markdown"
               @click="printText(markdown)"
             />
+            <FeedbackReport
+              :markdown="markdown"
+              :bbcode="bbcode"
+              :html="html"
+              :is-b24="isUseB24"
+              :locale="locale"
+            />
           </template>
           <!-- preview is sanitized in useConverter → safe to render -->
           <!-- eslint-disable-next-line vue/no-v-html -->
@@ -456,6 +463,13 @@ useEventListener('keydown', (e: KeyboardEvent) => {
                 :label="t('page.index.ui.print')"
                 :disabled="!markdown"
                 @click="printText(markdown)"
+              />
+              <FeedbackReport
+                :markdown="markdown"
+                :bbcode="bbcode"
+                :html="html"
+                :is-b24="isUseB24"
+                :locale="locale"
               />
             </template>
             <!-- eslint-disable-next-line vue/no-v-html -->

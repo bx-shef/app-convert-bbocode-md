@@ -86,6 +86,37 @@ describe('buildFeedbackIssue', () => {
     expect(body).not.toContain('a'.repeat(MAX_ATTACH_LEN + 1))
   })
 
+  it('renders labelled attachments (all editor panes) when consent is given', () => {
+    const { body } = buildFeedbackIssue({
+      kind: 'wrong-conversion',
+      includeSource: true,
+      context: {
+        direction: 'bb->md',
+        attachments: [
+          { label: 'Markdown', format: 'markdown', content: '**x**' },
+          { label: 'BBCode', format: 'bbcode', content: '[b]x[/b]' },
+          { label: 'HTML', format: 'html', content: '<b>x</b>' }
+        ]
+      }
+    })
+    expect(body).toContain('**Markdown:**')
+    expect(body).toContain('```markdown\n**x**\n```')
+    expect(body).toContain('**BBCode:**')
+    expect(body).toContain('```bbcode\n[b]x[/b]\n```')
+    expect(body).toContain('**HTML:**')
+    expect(body).toContain('```html\n<b>x</b>\n```')
+  })
+
+  it('shows the no-consent note when attachments exist but consent is withheld', () => {
+    const { body } = buildFeedbackIssue({
+      kind: 'wrong-conversion',
+      includeSource: false,
+      context: { attachments: [{ label: 'Markdown', content: '**x**' }] }
+    })
+    expect(body).toContain('not attached (no consent)')
+    expect(body).not.toContain('**x**')
+  })
+
   it('renders safe meta lines', () => {
     const { body } = buildFeedbackIssue({
       kind: 'general',
