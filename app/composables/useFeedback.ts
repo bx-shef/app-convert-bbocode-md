@@ -1,5 +1,8 @@
 import { ref, computed } from 'vue'
-import { buildFeedbackIssue, type FeedbackInput } from '~/utils/feedback'
+import { buildFeedbackIssue, isFeedbackEnabled, type FeedbackInput } from '~/utils/feedback'
+
+/** Abort a hung worker request so `isSending` can't stay stuck (locks the modal). */
+const REQUEST_TIMEOUT_MS = 15000
 
 /**
  * Feedback channel — POSTs a built `{ title, body }` issue payload to an external
@@ -14,10 +17,10 @@ import { buildFeedbackIssue, type FeedbackInput } from '~/utils/feedback'
 export function useFeedback() {
   const config = useRuntimeConfig()
   const endpoint = computed(() => String(config.public.feedbackUrl ?? '').trim())
-  const isEnabled = computed(() => endpoint.value.length > 0)
+  const isEnabled = computed(() => isFeedbackEnabled(endpoint.value))
   const isSending = ref(false)
 
-  /** Build + POST the feedback issue. Throws on a disabled endpoint or non-2xx. */
+  /** Build + POST the feedback issue. Throws on a disabled endpoint, timeout or non-2xx. */
   async function submit(input: FeedbackInput): Promise<void> {
     if (!isEnabled.value) throw new Error('feedback disabled: NUXT_PUBLIC_FEEDBACK_URL is unset')
     const issue = buildFeedbackIssue(input)
@@ -26,7 +29,9 @@ export function useFeedback() {
       const res = await fetch(endpoint.value, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(issue)
+        body: JSON.stringify(issue),
+        // Guard a hung worker: reject after the timeout instead of hanging.
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
       })
       if (!res.ok) throw new Error(`feedback failed: HTTP ${res.status}`)
     } finally {

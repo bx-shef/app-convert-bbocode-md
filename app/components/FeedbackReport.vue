@@ -14,11 +14,15 @@ const props = defineProps<{
   locale: string
 }>()
 
+// Single modal instance controlled by the parent (v-model:open). Kept out of the
+// per-breakpoint preview panes so there is exactly one stateful modal in the DOM
+// (both panes are CSS-toggled, not v-if, so two instances would otherwise coexist).
+const open = defineModel<boolean>('open', { default: false })
+
 const { t } = useI18n()
 const toast = useToast()
 const { isEnabled, isSending, submit } = useFeedback()
 
-const open = ref(false)
 const comment = ref('')
 // Opt-in by default (privacy): the source markup is the user's content and only
 // leaves the browser on an explicit, affirmative choice.
@@ -54,20 +58,15 @@ async function send() {
 </script>
 
 <template>
-  <!-- Hidden entirely when no feedback endpoint is configured (fail-safe). -->
+  <!-- Rendered only when a feedback endpoint is configured (fail-safe). -->
   <B24Modal
     v-if="isEnabled"
     v-model:open="open"
     :title="t('page.index.feedback.title')"
     :dismissible="!isSending"
+    :close="!isSending"
     :b24ui="{ footer: 'justify-end gap-2' }"
   >
-    <B24Button
-      size="xs"
-      color="air-tertiary-no-accent"
-      :label="t('page.index.feedback.button')"
-    />
-
     <template #body>
       <div class="flex flex-col gap-3 text-sm">
         <p class="text-(--ui-color-base-3)">

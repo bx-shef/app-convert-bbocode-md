@@ -9,6 +9,7 @@ import { ENTITY_KINDS, type EntityKind } from '~/utils/b24-entity'
 import { useConverter } from '~/composables/useConverter'
 import { usePrint } from '~/composables/usePrint'
 import { useMetrikaGoal } from '~/composables/useMetrikaGoal'
+import { useFeedback } from '~/composables/useFeedback'
 import BroomIcon from '@bitrix24/b24icons-vue/outline/BroomIcon'
 import CopyIcon from '@bitrix24/b24icons-vue/outline/CopyIcon'
 import CheckLIcon from '@bitrix24/b24icons-vue/outline/CheckLIcon'
@@ -35,6 +36,11 @@ const rest = useB24Rest()
 
 const config = useRuntimeConfig()
 const { reachGoal } = useMetrikaGoal()
+
+// Feedback ("report a bad conversion"): single modal, opened from either preview
+// pane's toolbar. Both live only when an endpoint is configured (fail-safe).
+const { isEnabled: feedbackEnabled } = useFeedback()
+const feedbackOpen = ref(false)
 
 const currentYear = new Date().getFullYear()
 
@@ -302,12 +308,12 @@ useEventListener('keydown', (e: KeyboardEvent) => {
               :disabled="!markdown"
               @click="printText(markdown)"
             />
-            <FeedbackReport
-              :markdown="markdown"
-              :bbcode="bbcode"
-              :html="html"
-              :is-b24="isUseB24"
-              :locale="locale"
+            <B24Button
+              v-if="feedbackEnabled"
+              size="xs"
+              color="air-tertiary-no-accent"
+              :label="t('page.index.feedback.button')"
+              @click="feedbackOpen = true"
             />
           </template>
           <!-- preview is sanitized in useConverter → safe to render -->
@@ -464,12 +470,12 @@ useEventListener('keydown', (e: KeyboardEvent) => {
                 :disabled="!markdown"
                 @click="printText(markdown)"
               />
-              <FeedbackReport
-                :markdown="markdown"
-                :bbcode="bbcode"
-                :html="html"
-                :is-b24="isUseB24"
-                :locale="locale"
+              <B24Button
+                v-if="feedbackEnabled"
+                size="xs"
+                color="air-tertiary-no-accent"
+                :label="t('page.index.feedback.button')"
+                @click="feedbackOpen = true"
               />
             </template>
             <!-- eslint-disable-next-line vue/no-v-html -->
@@ -483,6 +489,16 @@ useEventListener('keydown', (e: KeyboardEvent) => {
           </ConverterPane>
         </template>
       </B24Tabs>
+
+      <!-- Single feedback modal, opened from either preview pane's toolbar. -->
+      <FeedbackReport
+        v-model:open="feedbackOpen"
+        :markdown="markdown"
+        :bbcode="bbcode"
+        :html="html"
+        :is-b24="isUseB24"
+        :locale="locale"
+      />
     </template>
 
     <!-- Standalone footer — credits + links, unified with the currency-converter sibling app -->
