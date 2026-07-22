@@ -8,6 +8,7 @@ import { useB24Rest } from '~/composables/useB24Rest'
 import { ENTITY_KINDS, type EntityKind } from '~/utils/b24-entity'
 import { useConverter } from '~/composables/useConverter'
 import { usePrint } from '~/composables/usePrint'
+import { useMetrikaGoal } from '~/composables/useMetrikaGoal'
 import BroomIcon from '@bitrix24/b24icons-vue/outline/BroomIcon'
 import CopyIcon from '@bitrix24/b24icons-vue/outline/CopyIcon'
 import CheckLIcon from '@bitrix24/b24icons-vue/outline/CheckLIcon'
@@ -31,6 +32,9 @@ const { bbcode, markdown, html, preview, settings, setBb, setMd, setHtml, clear 
 const { copy, copied, isSupported: clipboardSupported } = useClipboard({ legacy: true, copiedDuring: 1500 })
 const { printMarkdown } = usePrint()
 const rest = useB24Rest()
+
+const config = useRuntimeConfig()
+const { reachGoal } = useMetrikaGoal()
 
 const currentYear = new Date().getFullYear()
 
@@ -57,6 +61,30 @@ const tabItems = computed<TabsItem[]>(() => [
 
 useHead({ title: t('page.index.seo.title') })
 
+// Yandex.Metrika is injected here — only on the standalone converter page, NOT
+// app-wide — so it never loads on the portal-only /install or /widget surfaces.
+// The converter is dual-mode (also opens as a B24 placement), so metrika.js
+// additionally self-mutes inside the iframe (window.self !== window.top): portal
+// users are never tracked (analytics principle #4). Static /metrika.js (no inline
+// script, CSP-friendly); the counter id passes via <meta> and is re-validated
+// there. Empty/invalid counter → nothing is injected (analytics off, fail-safe).
+// Deliberately NO <noscript> tracking pixel: it would fire whenever JS is off
+// regardless of iframe context, bypassing the self-mute — the one hole in the
+// "OFF inside the portal" guarantee. This is a JS-required SPA, so a JS-disabled
+// visitor can't use it anyway; dropping the pixel keeps principle #4 airtight.
+const rawCounterId = String(config.public.yandexCounterId ?? '')
+const yandexCounterId = /^\d+$/.test(rawCounterId) ? rawCounterId : ''
+if (yandexCounterId) {
+  useHead({
+    meta: [
+      { name: 'yandex-metrika-id', content: yandexCounterId }
+    ],
+    script: [
+      { key: 'yandex-metrika', src: `${config.app.baseURL}metrika.js`, defer: true }
+    ]
+  })
+}
+
 onMounted(() => {
   if (isUseB24.value) {
     const $b24 = b24Instance.get() as B24Frame
@@ -68,6 +96,7 @@ async function copyText(value: string) {
   if (!value) return
   try {
     await copy(value)
+    reachGoal('copy')
     toast.add({
       title: t('page.index.ui.copied'),
       color: 'air-primary-success',
@@ -84,9 +113,12 @@ async function copyText(value: string) {
 }
 
 async function printText(value: string) {
-  if (!value) return
+  // Guard on trimmed value: printMarkdown() no-ops on whitespace-only input, so
+  // without this the `print` goal would fire for a print that never happened.
+  if (!value.trim()) return
   try {
     await printMarkdown(value)
+    reachGoal('print')
   } catch {
     toast.add({
       title: t('page.index.ui.printFailed'),

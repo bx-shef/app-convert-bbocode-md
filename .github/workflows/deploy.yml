@@ -21,6 +21,9 @@ jobs:
       # Portable across forks: <owner>.github.io/<repo>/
       NUXT_PUBLIC_SITE_URL: https://${{ github.repository_owner }}.github.io
       NUXT_APP_BASE_URL: /${{ github.event.repository.name }}/
+      # Yandex.Metrika counter id (repo variable). Empty = analytics off (fail-safe).
+      # deployGhPages() passes process.env through to `nuxt generate`, so this bakes in.
+      NUXT_PUBLIC_YANDEX_COUNTER_ID: ${{ vars.NUXT_PUBLIC_YANDEX_COUNTER_ID }}
 
     steps:
       - name: Checkout

@@ -12,14 +12,19 @@
  * Required env per target (read from process.env / .env / GH secrets):
  *
  *   gh-pages:
- *     NUXT_PUBLIC_SITE_URL    e.g. https://bx-shef.github.io
- *     NUXT_APP_BASE_URL       e.g. /app-convert-bbocode-md/
+ *     NUXT_PUBLIC_SITE_URL          e.g. https://bx-shef.github.io
+ *     NUXT_APP_BASE_URL             e.g. /app-convert-bbocode-md/
+ *     NUXT_PUBLIC_YANDEX_COUNTER_ID (optional) Yandex.Metrika id; empty = off
  *
  *   docker:
- *     DOCKER_IMAGE            e.g. ghcr.io/bx-shef/app-convert-bbocode-md
- *     DOCKER_TAG              tag, default 'latest'
- *     NUXT_PUBLIC_SITE_URL    baked into the static bundle at build time
- *     NUXT_APP_BASE_URL       base path, default '/'
+ *     DOCKER_IMAGE                  e.g. ghcr.io/bx-shef/app-convert-bbocode-md
+ *     DOCKER_TAG                    tag, default 'latest'
+ *     NUXT_PUBLIC_SITE_URL          baked into the static bundle at build time
+ *     NUXT_APP_BASE_URL             base path, default '/'
+ *     NUXT_PUBLIC_YANDEX_COUNTER_ID (optional) Yandex.Metrika id; empty = off
+ *
+ * All NUXT_PUBLIC_* values bake into the static bundle at `nuxt generate`, so
+ * they must be present at build time (not just in the container's runtime env).
  */
 import { spawnSync } from 'node:child_process'
 import { existsSync } from 'node:fs'
@@ -63,6 +68,7 @@ function deployDocker(extraArgs: string[]): void {
   const tag = process.env.DOCKER_TAG ?? 'latest'
   const siteUrl = process.env.NUXT_PUBLIC_SITE_URL ?? ''
   const baseUrl = process.env.NUXT_APP_BASE_URL ?? '/'
+  const yandexCounterId = process.env.NUXT_PUBLIC_YANDEX_COUNTER_ID ?? ''
   const ref = `${image}:${tag}`
   const push = extraArgs.includes('--push') || process.env.DOCKER_PUSH === '1'
 
@@ -70,6 +76,7 @@ function deployDocker(extraArgs: string[]): void {
     'build',
     '--build-arg', `NUXT_PUBLIC_SITE_URL=${siteUrl}`,
     '--build-arg', `NUXT_APP_BASE_URL=${baseUrl}`,
+    '--build-arg', `NUXT_PUBLIC_YANDEX_COUNTER_ID=${yandexCounterId}`,
     '-t', ref,
     '.'
   ])

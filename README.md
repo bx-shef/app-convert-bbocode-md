@@ -1,6 +1,6 @@
 # BBCode ↔ Markdown ↔ HTML converter for Bitrix24
 
-> Last reviewed: 2026-06-19
+> Last reviewed: 2026-07-22
 
 [![CI](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/ci.yml/badge.svg)](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/ci.yml)
 [![Deploy GitHub Pages](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/deploy.yml/badge.svg)](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/deploy.yml)
@@ -322,13 +322,21 @@ NUXT_ALLOWED_HOSTS=your-tunnel.ngrok.app
 
 ## Аналитика посетителей (опционально)
 
-Поддержан **Cloudflare Web Analytics** — без кук, без баннера согласия GDPR, бесплатно. Один env-флаг:
+По умолчанию аналитика **выключена**: если счётчик не задан, никакие сторонние скрипты не подключаются. Включать стоит **не более одного** трекера.
+
+### Яндекс.Метрика (рекомендуется)
+
+Основной, iframe-безопасный вариант. Подключается **только на публичной странице конвертера** (`/`) и сам глушится внутри iframe портала Bitrix24 (`window.self !== window.top`) — пользователи портала не трекаются. Один env-флаг (id счётчика, только цифры, публичный — не секрет):
 
 ```env
-NUXT_PUBLIC_CF_ANALYTICS_TOKEN=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+NUXT_PUBLIC_YANDEX_COUNTER_ID=99999999
 ```
 
-Если переменная пустая — никакой скрипт не подключается. Токен берётся в Cloudflare → Analytics & Logs → Web Analytics → Add a site (для GitHub Pages выбирать «manual installation»). Значение запекается в бандл при сборке (через `--build-arg` для Docker / `vars` для GitHub Actions), как и `NUXT_PUBLIC_SITE_URL`.
+Значение запекается в бандл при сборке и проброшено по всей цепочке: `--build-arg` (Docker: `Dockerfile` + `tools/deploy.ts`) и `vars.NUXT_PUBLIC_YANDEX_COUNTER_ID` (GitHub Actions — оба workflow, Pages и Docker), как и `NUXT_PUBLIC_SITE_URL`. Пустое значение → аналитика выключена (fail-safe). Отслеживаемые цели: `copy`, `print`.
+
+### Cloudflare Web Analytics (не рекомендуется)
+
+Остаётся в коде, но **выключен** (`NUXT_PUBLIC_CF_ANALYTICS_TOKEN`). В отличие от Метрики, CF-beacon инжектится безусловно — без iframe-гарда — поэтому попал бы и на пользователей портала. Не включайте его без клиентского inbound-frame-гарда; предпочитайте Яндекс.Метрику. (Переменная CF в деплой-пайплайн намеренно не проброшена.)
 
 ## Roadmap
 - [x] REST: задачи, CRM-комментарии, посты Живой ленты — загрузка/сохранение текста (`useB24Rest`, `actions.v2`). **Требуется ручной QA в портале.**

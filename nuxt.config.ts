@@ -38,7 +38,12 @@ export default defineNuxtConfig({
      * @see https://nuxt.com/docs/guide/going-further/runtime-config#example
      */
     public: {
-      siteUrl: prodUrl
+      siteUrl: prodUrl,
+      // Yandex.Metrika counter id (digits). Empty = analytics disabled. Baked at
+      // BUILD time from NUXT_PUBLIC_YANDEX_COUNTER_ID; read by useMetrikaGoal and
+      // rendered into a <meta> tag on the standalone converter page (index.vue),
+      // which public/metrika.js reads. Loads only outside the B24 iframe.
+      yandexCounterId: ''
     }
   },
 
