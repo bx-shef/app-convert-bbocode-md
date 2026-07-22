@@ -89,7 +89,7 @@ legacy commit-status. Их переносить не нужно.
 |---|---|---|---|
 | Публиковать **оба деплоя** (`deploy-docker.yml` образ + `deploy.yml` Pages) **только после зелёного CI** (`workflow_run:[ci]` + гейт `conclusion==success`; образец — `deploy.yml` job `verify-ci` в примере). Сейчас **оба** пушат независимо от `ci.yml` | **P0** | M | ⬜ |
 | **`make prod-rollback TAG=sha-<sha>` + `make prod-smoke`** по образцу `currency-converter/Makefile` — `deploy-docker.yml` уже пушит immutable-тег `:${sha}`, база для отката готова | **P1** | S | ⬜ |
-| **SHA-пины** GitHub Actions (`uses: …@<sha> # v7.0.0`) вместо плавающих `@v7` во всех workflow | **P1** | S | ⬜ |
+| **SHA-пины** GitHub Actions (`uses: …@<sha> # v7.0.0`) вместо плавающих `@v7` во всех workflow. ⚠️ **Заблокировано в текущей среде**: внешние SHA не резолвятся (GitHub MCP — только scope `bx-shef`, `api.github.com` → 403 через прокси). Нужен сеанс с `gh`/неограниченным GitHub **или** SHA-pin через Dependabot. Часть SHA есть у соседей (`ai-price-import`/`currency-converter`), но Pages-экшены (`configure-pages`/`upload-pages-artifact`/`deploy-pages`) нигде не запинены и deploy-only (промах не ловится CI пиара) | **P1** | S | ⬜ |
 | Пост-деплойный **smoke-скрипт** (`scripts/smoke.sh`: `GET / →200`, ассет →200, наличие security-заголовков) | **P1** | S | ⬜ |
 | Флип **CSP Report-Only → enforce** после портального QA (сменить имя заголовка в `docker/nginx.conf`) | **P1** | S | 🧪→⬜ |
 | CSP: **hash-based `script-src`** (убрать `'unsafe-inline'`; образец — `currency-converter/scripts/csp-hashes.mjs`) | P1–P2 | M | ⬜ |
@@ -162,8 +162,8 @@ zero-width) — **server-agnostic, переносится как есть**. UI 
 | Честная **легенда статусов** (эта, ✅/🧪/📝/⛔) в `docs/project-map.md` вместо `✅/🟨/⬜` — у нас реальный зазор «сделано vs проверено в портале» (REST Load/Save) | **P1** | S | ✅ #96 |
 | Штамп **`> Last reviewed: YYYY-MM-DD`** под H1 во всех `docs/*.md` (сейчас только `README.md`) + тест-энфорсер по образцу `currency-converter/tests/mdReviewStamp.test.ts` | **P1** | S | ✅ #98 |
 | Агрегат **`pnpm check`** (= lint+typecheck+test) в `package.json` + цели `make dev/check` (сейчас `Makefile` только прод-докер; сделано в #95) | **P1** | S | ✅ #95 |
-| Мини-методология тестов (L1 smoke / L2 happy / L3 со всех сторон) + **чек-лист портального QA** (install, Load/Save, IM_TEXTAREA) — образец `docs/redesign/07-testing.md`, `10-qa-checklist.md` | P2 | M | ⬜ |
-| Норма «посмотри на пиксели» (DoD после UI-правки) в `CLAUDE.md` — образец `docs/redesign/VISUAL_VERIFICATION.md` | P2 | S | ⬜ |
+| Мини-методология тестов (L1 smoke / L2 happy / L3 со всех сторон) + **чек-лист портального QA** (install, Load/Save, IM_TEXTAREA) — образец `docs/redesign/07-testing.md`, `10-qa-checklist.md` | P2 | M | ✅ #99 (`docs/TESTING.md`) |
+| Норма «посмотри на пиксели» (DoD после UI-правки) в `CLAUDE.md` — образец `docs/redesign/VISUAL_VERIFICATION.md` | P2 | S | ✅ #99 |
 
 ### Сознательно НЕ переносим (серверное — в SPA не имеет смысла)
 

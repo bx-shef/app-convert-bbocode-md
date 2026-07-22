@@ -5,6 +5,7 @@
 > Точка входа в проект для людей и AI-агента.
 > На этот файл опираются навыки отчётов (`/report-status`, `/report-questions`).
 > Полный план улучшений (по образцу `ai-price-import`) — [`IMPROVEMENT_PLAN.md`](IMPROVEMENT_PLAN.md).
+> План тестирования + чек-лист портального QA — [`TESTING.md`](TESTING.md).
 
 ## Цель
 
