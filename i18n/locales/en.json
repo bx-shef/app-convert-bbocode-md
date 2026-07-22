@@ -27,6 +27,18 @@
         "preview": "Preview",
         "previewEmpty": "Rendered output appears here"
       },
+      "feedback": {
+        "button": "Report a bad conversion",
+        "title": "Report a wrong conversion",
+        "intro": "Describe what converted incorrectly — it helps fix the converter.",
+        "commentPlaceholder": "What went wrong?",
+        "attach": "Attach the source markup (all panes)",
+        "attachHint": "Helps reproduce the issue. Your text leaves the browser only if you tick this.",
+        "cancel": "Cancel",
+        "send": "Send",
+        "sent": "Thanks! Your report was sent.",
+        "failed": "Couldn't send the report. Please try again."
+      },
       "mode": {
         "b24": "Inside Bitrix24",
         "standalone": "Standalone (no B24)"

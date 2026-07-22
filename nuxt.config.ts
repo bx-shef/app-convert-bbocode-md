@@ -43,7 +43,12 @@ export default defineNuxtConfig({
       // BUILD time from NUXT_PUBLIC_YANDEX_COUNTER_ID; read by useMetrikaGoal and
       // rendered into a <meta> tag on the standalone converter page (index.vue),
       // which public/metrika.js reads. Loads only outside the B24 iframe.
-      yandexCounterId: ''
+      yandexCounterId: '',
+      // Feedback worker endpoint (public URL of an external worker that opens a
+      // GitHub issue in a PRIVATE bucket repo; the token lives in the worker, not
+      // here). Empty = feedback feature disabled (button hidden). Baked at BUILD
+      // time from NUXT_PUBLIC_FEEDBACK_URL. See useFeedback / app/utils/feedback.ts.
+      feedbackUrl: ''
     }
   },
 
