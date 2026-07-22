@@ -107,8 +107,8 @@ Node-рантайма нет). Браузерного RUM в примере не
 
 | Пункт | Приоритет | Сложн. | Статус |
 |---|---|---|---|
-| **Аналитика уже частично есть:** CF Web Analytics beacon подключён в `nuxt.config.ts` (gated на `NUXT_PUBLIC_CF_ANALYTICS_TOKEN`, cookieless). Довести — добавить токен в `.env.example`. **Согласовать со экосистемой:** сосед `currency-converter` на Яндекс.Метрике → два приложения на разных счётчиках без причины (открытый вопрос ниже) | **P0** | S | ⬜ |
-| Записать в `CLAUDE.md` **принципы**: default-off env-gate · allowlist «форма/счётчики, не содержимое» (текст textarea **никогда** не покидает браузер) · хеш portal-id · класс ошибки, не текст · аналитика **OFF внутри iframe** (прецедент `currency-converter/public/metrika.js`) | **P1** | S | ⬜ |
+| **Аналитика уже частично есть:** CF Web Analytics beacon подключён в `nuxt.config.ts` (gated на `NUXT_PUBLIC_CF_ANALYTICS_TOKEN`, cookieless). Довести — добавить токен в `.env.example`. **Согласовать со экосистемой:** сосед `currency-converter` на Яндекс.Метрике → два приложения на разных счётчиках без причины (открытый вопрос ниже) | **P0** | S | ✅ #97 |
+| Записать в `CLAUDE.md` **принципы**: default-off env-gate · allowlist «форма/счётчики, не содержимое» (текст textarea **никогда** не покидает браузер) · хеш portal-id · класс ошибки, не текст · аналитика **OFF внутри iframe** (прецедент `currency-converter/public/metrika.js`) | **P1** | S | ✅ #97 |
 | Продуктовые события (входной формат, copy/print, save-to-B24, insert-chat) — **только** при заведённом приёмнике (Plausible/Umami/свой воркер) | P2 | M | 📝 (решение) |
 | Свой collector/ClickHouse/Grafana для статики | — | — | 🚫 skip (избыточно) |
 

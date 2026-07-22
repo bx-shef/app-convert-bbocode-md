@@ -41,6 +41,7 @@ Nuxt 4 SPA placement for Bitrix24 that converts Bitrix24 BBCode ↔ Markdown.
 - **i18n** — when adding a new UI string, add the key to `i18n/locales/en.json` and `i18n/locales/ru.json`. Other 17 locales fall back to `en` (defaultLocale). User runs `pnpm translate-ui` later for full translation.
 - **B24 UI components only**: `B24Textarea`, `B24DashboardPanel`, `B24Button`, `B24DashboardNavbar`, `B24Progress`, etc. Auto-imported via `@bitrix24/b24ui-nuxt`.
 - **No server code.** `server/` folder was intentionally removed. No SSR API endpoints. App is pure SPA (runtime fetches go through `useB24` → Bitrix24 REST).
+- **Analytics/telemetry** — client-side only, opt-in via env-gate (`NUXT_PUBLIC_CF_ANALYTICS_TOKEN`, empty = off). No server-side OTel (pure SPA). Principles (mirroring `ai-price-import`, see `docs/IMPROVEMENT_PLAN.md` § Телеметрия): (1) collect **shape/counters only, never content** — the user's textarea text must never leave the browser; (2) if an event is ever tagged by portal, **hash** `member_id`/domain, never raw; (3) errors = **class, not message text**; (4) keep analytics **OFF inside the B24 iframe** (someone else's portal + privacy; precedent: `currency-converter/public/metrika.js`).
 - BBCode tag set is **closed** — see `KNOWN_TAGS` in `app/utils/bbcode-parser.ts`. Unknown tags pass through as text. To support a new tag (e.g. `[USER=id]`), add it to `KNOWN_TAGS` and handle it in both `bbcode-to-md.ts` and `md-to-bbcode.ts`.
 
 ## What NOT to touch without need
