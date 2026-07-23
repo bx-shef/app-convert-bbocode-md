@@ -36,7 +36,7 @@ Markdown и HTML (Markdown — опорный формат), с живым пр�
 - Платформа обновлена: `@bitrix24/b24jssdk` 2.0, `@bitrix24/b24ui-nuxt` 2.9 (+ Nuxt/Vue/Tailwind/markdown-it). Все проверки зелёные.
 - Постоянная визуальная проверка (Playwright e2e в CI).
 - Чистка: закрыты устаревшие dependabot-PR (#50/#51/#52/#53/#56/#57/#60, перекрыты апгрейдом) и issue #49 (HTML-превью + Copy HTML — уже в продукте).
-- Безопасность: закрыты 4 high Dependabot-алерта через `pnpm.overrides` (patch-бампы brace-expansion/linkify-it/svgo, #105). Overrides — временный security-floor, снимаются после мержа апстрим-PR #82/#91/#87.
+- Безопасность: закрыты 4 high Dependabot-алерта через `pnpm.overrides` (#105) — временный security-floor, снимаем по мере бампа родителей. **Override `linkify-it` снят в #110** (markdown-it 14.3 сам требует `^5.0.2`); остаются `brace-expansion@2`/`@5` + `svgo` (снимутся после бампа их родителей — nuxt #91 / dev-tooling).
 - Разбор открытых feature-PR: #42 закрыт (цель уже в main), #8 закрыт → заменён на #69 (Watchtower), #43 ребейзнут на актуальный main.
 
 ## Что сейчас
