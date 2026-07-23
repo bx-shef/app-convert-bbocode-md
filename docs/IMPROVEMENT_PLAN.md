@@ -96,7 +96,7 @@ legacy commit-status. Их переносить не нужно.
 | `make prod-redeploy` + `docker image prune`; оживить мёртвую цель `init-proxy` (пинованные `server`/`watchtower` compose) | P2 | S–M | ⬜ |
 | Тримминг `.dockerignore` (`docs`, `*.md`, `e2e`) — быстрее build-context | P2 | S | ⬜ |
 | `RUN nginx -t` как шаг сборки в `Dockerfile` (пояс+подтяжки к CI-проверке) | P2 | S | ⬜ |
-| **Vibecode Black Hole** — задокументировать как опцию | P2 | doc | 📝 |
+| **Vibecode Black Hole** — задокументировать как опцию | P2 | doc | ✅ [`docs/DEPLOY_VIBECODE.md`](DEPLOY_VIBECODE.md) (концепт; точные REST-шаги — по доступу владельца) |
 
 ### 2. Телеметрия
 
@@ -220,8 +220,10 @@ SessionStart-хук · `pnpm check` + `make dev/check` · SHA-пины Actions �
    аналитика заглушена намеренно; портальные счётчики позже через `b24.options`.
    *Со стороны владельца:* задать `vars.NUXT_PUBLIC_YANDEX_COUNTER_ID` в GitHub
    Actions и пересобрать (проброс env по деплой-пайплайну уже сделан) — код готов.
-4. **Black Hole** → ✅ **будем делать** (по образцу примера). Пока — документируем как
-   опцию; активируем под конкретного клиента. *Со стороны владельца:* доступ/ключ Vibecode.
+4. **Black Hole** → ✅ **будем делать** (по образцу примера). **Задокументировано**
+   как опция — [`docs/DEPLOY_VIBECODE.md`](DEPLOY_VIBECODE.md); активируем под
+   конкретного клиента. *Со стороны владельца:* доступ/ключ Vibecode + фиксация
+   точных REST-шагов в доке после первого прогона.
 5. **Единый счётчик аналитики** → ✅ **Яндекс.Метрика** (единообразие с
    `currency-converter`; в отличие от CF Web Analytics поддерживает цели и имеет
    iframe-self-mute). CF-beacon остаётся в коде выключенным (пустой токен), включать не нужно.
