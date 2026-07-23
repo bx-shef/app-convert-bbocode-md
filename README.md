@@ -138,6 +138,8 @@ tests/                          # vitest
 
 CLI и CI используют один и тот же код сборки — локальный `pnpm run deploy …` воспроизводит ровно то, что собирает Actions. (Команда называется `pnpm run deploy`, а не `pnpm deploy`, потому что у pnpm есть встроенная команда `deploy` для монорепо — её и перекрывает наш скрипт.)
 
+Есть и третий вариант — **хостинг внутри облака клиента** (Bitrix24 Vibecode «Black Hole», без публичного IP). Кода не требует (тот же статичный бандл), описан как опция в [`docs/DEPLOY_VIBECODE.md`](docs/DEPLOY_VIBECODE.md).
+
 ```bash
 pnpm run deploy gh-pages         # сборка под GitHub Pages (артефакт в dist/)
 pnpm run deploy docker           # docker build → локальный образ
