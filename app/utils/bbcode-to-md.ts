@@ -94,6 +94,12 @@ function renderTag(n: TagNode, ctx: RenderCtx): string {
     }
     case 'user': return n.primary ? `<span data-bb-user="${idVal(n.primary)}">${inner()}</span>` : inner()
     case 'department': return n.primary ? `<span data-bb-dept="${idVal(n.primary)}">${inner()}</span>` : inner()
+    // Interactive IM-bot tags (Bitrix24 chat): SEND submits the value as a
+    // message, PUT inserts it into the input, CALL dials the number. Carried
+    // through the MD/HTML pivot as a `<span data-bb-*>` (like user/department).
+    case 'send': return n.primary ? `<span data-bb-send="${attrVal(n.primary)}">${inner()}</span>` : inner()
+    case 'put': return n.primary ? `<span data-bb-put="${attrVal(n.primary)}">${inner()}</span>` : inner()
+    case 'call': return n.primary ? `<span data-bb-call="${attrVal(n.primary)}">${inner()}</span>` : inner()
     case 'br': return '\n'
     case 'hr': return '\n---\n'
     case 'p': return '\n\n' + inner() + '\n\n'
@@ -157,9 +163,20 @@ function styleVal(v: string): string {
   return v.replace(/["<>;]/g, '').trim()
 }
 
-/** Strip characters that would break out of an HTML attribute value. */
+// Strip attribute-breaking chars for a clean carrier. NOT the XSS barrier — that
+// is the allow-list in `sanitize-html.ts`, run before any HTML reaches the DOM
+// (preview/print). `"`/`<`/`>` are dropped (lossy for exotic values, safe): the
+// common bot values (`/help`, phone numbers) never contain them.
 function idVal(v: string): string {
   return v.replace(/["<>]/g, '').trim()
+}
+
+/**
+ * Like {@link idVal} but WITHOUT trimming — interactive-tag values can carry a
+ * meaningful trailing/leading space (e.g. `[PUT=/search ]` inserts `/search `).
+ */
+function attrVal(v: string): string {
+  return v.replace(/["<>]/g, '')
 }
 
 function collapseBlankLines(s: string): string {

@@ -32,6 +32,15 @@ describe('mdToHtml', () => {
     expect(mdToHtml('[X](https://x.com)')).toBe('<p><a href="https://x.com">X</a></p>')
   })
 
+  // markdown-it 14.3 (CommonMark 6.7): 2+ trailing spaces OR a backslash before
+  // a newline are hard breaks → <br>. Guards this for the preview/print HTML
+  // path; md-to-bbcode collapses soft/hard breaks to the same '\n', so the
+  // BBCode direction is unaffected.
+  it('renders hard line breaks as <br> (markdown-it 14.3 / CommonMark 6.7)', () => {
+    expect(mdToHtml('a  \nb')).toBe('<p>a<br>\nb</p>')
+    expect(mdToHtml('a\\\nb')).toBe('<p>a<br>\nb</p>')
+  })
+
   it('empty input', () => {
     expect(mdToHtml('')).toBe('')
   })

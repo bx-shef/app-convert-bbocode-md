@@ -33,6 +33,17 @@ export function useB24Rest() {
     return b24.get() as B24Frame
   }
 
+  // Transient-failure retries live in the SDK's HTTP layer, NOT here.
+  // `actions.v2.call.make` goes through its RestrictionManager, which — as of
+  // @bitrix24/b24jssdk 2.x (re-verify on a major/minor bump) — retries network
+  // errors (`retryOnNetworkError` defaults to true), 408, 429/OPERATION_TIME_LIMIT
+  // and 503/QUERY_LIMIT_EXCEEDED with exponential backoff + jitter (maxRetries 3,
+  // retryDelay 1000ms); only genuine 4xx throw straight up.
+  // Do NOT wrap an outer retry around this: it resets the SDK's per-call attempt
+  // counter and runs blind to its backoff/limit state, piling load onto an
+  // already-throttled method. The `*.update` saves are idempotent on the field
+  // value, but a blind retry can still double server-side side effects (edit
+  // history, notifications) when a write applied but its response was lost.
   async function call(method: string, params: Record<string, unknown>): Promise<unknown> {
     const $b24 = frame()
     const res = await $b24.actions.v2.call.make({ method, params, requestId: Text.getUuidRfc4122() })

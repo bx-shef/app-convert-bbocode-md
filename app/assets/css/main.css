@@ -78,6 +78,17 @@
 }
 .preview-html [data-bb-user]::before { content: "@"; opacity: 0.6; }
 
+/* Interactive IM-bot tags render as button-like chips (bordered, not filled). */
+.preview-html [data-bb-send], .preview-html [data-bb-put], .preview-html [data-bb-call] {
+  display: inline-block;
+  border: 1px solid color-mix(in srgb, var(--ui-color-accent-main-primary, #2fc6f6) 45%, transparent);
+  border-radius: 4px;
+  padding: 0 0.4em;
+  white-space: nowrap;
+  cursor: default;
+}
+.preview-html [data-bb-call]::before { content: "📞 "; opacity: 0.7; }
+
 /* @todo move to b24ui */
 .ui-btn.--air.ui-btn-lg {
   --ui-btn-font-weight: var(--ui-font-weight-semi-bold);

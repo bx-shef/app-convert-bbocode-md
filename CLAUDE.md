@@ -15,7 +15,7 @@ Nuxt 4 SPA placement for Bitrix24 that converts Bitrix24 BBCode ↔ Markdown.
 - `@nuxtjs/i18n` (19 locales)
 - vitest for tests
 - Tailwind v4 (set up by b24ui-nuxt)
-- pnpm 10
+- pnpm 10. **`pnpm.overrides` in `package.json`** is the sanctioned way to pin patched versions of **transitive** deps flagged by Dependabot security alerts, until upstream parents catch up (a temporary security-floor — remove the pin once the parent bump lands). Scope by major (`"pkg@2": "^2.1.2"`) when two majors of the same package coexist in the tree — a blanket override would force one API onto both and break resolution. Keep the current version/trigger detail in `docs/project-map.md`, not here.
 
 ## Architecture
 - `app/pages/index.vue` — three-format editor (Markdown / BBCode / HTML) + live preview; 2×2 panes on desktop (md+), tabs on mobile. Theme toggle + credits footer only standalone.
@@ -60,7 +60,7 @@ Nuxt 4 SPA placement for Bitrix24 that converts Bitrix24 BBCode ↔ Markdown.
 
 ## Out of scope (current state)
 - REST load/save **done** for task / CRM comment / Feed post (`useB24Rest` + the index toolbar bar; scopes `task`, `crm`, `log`). Live behaviour needs hands-on portal QA.
-- Entity mentions `[USER=id]`/`[DEPARTMENT=id]` are **done** (round-trip via `<span data-bb-*>` carrier; preview renders a chip; name comes from the tag — no REST resolve). `[DISK File=id]` still passes through as literal text (special format). Styling tags `[color]`/`[size]`/`[font]` are **done** (via `<span style>` carrier).
+- Entity mentions `[USER=id]`/`[DEPARTMENT=id]` are **done** (round-trip via `<span data-bb-*>` carrier; preview renders a chip; name comes from the tag — no REST resolve). Interactive IM-bot tags `[SEND]`/`[PUT]`/`[CALL]` are **done** (same carrier; official Bitrix24 chat format — issue #88). `[DISK File=id]` still passes through as literal text (special format). Styling tags `[color]`/`[size]`/`[font]` are **done** (via `<span style>` carrier).
 - Server-side handlers (`server/` deliberately absent).
 
 ## Conversion mapping
@@ -68,6 +68,7 @@ See `README.md` § Конвертация for the full table. Key rules:
 - `[u]` ↔ `<u>` (Markdown has no native underline; HTML fallback).
 - `[color]`/`[size]`/`[font]` ↔ `<span style="color:… | font-size:…px | font-family:…">` (MD carries the span; `md-to-bbcode` parses the style back, `sanitize-html` allow-lists a few safe CSS props).
 - `[USER=id]`/`[DEPARTMENT=id]` ↔ `<span data-bb-user|data-bb-dept="id">Name</span>` (round-trip carrier; preview renders a chip via `.preview-html [data-bb-*]`).
+- `[SEND=v]`/`[PUT=v]`/`[CALL=num]` (interactive IM-bot tags — official Bitrix24 chat format) ↔ `<span data-bb-send|put|call="v">text</span>` (same carrier; values may contain spaces → quoted in BBCode; preview renders a bordered button-chip). The official bot-message tag set is a **subset** — our `KNOWN_TAGS` is a superset that also serves task/CRM/Feed formatting; `chatMode` adapts (tables→lists).
 - `[code]` content is **literal** — no nested parsing.
 - `[*]` is self-closing; content of an item runs until next `[*]` or `[/list]`.
 - Autolink `<https://x>` ↔ `[url]https://x[/url]`; named link `[X](url)` ↔ `[url=url]X[/url]`.
