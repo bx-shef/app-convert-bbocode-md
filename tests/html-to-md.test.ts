@@ -98,4 +98,7 @@ describe('htmlToMd — robustness', () => {
     expect(htmlToMd('<span data-bb-send="/help">Go</span>')).toBe('<span data-bb-send="/help">Go</span>')
     expect(htmlToMd('<span data-bb-call="+7911">Call</span>')).toBe('<span data-bb-call="+7911">Call</span>')
   })
+  it('does not trim a meaningful trailing space in an interactive value', () => {
+    expect(htmlToMd('<span data-bb-put="/search ">Go</span>')).toBe('<span data-bb-put="/search ">Go</span>')
+  })
 })

@@ -163,7 +163,10 @@ function styleVal(v: string): string {
   return v.replace(/["<>;]/g, '').trim()
 }
 
-/** Strip characters that would break out of an HTML attribute value. */
+// Strip attribute-breaking chars for a clean carrier. NOT the XSS barrier — that
+// is the allow-list in `sanitize-html.ts`, run before any HTML reaches the DOM
+// (preview/print). `"`/`<`/`>` are dropped (lossy for exotic values, safe): the
+// common bot values (`/help`, phone numbers) never contain them.
 function idVal(v: string): string {
   return v.replace(/["<>]/g, '').trim()
 }

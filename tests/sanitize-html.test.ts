@@ -69,4 +69,7 @@ describe('sanitizeHtml', () => {
     expect(sanitizeHtml('<span data-bb-put="/x">P</span>')).toBe('<span data-bb-put="/x">P</span>')
     expect(sanitizeHtml('<span data-bb-call="+7911">Call</span>')).toBe('<span data-bb-call="+7911">Call</span>')
   })
+  it('drops event handlers on interactive-tag spans (allow-list is the barrier)', () => {
+    expect(sanitizeHtml('<span data-bb-send="/x" onmouseover="alert(1)">t</span>')).toBe('<span data-bb-send="/x">t</span>')
+  })
 })

@@ -137,6 +137,13 @@ describe('bbcodeToMd — entity mentions (→ <span data-bb-*>)', () => {
   it('quoted interactive value preserves spaces', () => {
     expect(bbcodeToMd('[PUT="/search "]Поиск[/PUT]')).toBe('<span data-bb-put="/search ">Поиск</span>')
   })
+  it('unquoted interactive value with spaces (real bot markup) parses intact', () => {
+    expect(bbcodeToMd('[PUT=/search ]Поиск[/PUT]')).toBe('<span data-bb-put="/search ">Поиск</span>')
+    expect(bbcodeToMd('[CALL=+7 916 123]Позвонить[/CALL]')).toBe('<span data-bb-call="+7 916 123">Позвонить</span>')
+  })
+  it('interactive tag without a value → unwrapped', () => {
+    expect(bbcodeToMd('[SEND]x[/SEND]')).toBe('x')
+  })
   it('user without id → unwrapped', () => {
     expect(bbcodeToMd('[USER]John[/USER]')).toBe('John')
   })
