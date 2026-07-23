@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { B24Frame } from '@bitrix24/b24jssdk'
 import type { TabsItem } from '@bitrix24/b24ui-nuxt'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useClipboard, useEventListener } from '@vueuse/core'
 import { useB24 } from '~/composables/useB24'
 import { useB24Rest } from '~/composables/useB24Rest'
@@ -96,12 +96,27 @@ if (yandexCounterId) {
   })
 }
 
+function onB24Ready() {
+  const $b24 = b24Instance.get() as B24Frame
+  $b24.parent.setTitle(t('page.index.seo.title'))
+  // Show the Marketplace rating prompt if the engagement policy allows.
+  rating.maybePrompt()
+}
+
 onMounted(() => {
+  // A child's onMounted runs BEFORE app.vue finishes the async b24.init(), so on
+  // a fresh load isUseB24 is still false here — wait for the frame to initialise
+  // (same pattern as widget/im-textarea.vue), otherwise setTitle/maybePrompt
+  // would never fire inside the portal.
   if (isUseB24.value) {
-    const $b24 = b24Instance.get() as B24Frame
-    $b24.parent.setTitle(t('page.index.seo.title'))
-    // Show the Marketplace rating prompt if the engagement policy allows.
-    rating.maybePrompt()
+    onB24Ready()
+  } else {
+    const stop = watch(isUseB24, (v) => {
+      if (v) {
+        stop()
+        onB24Ready()
+      }
+    })
   }
 })
 

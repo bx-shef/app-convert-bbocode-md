@@ -62,9 +62,15 @@ export function marketplacePath(slug: string): string {
   return `/marketplace/detail/${slug}/`
 }
 
-/** Whether a Marketplace slug is configured (feature gate). */
+// Marketplace app codes look like `vendor.appname`. Allow-list the format so a
+// malformed slug (typo, stray path chars) disables the feature (fail-fast)
+// instead of building a weird slider path.
+const SLUG_RE = /^[a-zA-Z0-9_.-]+$/
+
+/** Whether a valid Marketplace slug is configured (feature gate). */
 export function isRatingConfigured(slug: string | undefined | null): boolean {
-  return Boolean(slug && String(slug).trim().length > 0)
+  const s = slug ? String(slug).trim() : ''
+  return s.length > 0 && SLUG_RE.test(s)
 }
 
 // Pure state transitions — the composable persists the returned value.
@@ -90,11 +96,13 @@ export function parseRatingState(raw: string | null): RatingState {
   try {
     const o = JSON.parse(raw) as Partial<RatingState>
     return {
-      uses: Number(o.uses) || 0,
-      lastPromptAt: Number(o.lastPromptAt) || 0,
-      snoozes: Number(o.snoozes) || 0,
-      rated: Boolean(o.rated),
-      dismissed: Boolean(o.dismissed)
+      // Clamp to ≥0; strict === true for booleans (a tampered "false" string is
+      // truthy under Boolean() — must not read as "already rated/dismissed").
+      uses: Math.max(0, Number(o.uses) || 0),
+      lastPromptAt: Math.max(0, Number(o.lastPromptAt) || 0),
+      snoozes: Math.max(0, Number(o.snoozes) || 0),
+      rated: o.rated === true,
+      dismissed: o.dismissed === true
     }
   } catch {
     return { ...DEFAULT_RATING_STATE }

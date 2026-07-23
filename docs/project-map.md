@@ -1,6 +1,6 @@
 # Карта проекта — конвертер BBCode ↔ Markdown ↔ HTML для Bitrix24
 
-> Last reviewed: 2026-07-22
+> Last reviewed: 2026-07-23
 
 > Точка входа в проект для людей и AI-агента.
 > На этот файл опираются навыки отчётов (`/report-status`, `/report-questions`).

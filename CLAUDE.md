@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-> Last reviewed: 2026-07-22
+> Last reviewed: 2026-07-23
 
 Nuxt 4 SPA placement for Bitrix24 that converts Bitrix24 BBCode ↔ Markdown.
 
@@ -36,7 +36,7 @@ Nuxt 4 SPA placement for Bitrix24 that converts Bitrix24 BBCode ↔ Markdown.
 - `app/composables/usePrint.ts` + `app/utils/md-to-print-html.ts` — render Markdown to a print-ready HTML document (hidden iframe → `window.print()`).
 - `app/utils/metrika.ts` (pure `reachMetrikaGoal` core) + `app/composables/useMetrikaGoal.ts` (thin Vue wrapper) + `public/metrika.js` (static loader, iframe self-mute). Yandex.Metrika, **standalone-only**: injected by `index.vue` (not app-wide) when `NUXT_PUBLIC_YANDEX_COUNTER_ID` is set; goals `copy`/`print`. See Analytics convention below.
 - `app/utils/feedback.ts` (pure `buildFeedbackIssue` + `sanitizeReportText` + `isFeedbackEnabled`) + `app/composables/useFeedback.ts` (POSTs to worker, `AbortSignal.timeout`) + `app/components/FeedbackReport.vue` (single `B24Modal`, `v-model:open`, opened from the Preview pane toolbar in either layout).
-- `app/utils/app-rating.ts` (pure `shouldPromptRating` policy + state transitions + `parseRatingState`) + `app/composables/useAppRating.ts` (module-level singleton state, localStorage, opens the Marketplace slider) + `app/components/AppRatingModal.vue`. "Rate this app" prompt: **portal-only**, gated on `NUXT_PUBLIC_MARKETPLACE_SLUG` (empty = off); uses counted on copy/save, shown on portal mount when the engagement policy allows. Opens `frame.slider.openPath(slider.getUrl('/marketplace/detail/<slug>/'))`. See Rating convention below. "Report a bad conversion": builds a GitHub-issue payload, sends it to an external worker (`NUXT_PUBLIC_FEEDBACK_URL`, empty = hidden) that opens the issue in a PRIVATE bucket repo — **the token lives in the worker, never in this SPA bundle**. Source markup attached only on explicit consent; content sanitised (Trojan-Source/bidi/zero-width). See Feedback convention below.
+- `app/utils/app-rating.ts` (pure `shouldPromptRating` policy + state transitions + `parseRatingState`) + `app/composables/useAppRating.ts` (module-level singleton state, localStorage, opens the Marketplace slider) + `app/components/AppRatingModal.vue`. "Rate this app" prompt: **portal-only**, gated on `NUXT_PUBLIC_MARKETPLACE_SLUG` (empty/invalid = off); **in-portal** uses counted on copy/save, shown once the frame is ready (`watch(isUseB24)`, not bare `onMounted`) when the engagement policy allows. Opens `$b24.slider.openPath($b24.slider.getUrl('/marketplace/detail/<slug>/'))`. See Rating convention below. "Report a bad conversion": builds a GitHub-issue payload, sends it to an external worker (`NUXT_PUBLIC_FEEDBACK_URL`, empty = hidden) that opens the issue in a PRIVATE bucket repo — **the token lives in the worker, never in this SPA bundle**. Source markup attached only on explicit consent; content sanitised (Trojan-Source/bidi/zero-width). See Feedback convention below.
 - `app/layouts/clear.vue` — barebones full-height panel (used by index + install).
 - `app/layouts/widget.vue` — barebones wrapper for the placement widget.
 

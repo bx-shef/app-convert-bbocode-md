@@ -1,6 +1,6 @@
 # План улучшения репозитория (по образцу `ai-price-import`)
 
-> Last reviewed: 2026-07-22
+> Last reviewed: 2026-07-23
 
 Документ — итог сравнения нашего репозитория (`bx-shef/app-convert-bbocode-md`,
 далее **bbcode**) с примером `bx-shef/ai-price-import` («Procure AI») по осям

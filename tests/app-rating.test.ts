@@ -7,7 +7,9 @@ import {
 
 const NOW = 1_700_000_000_000
 const DAY = 86_400_000
-const ready: RatingState = { uses: 3, lastPromptAt: 0, snoozes: 0, rated: false, dismissed: false }
+// Frozen so any transition that mutates its input in-place throws (strict mode)
+// instead of silently corrupting a shared fixture.
+const ready: RatingState = Object.freeze({ uses: 3, lastPromptAt: 0, snoozes: 0, rated: false, dismissed: false })
 
 describe('shouldPromptRating', () => {
   it('prompts once the use threshold is met and nothing blocks it', () => {
@@ -27,12 +29,21 @@ describe('shouldPromptRating', () => {
     expect(shouldPromptRating({ ...ready, snoozes: DEFAULT_RATING_POLICY.maxSnoozes }, NOW)).toBe(false)
   })
 
-  it('respects the snooze cooldown, then prompts again', () => {
+  it('respects the snooze cooldown, then prompts again (incl. exact boundary)', () => {
     const snoozedNow = markSnoozed(ready, NOW)
     // within the cooldown window
     expect(shouldPromptRating(snoozedNow, NOW + DAY)).toBe(false)
+    // exactly at the boundary — cooldown has elapsed (guards `<` vs `<=`)
+    expect(shouldPromptRating(snoozedNow, NOW + DEFAULT_RATING_POLICY.snoozeDays * DAY)).toBe(true)
     // after the cooldown window
     expect(shouldPromptRating(snoozedNow, NOW + (DEFAULT_RATING_POLICY.snoozeDays + 1) * DAY)).toBe(true)
+  })
+
+  it('honours a custom policy', () => {
+    const policy = { minUses: 1, snoozeDays: 1, maxSnoozes: 1 }
+    expect(shouldPromptRating({ ...ready, uses: 1 }, NOW, policy)).toBe(true)
+    // maxSnoozes=1 → one snooze already gives up
+    expect(shouldPromptRating({ ...ready, uses: 1, snoozes: 1 }, NOW + 5 * DAY, policy)).toBe(false)
   })
 })
 
@@ -46,6 +57,11 @@ describe('marketplacePath / isRatingConfigured', () => {
     expect(isRatingConfigured('   ')).toBe(false)
     expect(isRatingConfigured(undefined)).toBe(false)
     expect(isRatingConfigured(null)).toBe(false)
+  })
+  it('rejects a malformed slug (fail-fast on typos / stray path chars)', () => {
+    expect(isRatingConfigured('shef/evil')).toBe(false)
+    expect(isRatingConfigured('a b')).toBe(false)
+    expect(isRatingConfigured('../x')).toBe(false)
   })
 })
 
@@ -82,5 +98,11 @@ describe('parseRatingState', () => {
   it('round-trips a full state', () => {
     const s: RatingState = { uses: 7, lastPromptAt: NOW, snoozes: 2, rated: false, dismissed: false }
     expect(parseRatingState(JSON.stringify(s))).toEqual(s)
+  })
+  it('coerces booleans strictly and clamps negative numbers', () => {
+    // a tampered "false" string must NOT read as rated (Boolean("false") is true)
+    expect(parseRatingState('{"rated":"false","dismissed":"false"}')).toMatchObject({ rated: false, dismissed: false })
+    expect(parseRatingState('{"rated":true}').rated).toBe(true)
+    expect(parseRatingState('{"uses":-5,"snoozes":-3}')).toMatchObject({ uses: 0, snoozes: 0 })
   })
 })
