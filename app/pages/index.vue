@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { B24Frame } from '@bitrix24/b24jssdk'
 import type { TabsItem } from '@bitrix24/b24ui-nuxt'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useClipboard, useEventListener } from '@vueuse/core'
 import { useB24 } from '~/composables/useB24'
 import { useB24Rest } from '~/composables/useB24Rest'
@@ -10,6 +10,7 @@ import { useConverter } from '~/composables/useConverter'
 import { usePrint } from '~/composables/usePrint'
 import { useMetrikaGoal } from '~/composables/useMetrikaGoal'
 import { useFeedback } from '~/composables/useFeedback'
+import { useAppRating } from '~/composables/useAppRating'
 import BroomIcon from '@bitrix24/b24icons-vue/outline/BroomIcon'
 import CopyIcon from '@bitrix24/b24icons-vue/outline/CopyIcon'
 import CheckLIcon from '@bitrix24/b24icons-vue/outline/CheckLIcon'
@@ -41,6 +42,10 @@ const { reachGoal } = useMetrikaGoal()
 // pane's toolbar. Both live only when an endpoint is configured (fail-safe).
 const { isEnabled: feedbackEnabled } = useFeedback()
 const feedbackOpen = ref(false)
+
+// Marketplace rating prompt (portal-only, gated on a configured slug). Uses are
+// counted on copy/save; the prompt is shown on mount when the policy allows.
+const rating = useAppRating()
 
 const currentYear = new Date().getFullYear()
 
@@ -91,10 +96,27 @@ if (yandexCounterId) {
   })
 }
 
+function onB24Ready() {
+  const $b24 = b24Instance.get() as B24Frame
+  $b24.parent.setTitle(t('page.index.seo.title'))
+  // Show the Marketplace rating prompt if the engagement policy allows.
+  rating.maybePrompt()
+}
+
 onMounted(() => {
+  // A child's onMounted runs BEFORE app.vue finishes the async b24.init(), so on
+  // a fresh load isUseB24 is still false here — wait for the frame to initialise
+  // (same pattern as widget/im-textarea.vue), otherwise setTitle/maybePrompt
+  // would never fire inside the portal.
   if (isUseB24.value) {
-    const $b24 = b24Instance.get() as B24Frame
-    $b24.parent.setTitle(t('page.index.seo.title'))
+    onB24Ready()
+  } else {
+    const stop = watch(isUseB24, (v) => {
+      if (v) {
+        stop()
+        onB24Ready()
+      }
+    })
   }
 })
 
@@ -103,6 +125,7 @@ async function copyText(value: string) {
   try {
     await copy(value)
     reachGoal('copy')
+    rating.registerUse()
     toast.add({
       title: t('page.index.ui.copied'),
       color: 'air-primary-success',
@@ -165,6 +188,7 @@ async function saveToB24() {
   b24Busy.value = true
   try {
     await rest.saveMarkdown(entityKind.value, id, markdown.value)
+    rating.registerUse()
     toast.add({ title: t('page.index.b24.saved', { id }), color: 'air-primary-success', icon: CheckLIcon, duration: 1500 })
   } catch (e) {
     toast.add({ title: t('page.index.b24.saveFailed'), description: e instanceof Error ? e.message : String(e), color: 'air-primary-alert', duration: 3000 })
@@ -499,6 +523,9 @@ useEventListener('keydown', (e: KeyboardEvent) => {
         :is-b24="isUseB24"
         :locale="locale"
       />
+
+      <!-- Marketplace rating prompt (portal-only, engagement-gated, self-contained). -->
+      <AppRatingModal />
     </template>
 
     <!-- Standalone footer — credits + links, unified with the currency-converter sibling app -->

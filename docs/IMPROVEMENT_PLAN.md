@@ -1,6 +1,6 @@
 # План улучшения репозитория (по образцу `ai-price-import`)
 
-> Last reviewed: 2026-07-22
+> Last reviewed: 2026-07-23
 
 Документ — итог сравнения нашего репозитория (`bx-shef/app-convert-bbocode-md`,
 далее **bbcode**) с примером `bx-shef/ai-price-import` («Procure AI») по осям
@@ -135,7 +135,7 @@ unmatched/errors/…) + производные метрики (`app/utils/saving
 
 | Пункт | Приоритет | Сложн. | Хранение без backend | Статус |
 |---|---|---|---|---|
-| **Рейтинг в Маркете Б24**: порт `AppRatingModal.vue` + `useAppRating.ts` (ненавязчивый попап «Оцените» → `frame.slider.openPath('/marketplace/detail/<code>/')`). Чистая политика `shouldPrompt` (`server/utils/appRatingPolicy.ts`) переносится **дословно** | **P1** | M | `b24.options`/`localStorage` вместо Postgres | ⛔ блокер: нужен листинг в Маркете |
+| **Рейтинг в Маркете Б24**: `AppRatingModal.vue` + `useAppRating.ts` (ненавязчивый попап «Оцените» → `slider.openPath(slider.getUrl('/marketplace/detail/<slug>/'))`). Чистая политика `shouldPromptRating` | **P1** | M | `localStorage` вместо Postgres | 🧪 код+тесты (14): чистая политика + переходы + `parseRatingState`; попап portal-only, gated `NUXT_PUBLIC_MARKETPLACE_SLUG`, троттлинг (min uses/snooze cooldown/give-up). Проброшен по пайплайну. Ждём слаг листинга от владельца |
 | Метрики использования (конвертации по направлениям, insert-chat, save, print, copy) | P2 | S–M | Яндекс.Метрика-цели на standalone (паттерн `currency-converter/useMetrikaGoal.ts`); in-portal → внешний приёмник или личный счётчик в `b24.options` («вы конвертировали N раз») | 🧪 плумбинг + цели `copy`/`print` на standalone; ждём боевой счётчик. **В портале аналитика заглушена намеренно** (принцип №4) → цели `save`/`insert-chat`/`load` там не срабатывают (муты) и на standalone упираются в демо/REST — их снимаем позже через `b24.options`-счётчик, не через Метрику |
 | Пер-портальный серверный дашборд метрик | — | — | 🚫 skip (некому персистить) |
 
@@ -213,6 +213,7 @@ SessionStart-хук · `pnpm check` + `make dev/check` · SHA-пины Actions �
    пайплайну). *Со стороны владельца:* создать приватный репо-бакет + задеплоить
    воркер с токеном (токен **в воркере**, не в SPA-бандл) + дать его URL.
 2. **Листинг в Маркете Б24** → ✅ **будем публиковать** — разблокирует попап-рейтинг.
+   **Код-часть рейтинга готова** (политика + модалка, gated `NUXT_PUBLIC_MARKETPLACE_SLUG`).
    *Со стороны владельца:* опубликовать листинг и дать слаг (как `shef.currencyconverter`).
 3. **Продуктовые метрики** → ✅ **«заводи, предлагай сам»** → выбрана **Яндекс.Метрика
    на standalone** (реализовано этим PR: плумбинг + цели `copy`/`print`). В портале —

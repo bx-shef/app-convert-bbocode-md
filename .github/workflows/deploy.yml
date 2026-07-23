@@ -26,6 +26,8 @@ jobs:
       NUXT_PUBLIC_YANDEX_COUNTER_ID: ${{ vars.NUXT_PUBLIC_YANDEX_COUNTER_ID }}
       # Feedback worker URL (repo variable). Empty = feedback feature hidden (fail-safe).
       NUXT_PUBLIC_FEEDBACK_URL: ${{ vars.NUXT_PUBLIC_FEEDBACK_URL }}
+      # B24 Marketplace slug (repo variable). Empty = rating prompt disabled (fail-safe).
+      NUXT_PUBLIC_MARKETPLACE_SLUG: ${{ vars.NUXT_PUBLIC_MARKETPLACE_SLUG }}
 
     steps:
       - name: Checkout

@@ -1,6 +1,6 @@
 # BBCode ↔ Markdown ↔ HTML converter for Bitrix24
 
-> Last reviewed: 2026-07-22
+> Last reviewed: 2026-07-23
 
 [![CI](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/ci.yml/badge.svg)](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/ci.yml)
 [![Deploy GitHub Pages](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/deploy.yml/badge.svg)](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/deploy.yml)
@@ -363,6 +363,21 @@ NUXT_PUBLIC_FEEDBACK_URL=https://your-worker.example.workers.dev
   на чужой origin → браузер делает preflight). Rate-limit/анти-спам — тоже на воркере
   (URL публичный). Если раздаёте статику через `docker/nginx.conf` и включаете CSP в
   режим enforce — добавьте origin воркера в `connect-src` (сейчас CSP в Report-Only).
+
+## Оценка в Маркете Bitrix24 (опционально)
+
+Внутри портала после нескольких действий (копирование/сохранение) приложение может
+**ненавязчиво** предложить оценить его в Маркете. Попап **выключен**, пока не задан
+слаг приложения:
+
+```env
+NUXT_PUBLIC_MARKETPLACE_SLUG=shef.bbcodemd
+```
+
+- Только в портале Б24 (открывает слайдер листинга); на публичном сайте не появляется.
+- Сильно throttled: минимум несколько действий, кулдаун после «Позже», сдаётся после
+  нескольких откладываний, не спрашивает после оценки/«Больше не спрашивать». Состояние —
+  в `localStorage` (без REST). Пустой слаг → попапа нет (fail-safe).
 
 ## Roadmap
 - [x] REST: задачи, CRM-комментарии, посты Живой ленты — загрузка/сохранение текста (`useB24Rest`, `actions.v2`). **Требуется ручной QA в портале.**

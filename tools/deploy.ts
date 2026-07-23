@@ -16,6 +16,7 @@
  *     NUXT_APP_BASE_URL             e.g. /app-convert-bbocode-md/
  *     NUXT_PUBLIC_YANDEX_COUNTER_ID (optional) Yandex.Metrika id; empty = off
  *     NUXT_PUBLIC_FEEDBACK_URL      (optional) feedback worker URL; empty = off
+ *     NUXT_PUBLIC_MARKETPLACE_SLUG  (optional) B24 Marketplace slug; empty = off
  *
  *   docker:
  *     DOCKER_IMAGE                  e.g. ghcr.io/bx-shef/app-convert-bbocode-md
@@ -24,6 +25,7 @@
  *     NUXT_APP_BASE_URL             base path, default '/'
  *     NUXT_PUBLIC_YANDEX_COUNTER_ID (optional) Yandex.Metrika id; empty = off
  *     NUXT_PUBLIC_FEEDBACK_URL      (optional) feedback worker URL; empty = off
+ *     NUXT_PUBLIC_MARKETPLACE_SLUG  (optional) B24 Marketplace slug; empty = off
  *
  * All NUXT_PUBLIC_* values bake into the static bundle at `nuxt generate`, so
  * they must be present at build time (not just in the container's runtime env).
@@ -72,6 +74,7 @@ function deployDocker(extraArgs: string[]): void {
   const baseUrl = process.env.NUXT_APP_BASE_URL ?? '/'
   const yandexCounterId = process.env.NUXT_PUBLIC_YANDEX_COUNTER_ID ?? ''
   const feedbackUrl = process.env.NUXT_PUBLIC_FEEDBACK_URL ?? ''
+  const marketplaceSlug = process.env.NUXT_PUBLIC_MARKETPLACE_SLUG ?? ''
   const ref = `${image}:${tag}`
   const push = extraArgs.includes('--push') || process.env.DOCKER_PUSH === '1'
 
@@ -81,6 +84,7 @@ function deployDocker(extraArgs: string[]): void {
     '--build-arg', `NUXT_APP_BASE_URL=${baseUrl}`,
     '--build-arg', `NUXT_PUBLIC_YANDEX_COUNTER_ID=${yandexCounterId}`,
     '--build-arg', `NUXT_PUBLIC_FEEDBACK_URL=${feedbackUrl}`,
+    '--build-arg', `NUXT_PUBLIC_MARKETPLACE_SLUG=${marketplaceSlug}`,
     '-t', ref,
     '.'
   ])

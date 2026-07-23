@@ -48,7 +48,11 @@ export default defineNuxtConfig({
       // GitHub issue in a PRIVATE bucket repo; the token lives in the worker, not
       // here). Empty = feedback feature disabled (button hidden). Baked at BUILD
       // time from NUXT_PUBLIC_FEEDBACK_URL. See useFeedback / app/utils/feedback.ts.
-      feedbackUrl: ''
+      feedbackUrl: '',
+      // Bitrix24 Marketplace app slug/code (e.g. `shef.bbcodemd`) for the "rate
+      // this app" prompt. Empty = prompt disabled. Baked at BUILD time from
+      // NUXT_PUBLIC_MARKETPLACE_SLUG. See useAppRating / app/utils/app-rating.ts.
+      marketplaceSlug: ''
     }
   },
 
