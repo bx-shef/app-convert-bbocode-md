@@ -94,4 +94,8 @@ describe('htmlToMd — robustness', () => {
   it('preserves entity-mention data attributes', () => {
     expect(htmlToMd('<span data-bb-user="123">John</span>')).toBe('<span data-bb-user="123">John</span>')
   })
+  it('preserves interactive IM-bot data attributes', () => {
+    expect(htmlToMd('<span data-bb-send="/help">Go</span>')).toBe('<span data-bb-send="/help">Go</span>')
+    expect(htmlToMd('<span data-bb-call="+7911">Call</span>')).toBe('<span data-bb-call="+7911">Call</span>')
+  })
 })

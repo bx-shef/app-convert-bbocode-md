@@ -82,6 +82,9 @@ function spanCarrier(attribs: Record<string, string>): string {
   if (style) parts.push(`style="${style}"`)
   if (attribs['data-bb-user']) parts.push(`data-bb-user="${idVal(attribs['data-bb-user'])}"`)
   if (attribs['data-bb-dept']) parts.push(`data-bb-dept="${idVal(attribs['data-bb-dept'])}"`)
+  if (attribs['data-bb-send']) parts.push(`data-bb-send="${idVal(attribs['data-bb-send'])}"`)
+  if (attribs['data-bb-put']) parts.push(`data-bb-put="${idVal(attribs['data-bb-put'])}"`)
+  if (attribs['data-bb-call']) parts.push(`data-bb-call="${idVal(attribs['data-bb-call'])}"`)
   return parts.join(' ')
 }
 

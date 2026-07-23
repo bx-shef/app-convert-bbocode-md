@@ -129,6 +129,14 @@ describe('bbcodeToMd — entity mentions (→ <span data-bb-*>)', () => {
   it('department', () => {
     expect(bbcodeToMd('[DEPARTMENT=5]Sales[/DEPARTMENT]')).toBe('<span data-bb-dept="5">Sales</span>')
   })
+  it('interactive IM-bot tags send/put/call → data-bb spans', () => {
+    expect(bbcodeToMd('[SEND=/help]Помощь[/SEND]')).toBe('<span data-bb-send="/help">Помощь</span>')
+    expect(bbcodeToMd('[PUT=/search]Поиск[/PUT]')).toBe('<span data-bb-put="/search">Поиск</span>')
+    expect(bbcodeToMd('[CALL=+79161234567]Позвонить[/CALL]')).toBe('<span data-bb-call="+79161234567">Позвонить</span>')
+  })
+  it('quoted interactive value preserves spaces', () => {
+    expect(bbcodeToMd('[PUT="/search "]Поиск[/PUT]')).toBe('<span data-bb-put="/search ">Поиск</span>')
+  })
   it('user without id → unwrapped', () => {
     expect(bbcodeToMd('[USER]John[/USER]')).toBe('John')
   })
