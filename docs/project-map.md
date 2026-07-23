@@ -20,7 +20,7 @@ Markdown и HTML (Markdown — опорный формат), с живым пр�
 | # | Этап | Статус |
 | --- | --- | --- |
 | 1 | Ядро конвертера BBCode ⇄ MD ⇄ HTML + превью/печать/санитайзер | ✅ |
-| 2 | Стилевые теги `[color]`/`[size]`/`[font]`, упоминания `[USER]`/`[DEPARTMENT]` | ✅ |
+| 2 | Стилевые теги `[color]`/`[size]`/`[font]`, упоминания `[USER]`/`[DEPARTMENT]`, интерактивные теги чата `[SEND]`/`[PUT]`/`[CALL]` | ✅ |
 | 3 | Виджет `IM_TEXTAREA`, install-flow, миграция JSSDK на `actions.v2` | 🧪 код готов, ждёт QA в портале |
 | 4 | REST: задачи / CRM-комментарии / посты Ленты — load/save | 🧪 код+тесты, ждёт QA в портале |
 | 5 | Обновление платформы: Bitrix24 SDK/UI до актуальных версий | ✅ |
@@ -30,7 +30,7 @@ Markdown и HTML (Markdown — опорный формат), с живым пр�
 ## Что сделано
 
 - Конвертер BBCode ⇄ Markdown ⇄ HTML + живое превью, печать, HTML-санитайзер.
-- Стилевые теги `[color]`/`[size]`/`[font]` и упоминания `[USER]`/`[DEPARTMENT]` (round-trip).
+- Стилевые теги `[color]`/`[size]`/`[font]`, упоминания `[USER]`/`[DEPARTMENT]` и интерактивные теги чата `[SEND]`/`[PUT]`/`[CALL]` — round-trip (официальный формат бот-сообщений Bitrix24, issue #88).
 - Виджет `IM_TEXTAREA` (чтение/вставка в чат), install-flow, единый бренд-стиль, тёмная тема.
 - REST load/save для задач (`DESCRIPTION`), CRM-комментариев (`COMMENT`), постов Ленты (`DETAIL_TEXT`/`POST_MESSAGE`).
 - Платформа обновлена: `@bitrix24/b24jssdk` 2.0, `@bitrix24/b24ui-nuxt` 2.9 (+ Nuxt/Vue/Tailwind/markdown-it). Все проверки зелёные.
