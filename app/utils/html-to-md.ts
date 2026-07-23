@@ -71,8 +71,15 @@ function filterSpanStyle(style: string): string {
     .join('; ')
 }
 
+// NB: these strip attribute-breaking chars for a clean carrier, they are NOT the
+// XSS barrier — that is the allow-list in `sanitize-html.ts` (run before any HTML
+// reaches the DOM). `idVal` trims (entity ids); `attrVal` does not (interactive
+// values can carry a meaningful trailing space, e.g. `[PUT=/search ]`).
 function idVal(v: string): string {
   return v.replace(/["<>]/g, '').trim()
+}
+function attrVal(v: string): string {
+  return v.replace(/["<>]/g, '')
 }
 
 /** Attributes worth preserving on a `<span>`: safe style + entity carriers. */
@@ -82,6 +89,9 @@ function spanCarrier(attribs: Record<string, string>): string {
   if (style) parts.push(`style="${style}"`)
   if (attribs['data-bb-user']) parts.push(`data-bb-user="${idVal(attribs['data-bb-user'])}"`)
   if (attribs['data-bb-dept']) parts.push(`data-bb-dept="${idVal(attribs['data-bb-dept'])}"`)
+  if (attribs['data-bb-send']) parts.push(`data-bb-send="${attrVal(attribs['data-bb-send'])}"`)
+  if (attribs['data-bb-put']) parts.push(`data-bb-put="${attrVal(attribs['data-bb-put'])}"`)
+  if (attribs['data-bb-call']) parts.push(`data-bb-call="${attrVal(attribs['data-bb-call'])}"`)
   return parts.join(' ')
 }
 

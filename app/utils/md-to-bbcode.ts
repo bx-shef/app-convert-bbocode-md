@@ -67,6 +67,14 @@ function parseSpan(openTag: string): { open: string, close: string }[] {
   if (user) tags.push({ open: `[USER=${user}]`, close: '[/USER]' })
   const dept = attrOf(openTag, 'data-bb-dept')
   if (dept) tags.push({ open: `[DEPARTMENT=${dept}]`, close: '[/DEPARTMENT]' })
+  // Interactive IM-bot tags — values may contain spaces (e.g. `[PUT="/search "]`),
+  // so quote them; the parser reads a quoted primary back intact.
+  const send = attrOf(openTag, 'data-bb-send')
+  if (send) tags.push({ open: `[SEND=${quoteIfNeeded(send)}]`, close: '[/SEND]' })
+  const put = attrOf(openTag, 'data-bb-put')
+  if (put) tags.push({ open: `[PUT=${quoteIfNeeded(put)}]`, close: '[/PUT]' })
+  const call = attrOf(openTag, 'data-bb-call')
+  if (call) tags.push({ open: `[CALL=${quoteIfNeeded(call)}]`, close: '[/CALL]' })
   for (const t of parseSpanStyle(openTag)) {
     tags.push({ open: `[${t.name}=${quoteIfNeeded(t.primary)}]`, close: `[/${t.name}]` })
   }

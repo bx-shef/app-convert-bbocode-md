@@ -19,10 +19,15 @@ const KNOWN_TAGS = new Set([
   'br', 'hr', 'p',
   'table', 'tr', 'th', 'td',
   'color', 'size', 'font',
-  'user', 'department'
+  'user', 'department',
+  'send', 'put', 'call'
 ])
 
-const TAG_OPEN_RE = /^([a-zA-Z*][a-zA-Z0-9_*]*)(=("[^"]*"|'[^']*'|[^\s\]]+))?(\s+([^\]]+))?\/?$/
+// An unquoted primary value runs to the closing `]` — spaces included — so real
+// Bitrix24 bot markup like `[PUT=/search ]` / `[CALL=+7 916 123]` (unquoted,
+// spaces) parses intact. Named attrs (`[code lang=js]`) still work: they only
+// appear when NO `=value` immediately follows the tag name (the `(\s+…)?` group).
+const TAG_OPEN_RE = /^([a-zA-Z*][a-zA-Z0-9_*]*)(=("[^"]*"|'[^']*'|[^\]]+))?(\s+([^\]]+))?\/?$/
 const ATTR_RE = /(\w+)=("[^"]*"|'[^']*'|\S+)/g
 
 export function parseBBCode(input: string): BBNode[] {

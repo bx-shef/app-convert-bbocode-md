@@ -151,4 +151,12 @@ describe('mdToBbcode — entity mention spans', () => {
   it('empty mention id is dropped (no invalid [USER=])', () => {
     expect(mdToBbcode('<span data-bb-user="">Ann</span>')).toBe('Ann')
   })
+  it('interactive spans → [SEND]/[PUT]/[CALL]', () => {
+    expect(mdToBbcode('<span data-bb-send="/help">Помощь</span>')).toBe('[SEND=/help]Помощь[/SEND]')
+    expect(mdToBbcode('<span data-bb-put="/search">Поиск</span>')).toBe('[PUT=/search]Поиск[/PUT]')
+    expect(mdToBbcode('<span data-bb-call="+79161234567">Позвонить</span>')).toBe('[CALL=+79161234567]Позвонить[/CALL]')
+  })
+  it('interactive value with spaces is quoted', () => {
+    expect(mdToBbcode('<span data-bb-put="/search ">Поиск</span>')).toBe('[PUT="/search "]Поиск[/PUT]')
+  })
 })

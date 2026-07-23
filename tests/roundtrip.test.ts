@@ -17,7 +17,10 @@ describe('roundtrip BBCode → MD → BBCode', () => {
     '[size=14]x[/size]',
     '[font=Arial]x[/font]',
     '[USER=123]John[/USER]',
-    '[DEPARTMENT=5]Sales[/DEPARTMENT]'
+    '[DEPARTMENT=5]Sales[/DEPARTMENT]',
+    '[SEND=/help]Помощь[/SEND]',
+    '[PUT=/search]Поиск[/PUT]',
+    '[CALL=+79161234567]Позвонить[/CALL]'
   ]
   for (const c of cases) {
     it(`stable: ${c}`, () => {
