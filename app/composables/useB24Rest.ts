@@ -33,6 +33,13 @@ export function useB24Rest() {
     return b24.get() as B24Frame
   }
 
+  // Transient-failure retries are handled by the SDK's HTTP layer, NOT here.
+  // `actions.v2.call.make` routes through its retry manager (maxRetries 3,
+  // adaptive backoff + jitter) which retries network errors (`retryOnNetworkError`
+  // is on by default), timeouts (408), rate limits (429 / OPERATION_TIME_LIMIT) and
+  // overload (503 / QUERY_LIMIT_EXCEEDED); only genuine 4xx are thrown straight up.
+  // Do NOT wrap an outer retry around this — it would multiply attempts and risk
+  // duplicate writes on the non-idempotent `*.update` saves below.
   async function call(method: string, params: Record<string, unknown>): Promise<unknown> {
     const $b24 = frame()
     const res = await $b24.actions.v2.call.make({ method, params, requestId: Text.getUuidRfc4122() })
