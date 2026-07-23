@@ -15,7 +15,7 @@ Nuxt 4 SPA placement for Bitrix24 that converts Bitrix24 BBCode ↔ Markdown.
 - `@nuxtjs/i18n` (19 locales)
 - vitest for tests
 - Tailwind v4 (set up by b24ui-nuxt)
-- pnpm 10
+- pnpm 10. **`pnpm.overrides` in `package.json`** is the sanctioned way to pin patched versions of **transitive** deps flagged by Dependabot security alerts, until upstream parents catch up (a temporary security-floor — remove the pin once the parent bump lands). Scope by major (`"pkg@2": "^2.1.2"`) when two majors of the same package coexist in the tree — a blanket override would force one API onto both and break resolution. Keep the current version/trigger detail in `docs/project-map.md`, not here.
 
 ## Architecture
 - `app/pages/index.vue` — three-format editor (Markdown / BBCode / HTML) + live preview; 2×2 panes on desktop (md+), tabs on mobile. Theme toggle + credits footer only standalone.

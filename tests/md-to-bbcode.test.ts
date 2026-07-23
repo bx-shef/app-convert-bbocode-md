@@ -26,6 +26,14 @@ describe('mdToBbcode — basic', () => {
     expect(mdToBbcode('<https://x.com>')).toBe('[url]https://x.com[/url]')
   })
 
+  // Guards the `linkify: false` invariant: a BARE url (not wrapped in <>) must
+  // stay literal text, never an auto-detected [url]. This is the same guard
+  // md-to-html.test.ts has, and it underpins why the linkify-it CVE is
+  // unreachable here — markdown-it never runs the linkify matcher on user text.
+  it('does not auto-link bare URLs (linkify: false)', () => {
+    expect(mdToBbcode('see https://x.com')).toBe('see https://x.com')
+  })
+
   it('image', () => {
     expect(mdToBbcode('![](https://x.com/a.png)')).toBe('[img]https://x.com/a.png[/img]')
   })
