@@ -10,6 +10,7 @@ import { useConverter } from '~/composables/useConverter'
 import { usePrint } from '~/composables/usePrint'
 import { useMetrikaGoal } from '~/composables/useMetrikaGoal'
 import { useFeedback } from '~/composables/useFeedback'
+import { useAppRating } from '~/composables/useAppRating'
 import BroomIcon from '@bitrix24/b24icons-vue/outline/BroomIcon'
 import CopyIcon from '@bitrix24/b24icons-vue/outline/CopyIcon'
 import CheckLIcon from '@bitrix24/b24icons-vue/outline/CheckLIcon'
@@ -41,6 +42,10 @@ const { reachGoal } = useMetrikaGoal()
 // pane's toolbar. Both live only when an endpoint is configured (fail-safe).
 const { isEnabled: feedbackEnabled } = useFeedback()
 const feedbackOpen = ref(false)
+
+// Marketplace rating prompt (portal-only, gated on a configured slug). Uses are
+// counted on copy/save; the prompt is shown on mount when the policy allows.
+const rating = useAppRating()
 
 const currentYear = new Date().getFullYear()
 
@@ -95,6 +100,8 @@ onMounted(() => {
   if (isUseB24.value) {
     const $b24 = b24Instance.get() as B24Frame
     $b24.parent.setTitle(t('page.index.seo.title'))
+    // Show the Marketplace rating prompt if the engagement policy allows.
+    rating.maybePrompt()
   }
 })
 
@@ -103,6 +110,7 @@ async function copyText(value: string) {
   try {
     await copy(value)
     reachGoal('copy')
+    rating.registerUse()
     toast.add({
       title: t('page.index.ui.copied'),
       color: 'air-primary-success',
@@ -165,6 +173,7 @@ async function saveToB24() {
   b24Busy.value = true
   try {
     await rest.saveMarkdown(entityKind.value, id, markdown.value)
+    rating.registerUse()
     toast.add({ title: t('page.index.b24.saved', { id }), color: 'air-primary-success', icon: CheckLIcon, duration: 1500 })
   } catch (e) {
     toast.add({ title: t('page.index.b24.saveFailed'), description: e instanceof Error ? e.message : String(e), color: 'air-primary-alert', duration: 3000 })
@@ -499,6 +508,9 @@ useEventListener('keydown', (e: KeyboardEvent) => {
         :is-b24="isUseB24"
         :locale="locale"
       />
+
+      <!-- Marketplace rating prompt (portal-only, engagement-gated, self-contained). -->
+      <AppRatingModal />
     </template>
 
     <!-- Standalone footer — credits + links, unified with the currency-converter sibling app -->

@@ -39,6 +39,13 @@
         "sent": "Thanks! Your report was sent.",
         "failed": "Couldn't send the report. Please try again."
       },
+      "rating": {
+        "title": "Enjoying the converter?",
+        "body": "If it saves you time, a quick rating in the Bitrix24 Marketplace really helps.",
+        "rate": "Rate it",
+        "later": "Later",
+        "dismiss": "Don't ask again"
+      },
       "mode": {
         "b24": "Inside Bitrix24",
         "standalone": "Standalone (no B24)"
