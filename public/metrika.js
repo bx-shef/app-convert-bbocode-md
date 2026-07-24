@@ -21,5 +21,8 @@
     k = e.createElement(t); a = e.getElementsByTagName(t)[0]; k.async = 1; k.src = r
     a.parentNode.insertBefore(k, a)
   })(window, document, 'script', 'https://mc.yandex.ru/metrika/tag.js', 'ym')
-  window.ym(Number(id), 'init', { clickmap: true, trackLinks: true, accurateTrackBounce: true })
+  // trackLinks:false — the preview renders user-authored links; outbound-link
+  // tracking would ship those href URLs (user content) to Metrika, breaking
+  // analytics principle #1 (counters only, never content).
+  window.ym(Number(id), 'init', { clickmap: true, trackLinks: false, accurateTrackBounce: true })
 })()
