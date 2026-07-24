@@ -29,6 +29,20 @@ describe('sanitizeHtml', () => {
     expect(sanitizeHtml('<a href="javascript:alert(1)">x</a>')).toBe('<a>x</a>')
   })
 
+  it('drops other dangerous URL schemes on href (data/vbscript/file)', () => {
+    expect(sanitizeHtml('<a href="data:text/html,<script>alert(1)</script>">x</a>')).toBe('<a>x</a>')
+    expect(sanitizeHtml('<a href="vbscript:msgbox(1)">x</a>')).toBe('<a>x</a>')
+    expect(sanitizeHtml('<a href="file:///etc/passwd">x</a>')).toBe('<a>x</a>')
+  })
+
+  it('catches a scheme hidden by control chars (java\\tscript:)', () => {
+    expect(sanitizeHtml('<a href="java\tscript:alert(1)">x</a>')).toBe('<a>x</a>')
+  })
+
+  it('applies the URL-scheme guard to img src too', () => {
+    expect(sanitizeHtml('<img src="javascript:alert(1)">')).toBe('<img>')
+  })
+
   it('keeps safe http(s) links', () => {
     expect(sanitizeHtml('<a href="https://x.com" title="t">x</a>'))
       .toBe('<a href="https://x.com" title="t">x</a>')

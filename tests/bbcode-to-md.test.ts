@@ -148,3 +148,13 @@ describe('bbcodeToMd — entity mentions (→ <span data-bb-*>)', () => {
     expect(bbcodeToMd('[USER]John[/USER]')).toBe('John')
   })
 })
+
+describe('bbcodeToMd — line breaks and paragraphs', () => {
+  it('[br] becomes a single newline', () => {
+    expect(bbcodeToMd('a[br]b')).toBe('a\nb')
+    expect(bbcodeToMd('a[br]b[br]c')).toBe('a\nb\nc')
+  })
+  it('[p] wraps content in blank lines', () => {
+    expect(bbcodeToMd('a[p]x[/p]b')).toBe('a\n\nx\n\nb')
+  })
+})
