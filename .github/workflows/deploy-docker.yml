@@ -1,21 +1,16 @@
 name: Deploy Docker image 🐳
 on:
-  # Auto: rebuild on every push to main that touches image-affecting files.
-  push:
+  # Auto: deploy ONLY after the `ci` workflow succeeds on main — never ship a
+  # red build (quality gate). CI runs on every push to main, so this fires once
+  # per main commit. The `paths` optimisation is dropped (workflow_run has no
+  # paths filter); a doc-only change rebuilds, but the layer cache makes it a
+  # near-noop and an identical image digest means Watchtower won't redeploy.
+  workflow_run:
+    workflows: [ "ci" ]
+    types: [ completed ]
     branches: [ main ]
-    paths:
-      - 'app/**'
-      - 'public/**'
-      - 'i18n/**'
-      - 'docker/**'
-      - 'Dockerfile'
-      - '.dockerignore'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
-      - 'nuxt.config.ts'
-      - 'tsconfig.json'
-      - '.github/workflows/deploy-docker.yml'
-  # Manual: override site_url / base_url / tag for one-off rebuilds.
+  # Manual: override site_url / base_url / tag for one-off rebuilds / rollback
+  # (bypasses the gate — for emergencies and `make prod-rollback`).
   workflow_dispatch:
     inputs:
       site_url:
@@ -41,10 +36,17 @@ concurrency:
 jobs:
   build-push:
     runs-on: ubuntu-latest
+    # Gate: deploy a commit only when its CI concluded success (or a manual
+    # dispatch). PR CI runs have head_branch != main and are filtered out above.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
 
     env:
       IMAGE: ghcr.io/${{ github.repository }}
       TAG: ${{ github.event.inputs.tag || 'latest' }}
+      # The exact commit that passed CI (workflow_run) or the ref on manual run.
+      DEPLOY_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
       NUXT_PUBLIC_SITE_URL: ${{ github.event.inputs.site_url || vars.NUXT_PUBLIC_SITE_URL }}
       NUXT_APP_BASE_URL: ${{ github.event.inputs.base_url || '/' }}
       # Yandex.Metrika counter id (repo variable). Empty = analytics off (fail-safe).
@@ -57,6 +59,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          # workflow_run checks out the default branch by default — pin to the
+          # exact commit that passed CI (falls back to the ref on manual run).
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
 
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v4
@@ -75,7 +81,7 @@ jobs:
           push: true
           tags: |
             ${{ env.IMAGE }}:${{ env.TAG }}
-            ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.IMAGE }}:${{ env.DEPLOY_SHA }}
           build-args: |
             NUXT_PUBLIC_SITE_URL=${{ env.NUXT_PUBLIC_SITE_URL }}
             NUXT_APP_BASE_URL=${{ env.NUXT_APP_BASE_URL }}
