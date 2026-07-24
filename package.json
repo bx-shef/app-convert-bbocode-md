@@ -46,7 +46,7 @@
     "tsx": "^4.23.1",
     "typescript": "^6.0.3",
     "vitest": "^3.2.6",
-    "vue-tsc": "^3.3.5"
+    "vue-tsc": "^3.3.8"
   },
   "packageManager": "pnpm@10.33.0",
   "pnpm": {
