@@ -42,6 +42,11 @@ const { reachGoal } = useMetrikaGoal()
 // pane's toolbar. Both live only when an endpoint is configured (fail-safe).
 const { isEnabled: feedbackEnabled } = useFeedback()
 const feedbackOpen = ref(false)
+// Named void handler: an inline `@click="openFeedback"` returns boolean,
+// which vue-tsc 3.3.8 rejects (click expects void); shared by both toolbars.
+const openFeedback = () => {
+  feedbackOpen.value = true
+}
 
 // Marketplace rating prompt (portal-only, gated on a configured slug). Uses are
 // counted on copy/save; the prompt is shown on mount when the policy allows.
@@ -337,7 +342,7 @@ useEventListener('keydown', (e: KeyboardEvent) => {
               size="xs"
               color="air-tertiary-no-accent"
               :label="t('page.index.feedback.button')"
-              @click="feedbackOpen = true"
+              @click="openFeedback"
             />
           </template>
           <!-- preview is sanitized in useConverter → safe to render -->
@@ -499,7 +504,7 @@ useEventListener('keydown', (e: KeyboardEvent) => {
                 size="xs"
                 color="air-tertiary-no-accent"
                 :label="t('page.index.feedback.button')"
-                @click="feedbackOpen = true"
+                @click="openFeedback"
               />
             </template>
             <!-- eslint-disable-next-line vue/no-v-html -->

@@ -36,7 +36,7 @@ jobs:
       # broken docker/nginx.conf would surface only at deploy. `nginx -t` parses
       # it inside the full http{} context.
       - name: Validate nginx config (docker/nginx.conf)
-        run: docker run --rm -v "${{ github.workspace }}/docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro" nginx:1.27-alpine nginx -t
+        run: docker run --rm -v "${{ github.workspace }}/docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro" nginx:1.31-alpine nginx -t
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
