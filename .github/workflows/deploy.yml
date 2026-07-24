@@ -20,10 +20,15 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    # Gate: build/deploy only when CI concluded success (or a manual dispatch).
+    # Gate: build/deploy only when CI succeeded on a real PUSH from THIS repo
+    # (not a fork PR — a fork's default branch is also `main`, so the
+    # `branches:[main]` name filter alone is not a trust boundary). Manual
+    # dispatch bypasses the gate.
     if: >-
       github.event_name == 'workflow_dispatch' ||
-      github.event.workflow_run.conclusion == 'success'
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
 
     env:
       # Portable across forks: <owner>.github.io/<repo>/

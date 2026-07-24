@@ -36,11 +36,17 @@ concurrency:
 jobs:
   build-push:
     runs-on: ubuntu-latest
-    # Gate: deploy a commit only when its CI concluded success (or a manual
-    # dispatch). PR CI runs have head_branch != main and are filtered out above.
+    # Gate: deploy only a commit whose CI succeeded, that CI ran on a real PUSH
+    # (not a PR), and that push came from THIS repo — never a fork. The
+    # `branches:[main]` filter above matches only the head-branch *name*, and a
+    # fork's default branch is also called `main`, so without the repo+event
+    # checks a fork PR could ride a green CI into a privileged deploy. Manual
+    # dispatch bypasses the gate (rollback/emergency).
     if: >-
       github.event_name == 'workflow_dispatch' ||
-      github.event.workflow_run.conclusion == 'success'
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
 
     env:
       IMAGE: ghcr.io/${{ github.repository }}
