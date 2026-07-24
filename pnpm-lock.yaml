@@ -78,8 +78,8 @@ importers:
         specifier: ^10.7.0
         version: 10.7.0(jiti@2.7.0)
       openai:
-        specifier: ^6.48.0
-        version: 6.48.0(ws@8.21.0)(zod@4.3.6)
+        specifier: ^6.49.0
+        version: 6.49.0(ws@8.21.0)(zod@4.3.6)
       tsx:
         specifier: ^4.23.1
         version: 4.23.1
@@ -4898,8 +4898,8 @@ packages:
     resolution: {integrity: sha512-smsWv2LzFjP03xmvFoJ331ss6h+jixfA4UUV/Bsiyuu4YJPfN+FIQGOIiv4w9/+MoHkfkJ22UIaQWRVFRfH6Vw==}
     engines: {node: '>=20'}
 
-  openai@6.48.0:
-    resolution: {integrity: sha512-KhVp+FyV50QrXNextvL9hIU5l6ox5HYuKQjGVk7lIqprgJol90+dQXWONV6S1lRWsKA1bXjrow8RsUT14M1hNA==}
+  openai@6.49.0:
+    resolution: {integrity: sha512-aYCc0C6L864eR6WSYIwQGyXriw/nIyZx0ObvhzOEVuk0zoBDpynjSbrionWI7q65B5H8jJX0DXR9snEzM6bfPg==}
     peerDependencies:
       '@aws-sdk/credential-provider-node': '>=3.972.0 <4'
       '@smithy/hash-node': '>=4.3.0 <5'
@@ -11275,7 +11275,7 @@ snapshots:
       powershell-utils: 0.1.0
       wsl-utils: 0.3.1
 
-  openai@6.48.0(ws@8.21.0)(zod@4.3.6):
+  openai@6.49.0(ws@8.21.0)(zod@4.3.6):
     optionalDependencies:
       ws: 8.21.0
       zod: 4.3.6
