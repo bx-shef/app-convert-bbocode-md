@@ -1,6 +1,6 @@
 # BBCode ↔ Markdown ↔ HTML converter for Bitrix24
 
-> Last reviewed: 2026-07-23
+> Last reviewed: 2026-07-24
 
 [![CI](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/ci.yml/badge.svg)](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/ci.yml)
 [![Deploy GitHub Pages](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/deploy.yml/badge.svg)](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/deploy.yml)
@@ -37,7 +37,7 @@ Live-конвертер BBCode (диалект Bitrix24) ⇄ Markdown ⇄ HTML �
 ревью) — в **[docs/PROCESS.md](docs/PROCESS.md)**.
 
 Коротко: конвертер, виджет `IM_TEXTAREA`, install-flow и REST load/save
-(задачи/CRM/Лента) — готовы; платформа обновлена до `@bitrix24/*` 2.x.
+(задачи/CRM/Лента) — **код готов** (ждёт портального QA); платформа обновлена до `@bitrix24/*` 2.x.
 Живые REST/портальные сценарии **проверяются вручную в тестовом портале** — из
 CI их не протестировать (см. Карту проекта § «Что проверить»).
 
@@ -410,7 +410,7 @@ pnpm translate-ui
 - **`deploy.yml`** — на push в `main` собирает SPA и публикует на GitHub Pages.
 - **`deploy-docker.yml`** — на push в `main` (если затронуты файлы образа) пересобирает Docker-образ и пушит в GHCR.
 - **`dependabot.yml`** — еженедельно (понедельник) проверяет обновления npm, GitHub Actions и базовых Docker-образов. Bitrix24-, Nuxt-, Vue-пакеты сгруппированы; dev-зависимости (minor/patch) — в общую группу; все action-бампы и образы приходят по одному сгруппированному PR на экосистему. Node-major у образов игнорируется намеренно (corepack убран из `node:25+`).
-- **`docs-links.yml`** — на PR/push с изменениями в `**/*.md` или `scripts/**`: гоняет проверки набора **reporting-kit** (`scripts/check-docs.sh` ссылки/конфликты/эмодзи, `check-skills.sh` навыки↔канон, `check-tg.sh` отправщик Telegram без сети). Отчётность в Telegram — см. [`docs/reports/`](docs/reports/README.md) и раздел «Операционная дисциплина» в `CLAUDE.md`.
+- **`docs-links.yml`** — на PR/push с изменениями в `**/*.md` или `scripts/**`: гоняет проверки набора **reporting-kit** (`scripts/check-docs.sh` ссылки/конфликты/эмодзи, `check-skills.sh` навыки↔канон, `check-tg.sh` отправщик Telegram без сети). Отчётность в Telegram — см. [`docs/reports/`](docs/reports/README.md) и [`docs/PROCESS.md`](docs/PROCESS.md).
 
 ### Branch protection для `main` (обязательно настроить руками)
 

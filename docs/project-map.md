@@ -69,7 +69,8 @@ Markdown и HTML (**Markdown — опорный формат**), с живым �
 - Яндекс.Метрика на standalone (iframe-safe, gated `NUXT_PUBLIC_YANDEX_COUNTER_ID`) — **PR #100**.
 - «Сообщить о неверной конвертации» (opt-in, приватный воркер, gated `NUXT_PUBLIC_FEEDBACK_URL`) — **PR #101**.
 - Попап «оцените приложение» в Маркете (portal-only, троттлинг, gated `NUXT_PUBLIC_MARKETPLACE_SLUG`) — **PR #102**.
-- Опция деплоя Bitrix24 Vibecode «Black Hole» — концепт (**PR #103**, см. § Деплой).
+
+(Опция деплоя Bitrix24 Vibecode «Black Hole» — концепт, **PR #103**; см. § Деплой.)
 
 **Безопасность и гигиена зависимостей**
 - Закрыты 4 high Dependabot-алерта через `pnpm.overrides` (**PR #105**) — временный security-floor, снимаем по мере бампа родителей.
@@ -100,14 +101,14 @@ Markdown и HTML (**Markdown — опорный формат**), с живым �
 | Визуальный e2e | `pnpm build && pnpm test:e2e` | Playwright зелёный + dark-contrast-guard; скриншоты в `e2e/output/` |
 | Конвертация | BBCode → смотреть MD/HTML/превью | все панели пересчитываются; превью санитизировано |
 | Печать | кнопка печати | системный print-preview (скрытый iframe) |
-| REST вне портала | тулбар Load/Save | демо-уведомление (`isUseB24` → `notifyDemo`), не падает |
+| REST вне портала | тулбар Load/Save | демо-уведомление (`isUseB24` → `notifyDemo`), не падает (`B24NotReadyError` — предохранитель при REST без init) |
 
 ### Уровень 3 — со всех сторон (полное покрытие)
 | Проверка | Где | Метка |
 |---|---|---|
-| Roundtrip всех тегов | `tests/roundtrip.test.ts`, `table.test.ts` | [авто] |
-| Санитайзер (`<script>`/`on*`/`javascript:` вырезаются) | `tests/sanitize-html.test.ts` | [авто] |
-| Raw-HTML не протекает | HTML-панель: `<ul>`/`<table>`/`<b>` | [авто]+ручной |
+| Roundtrip всех тегов (bb→md→bb, md→html→md стабильны; таблицы, вложенность, `[*]`, code-literal) | `tests/roundtrip.test.ts`, `table.test.ts` | [авто] |
+| Санитайзер (`<script>`/`on*`/`javascript:` вырезаются до DOM) | `tests/sanitize-html.test.ts` | [авто] |
+| Raw-HTML не протекает (конвертится в BBCode, а не в текст) | HTML-панель: `<ul>`/`<table>`/`<b>` | [авто]+ручной |
 | Стилевые + упоминания + интерактивные теги | `<span>`-carrier + чип в превью | [авто]+ручной |
 | i18n (17 локалей → fallback `en`) | смена локали | ручной |
 | Тёмная тема (контраст) | toggle | [авто] |
@@ -119,11 +120,11 @@ Markdown и HTML (**Markdown — опорный формат**), с живым �
 - [ ] **Load/Save CRM-комментарий** — `COMMENT` ↔ MD.
 - [ ] **Load/Save пост Ленты** — `DETAIL_TEXT`; заголовок сохраняется (get-перед-update).
 - [ ] **Виджет IM_TEXTAREA** — чтение чата → MD → правка → «Вставить» → MD→BBCode в поле ввода.
-- [ ] **Попап рейтинга** — при заданном слаге и достаточной активности; «Оценить»/«Позже»/«Больше не спрашивать».
+- [ ] **Попап рейтинга** — при заданном слаге и достаточной активности; «Оценить» (слайдер листинга) / «Позже» (кулдаун; закрытие крестиком/Esc тоже считается откладыванием) / «Больше не спрашивать». Вне портала / при пустом слаге — попапа нет.
 - [ ] **Мобильное приложение Б24 (WebView)** — виджет работает; кнопка «Печать» скрыта (`isBitrixMobile`).
 - [ ] **Mixed-Content / редирект** — `/widget/im-textarea` по `https` без Mixed-Content (фикс `absolute_redirect off`, #74).
 - [ ] **POST-обработчик** — открытие из портала (POST) без белого «405» (`error_page 405 =200`).
-- [ ] **CSP** — консоль без CSP-violations на `/`, `/install/`, `/widget/im-textarea` (CSP в Report-Only, #78 — при флипе на enforce перепроверить).
+- [ ] **CSP** — консоль без CSP-violations на `/`, `/install/`, `/widget/im-textarea` (CSP в Report-Only, #78 — при флипе на enforce перепроверить; при включённой аналитике проверить `connect-src`/`script-src`).
 
 ### DoD для UI
 После любой UI-правки: прогнать e2e (`pnpm build && pnpm test:e2e`) и **посмотреть
@@ -159,11 +160,30 @@ Markdown и HTML (**Markdown — опорный формат**), с живым �
 | #91 | nuxt 4.4→4.5 | под минором Vite 8 + Rspack 2 — нужен ручной смоук `pnpm dev`, не автомерж |
 | #109 | vue-tsc 3.3.5→3.3.8 | CI красный: строгая семантика TS7 требует правки `@click`-обработчиков в `index.vue` |
 
-**Прочее:**
+**Инженерный долг — деплой-гигиена** (после решения №0 по контуру; образцы у соседа `currency-converter`):
+- Гейт «деплой только после зелёного CI» (`workflow_run:[ci]` + `conclusion==success`) для **обоих** workflow — сейчас `deploy.yml`/`deploy-docker.yml` пушат независимо от `ci.yml` (**P0**).
+- `make prod-rollback TAG=sha-<sha>` + `make prod-smoke` (immutable `:sha`-тег уже пушится).
+- Пост-деплойный smoke-скрипт (`scripts/smoke.sh`: `GET / →200`, ассет →200, наличие security-заголовков).
+- CSP `script-src` через sha256-хеши вместо `'unsafe-inline'` (образец `currency-converter/scripts/csp-hashes.mjs`).
+- Флип CSP `Report-Only → enforce` в `docker/nginx.conf` (после портального QA).
+- Тримминг `.dockerignore` (`docs`/`*.md`/`e2e`) + `RUN nginx -t` в `Dockerfile` — **заблокировано в песочнице** (нет docker-демона для проверки; CI образ на PR не собирает).
+- SHA-пины GitHub Actions (`uses: …@<sha>`) — **заблокировано в песочнице** (внешние SHA не резолвятся через прокси / scope MCP).
+
+**Прикладной долг:**
+- Прикладной **timeout/cancel** (`AbortSignal`) для REST Save/Load в `useB24Rest`/`index.vue`: SDK ретраит транзиентные сбои, но верхней границы ожидания одного вызова не задаёт (при `OPERATION_TIME_LIMIT` возможно «висение» до ~10 мин). Прецедент — `useFeedback.ts` (замечание ревью #106).
+- Форвард ИБ-заметка: если `buildLogger()`/`setLogger()` подключат к `$b24` — держать прод-порог логов `WARNING`+ **или** явно исключать текстовые поля (`DESCRIPTION`/`COMMENT`/`POST_MESSAGE`/`fields`) из логируемых params (`redact.mjs` фильтрует по ключу, не по классу «контент пользователя»). Сейчас логгер = `NullLogger` (dead code), утечки нет.
+- Feedback фаст-фоллоу (при активации): e2e-сценарий модалки; лимит на весь body issue (сейчас `MAX_ATTACH_LEN` на поле, не на весь body); CORS + CSP `connect-src` под origin воркера.
 - `[DISK File=id]` (особый формат) — пока проходит как текст; нужен реальный контент портала.
 - Опционально: REST-резолв имён упоминаний; шаг `pnpm audit --audit-level=high` в CI как постоянный guard (меняет CI-политику — на решение владельца).
 - Полные переводы новых i18n-ключей на остальные локали (`pnpm translate-ui`); проверить RTL для `ar`.
-- Портальный QA (этап 8) — после ручного прогона донастроить парсинг ответов REST под реальные данные.
+
+**Reference-project / demo (позиционировать репо как образец B24-плейсмента):**
+- JSDoc на экспортируемые функции/composables/utils; раздел «Архитектура» с проходом по слоям; комментарии-маркеры паттернов B24 (init JSSDK, `placement.bind`, listen темы); примеры b24jssdk API.
+- Оформить типовые B24-сценарии как Claude Code skills (`b24-jssdk-init`, `b24-placement-install/runtime`, `b24-options`, `b24-rest-calls`, `b24-theme`, `b24-localization`, `b24-deploy`) и вынести в общий репо скилов.
+
+**Заблокировано внешним:**
+- Auto-detect темы B24 через JSSDK — `@bitrix24/b24jssdk` 2.x не экспонирует тему портала (нет `theme`/`colorScheme`); нужен иной сигнал (placement options / postMessage).
+- Портальный QA (этап 8) — после ручного прогона донастроить парсинг ответов REST под реальные данные; QA-процесс: отдельная QA-ветка → свой URL/портал → ручная проверка (desktop / iOS / Android / темы / локали) → PR в `main`.
 - Боевой Telegram-канал отчётности + регулярный дайджест.
 
 ## Открытые вопросы
