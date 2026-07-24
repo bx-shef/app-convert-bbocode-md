@@ -1,6 +1,10 @@
 name: Deploy to GitHub Pages 📰
 on:
-  push:
+  # Deploy the public standalone/demo ONLY after the `ci` workflow succeeds on
+  # main (same quality gate as the canonical Docker contour — never ship red).
+  workflow_run:
+    workflows: [ "ci" ]
+    types: [ completed ]
     branches: [ main ]
   workflow_dispatch:
 
@@ -16,6 +20,15 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Gate: build/deploy only when CI succeeded on a real PUSH from THIS repo
+    # (not a fork PR — a fork's default branch is also `main`, so the
+    # `branches:[main]` name filter alone is not a trust boundary). Manual
+    # dispatch bypasses the gate.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
 
     env:
       # Portable across forks: <owner>.github.io/<repo>/
@@ -32,6 +45,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          # workflow_run checks out the default branch by default — pin to the
+          # exact commit that passed CI (falls back to the ref on manual run).
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
