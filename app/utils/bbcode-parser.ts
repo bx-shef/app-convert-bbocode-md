@@ -30,11 +30,26 @@ const KNOWN_TAGS = new Set([
 const TAG_OPEN_RE = /^([a-zA-Z*][a-zA-Z0-9_*]*)(=("[^"]*"|'[^']*'|[^\]]+))?(\s+([^\]]+))?\/?$/
 const ATTR_RE = /(\w+)=("[^"]*"|'[^']*'|\S+)/g
 
+// Hard input cap (defense-in-depth). Real Bitrix24 task/comment/feed content is
+// far smaller; anything larger keeps its tail as a literal text node so nothing
+// is silently dropped, while bounding worst-case work on pathological input.
+const MAX_INPUT = 1_000_000
+
 export function parseBBCode(input: string): BBNode[] {
   const result: BBNode[] = []
+  let overflow = ''
+  if (input.length > MAX_INPUT) {
+    overflow = input.slice(MAX_INPUT)
+    input = input.slice(0, MAX_INPUT)
+  }
   const stack: TagNode[] = []
   let i = 0
   let textBuf = ''
+  // Memoized index of the next ']' at/after the cursor. Reused while it stays
+  // ahead of `i`, so a '['-heavy input does not rescan to the same ']' on every
+  // char — that rescan made parsing O(n²) (a DoS vector on externally-authored
+  // task/comment content loaded via REST).
+  let nextClose = -1
 
   const target = (): BBNode[] => stack.length ? stack[stack.length - 1]!.children : result
 
@@ -51,11 +66,12 @@ export function parseBBCode(input: string): BBNode[] {
       i++
       continue
     }
-    const close = input.indexOf(']', i + 1)
+    if (nextClose < i + 1) nextClose = input.indexOf(']', i + 1)
+    const close = nextClose
     if (close === -1) {
-      textBuf += input[i]
-      i++
-      continue
+      // No ']' ahead — the remainder cannot form a tag; emit it verbatim.
+      textBuf += input.slice(i)
+      break
     }
     const inner = input.slice(i + 1, close)
 
@@ -137,6 +153,7 @@ export function parseBBCode(input: string): BBNode[] {
     i = close + 1
   }
   flushText()
+  if (overflow) result.push({ type: 'text', value: overflow })
   return result
 }
 
