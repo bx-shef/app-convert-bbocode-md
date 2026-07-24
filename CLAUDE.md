@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-> Last reviewed: 2026-07-23
+> Last reviewed: 2026-07-24
 
 Nuxt 4 SPA placement for Bitrix24 that converts Bitrix24 BBCode ↔ Markdown.
 
@@ -46,7 +46,7 @@ Nuxt 4 SPA placement for Bitrix24 that converts Bitrix24 BBCode ↔ Markdown.
 - **i18n** — when adding a new UI string, add the key to `i18n/locales/en.json` and `i18n/locales/ru.json`. Other 17 locales fall back to `en` (defaultLocale). User runs `pnpm translate-ui` later for full translation.
 - **B24 UI components only**: `B24Textarea`, `B24DashboardPanel`, `B24Button`, `B24DashboardNavbar`, `B24Progress`, etc. Auto-imported via `@bitrix24/b24ui-nuxt`.
 - **No server code.** `server/` folder was intentionally removed. No SSR API endpoints. App is pure SPA (runtime fetches go through `useB24` → Bitrix24 REST).
-- **Analytics/telemetry** — client-side only, opt-in via env-gate, empty = off. No server-side OTel (pure SPA). **Wired analytics = Yandex.Metrika** (`NUXT_PUBLIC_YANDEX_COUNTER_ID`), the iframe-safe option: injected only on the standalone converter page and self-muting inside the portal iframe (see the metrika files above). A dormant Cloudflare beacon (`NUXT_PUBLIC_CF_ANALYTICS_TOKEN`) also exists in `nuxt.config.ts` but is **unguarded** (injects unconditionally) — leave it off; prefer Metrika. Enable at most one. Principles (mirroring `ai-price-import`, see `docs/IMPROVEMENT_PLAN.md` § Телеметрия): (1) collect **shape/counters only, never content** — the user's textarea text must never leave the browser **via analytics/telemetry** (explicit REST save / insert-to-chat are separate, user-initiated); (2) if an event is ever tagged by portal, **hash (salted)** `member_id`/domain, never raw; (3) errors = **class, not message text**; (4) analytics must be kept **OFF inside the B24 iframe** — **realized** for Metrika via `public/metrika.js`'s `window.self !== window.top` self-mute (goals therefore fire only on the standalone `/`; portal users are never tracked). Precedent: `currency-converter/public/metrika.js`.
+- **Analytics/telemetry** — client-side only, opt-in via env-gate, empty = off. No server-side OTel (pure SPA). **Wired analytics = Yandex.Metrika** (`NUXT_PUBLIC_YANDEX_COUNTER_ID`), the iframe-safe option: injected only on the standalone converter page and self-muting inside the portal iframe (see the metrika files above). A dormant Cloudflare beacon (`NUXT_PUBLIC_CF_ANALYTICS_TOKEN`) also exists in `nuxt.config.ts` but is **unguarded** (injects unconditionally) — leave it off; prefer Metrika. Enable at most one. Principles (mirroring `ai-price-import`): (1) collect **shape/counters only, never content** — the user's textarea text must never leave the browser **via analytics/telemetry** (explicit REST save / insert-to-chat are separate, user-initiated); (2) if an event is ever tagged by portal, **hash (salted)** `member_id`/domain, never raw; (3) errors = **class, not message text**; (4) analytics must be kept **OFF inside the B24 iframe** — **realized** for Metrika via `public/metrika.js`'s `window.self !== window.top` self-mute (goals therefore fire only on the standalone `/`; portal users are never tracked). Precedent: `currency-converter/public/metrika.js`.
 - **Feedback** — the "report a bad conversion" flow is **opt-in and privacy-first**: gated on `NUXT_PUBLIC_FEEDBACK_URL` (empty = button hidden); the user's source markup is attached **only on an explicit consent tick** (default off); all embedded text is sanitised (`sanitizeReportText` — Trojan-Source/bidi/zero-width/control codes) before it reaches an issue a human/agent reads; free-text never goes in the issue title. The SPA only knows a **public worker URL** — the GitHub token that opens the issue lives in that external worker (private bucket repo `app-convert-bbocode-md-feedback`), **never in the bundle**. Pure builder is `app/utils/feedback.ts` (channel-agnostic, tested); keep it server-agnostic.
 - **Rating** — the Marketplace "rate this app" prompt is **portal-only, opt-in by config, and unobtrusive**: gated on `NUXT_PUBLIC_MARKETPLACE_SLUG` (empty = never shown); only fires inside the B24 frame; heavily throttled by the pure `shouldPromptRating` policy (min uses, snooze cooldown, give-up after N snoozes, never after rated/dismissed). State lives in `localStorage` (no REST). Keep the policy pure/tested in `app/utils/app-rating.ts`; the composable is a thin singleton.
 - BBCode tag set is **closed** — see `KNOWN_TAGS` in `app/utils/bbcode-parser.ts`. Unknown tags pass through as text. To support a new tag (e.g. `[USER=id]`), add it to `KNOWN_TAGS` and handle it in both `bbcode-to-md.ts` and `md-to-bbcode.ts`.
@@ -90,46 +90,12 @@ pnpm build
 
 **Visual/e2e**: `e2e/` holds Playwright specs run against the built server. Assertions are functional + a dark-mode contrast guard (no flaky pixel baselines); screenshots land in `e2e/output/` (gitignored) and upload as CI artifacts. Runs in CI after `build`.
 
-**DoD for UI changes**: after any UI change, run the e2e and **look at** `e2e/output/` before calling it done — don't trust "built without errors". When building interfaces, cross-check the Bitrix24 UI docs: https://bitrix24.github.io/b24ui/. Full test plan + portal QA checklist: `docs/TESTING.md`.
+**DoD for UI changes**: after any UI change, run the e2e and **look at** `e2e/output/` before calling it done — don't trust "built without errors". When building interfaces, cross-check the Bitrix24 UI docs: https://bitrix24.github.io/b24ui/. Full test plan + portal QA checklist: `docs/project-map.md` § «Что проверить».
 
-## Операционная дисциплина и отчётность (reporting-kit)
+## Процесс, состояние, отчётность
 
-Набор перенесён из базы знаний `bx-shef/ai-agent` (`reporting-kit`). Полное
-описание — [`docs/reports/README.md`](docs/reports/README.md) и
-[`docs/project-map.md`](docs/project-map.md).
+Технический гайд выше описывает **как устроен код**. Всё остальное вынесено:
 
-### Отчёты в Telegram
-- Навыки/команды готовят текст отчёта: `/report-status` (срез по `docs/project-map.md`),
-  `/report-digest` (дайджест по репозиториям за период), `/report-questions` (вопросник заказчику).
-- Отправляет **только** `scripts/tg-send.sh` и **только по явной команде «шли»** — не раньше.
-  Без `TG_BOT_TOKEN`/`TG_CHAT_ID` скрипт намеренно отказывает. Секреты — в `.env` (в git не коммитим).
-- Промпты в `docs/reports/` — **канон**; тела `.claude/skills/*/SKILL.md` — их зеркало.
-  При правке промпта синхронно обновляй `SKILL.md` (и наоборот). Идентичность проверяет
-  `scripts/check-skills.sh` и CI (`docs-links.yml`). Перед коммитом доков:
-  `bash scripts/check-tg.sh && bash scripts/check-skills.sh && bash scripts/check-docs.sh`.
-
-### Ветки, PR, merge
-- В `main` напрямую не пушим. Работа — в ветке, изменения через Pull Request (описание на русском: что/зачем/на что влияет).
-- В один PR — одна логическая задача. **Мержит владелец сам** (автомерж/force-merge не используем); PR не мержится без явного сигнала владельца.
-- После смерженного PR синхронно обновляем `docs/` — документация не отстаёт от состояния.
-
-### Review — 5 проверяющих
-Перед правками привлекаем `/review` + параллельно 5 ролей (модель Sonnet; предупреждаем, что проект большой — не падать по таймауту):
-1. **Документация / Skill** — оценка доков и файлов навыков.
-2. **Программист** — адекватность решений, JSDoc, типизация TS и пр.
-3. **Тестировщик** — покрытие тестами и сами тесты.
-4. **Безопасность** — отдел ИБ.
-5. **Тех-директор** — общая инженерная оценка.
-
-Отчёт о проверке — на русском, кратко: кто · что · почему · как исправить. Правки вносим в этом же PR; вынос в отдельный issue/PR — только по согласованию.
-
-### Связанные репозитории
-| Репо | Роль |
-|---|---|
-| `bx-shef/app-convert-bbocode-md` | это приложение (конвертер BBCode ↔ MD ↔ HTML) |
-| `bx-shef/ai-agent` | база знаний и `reporting-kit` (источник этого набора) |
-| `bx-shef/currency-converter` | соседнее приложение (единый бренд-стиль) |
-
-### Bitrix24 через хук
-Для setup/проверки портала используем входящий вебхук `B24_HOOK___SUFFIX` (свой суффикс под портал).
-Хук с максимальными правами — секрет: храним в окружении/секретах, не в git/логах; для рантайма — отдельный хук с минимальными правами.
+- **Процесс работы** (ветки, PR, ревью 5 ролей, штамп ревью, тесты, reporting-kit/Telegram, хук Bitrix24) — [`docs/PROCESS.md`](docs/PROCESS.md).
+- **Состояние проекта** (что сделано / что проверить / деплой / открытые вопросы) — [`docs/project-map.md`](docs/project-map.md).
+- **Пользовательский обзор и деплой** — [`README.md`](README.md).

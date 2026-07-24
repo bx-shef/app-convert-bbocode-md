@@ -1,6 +1,6 @@
 # BBCode ↔ Markdown ↔ HTML converter for Bitrix24
 
-> Last reviewed: 2026-07-23
+> Last reviewed: 2026-07-24
 
 [![CI](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/ci.yml/badge.svg)](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/ci.yml)
 [![Deploy GitHub Pages](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/deploy.yml/badge.svg)](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/deploy.yml)
@@ -27,27 +27,19 @@ Live-конвертер BBCode (диалект Bitrix24) ⇄ Markdown ⇄ HTML �
 - **Bitrix24 UI Kit** — нативный вид внутри портала; виджет `IM_TEXTAREA` для вставки в чат.
 - **Готовая install-страница** для регистрации приложения как placement (mock-flow без серверной части).
 - **i18n** — 19 локалей (EN+RU поддерживаются вручную, остальные — fallback на EN + `pnpm translate-ui`).
-- **Юнит-тесты** — 271 тест на vitest (обе стороны, HTML, санитайзер, roundtrip).
+- **Юнит-тесты** — 275 тестов на vitest (обе стороны, HTML, санитайзер, roundtrip).
 - **Развёртывание из коробки** — единый CLI `pnpm run deploy <gh-pages|docker>` плюс готовые GitHub Actions: статический хостинг на GitHub Pages и Docker-образ в GHCR (nginx + SPA-фоллбэк, `docker compose pull && up -d` на вашем сервере).
 
 ## Статус и план
 
-> Что сделано и что в работе. Живые REST-сценарии **проверяются вручную в портале** — из CI/среды разработки их не протестировать.
+Актуальное состояние (что сделано / что проверить / деплой / открытые вопросы) —
+в единой **[Карте проекта](docs/project-map.md)**. Процесс работы (ветки, PR,
+ревью) — в **[docs/PROCESS.md](docs/PROCESS.md)**.
 
-**Готово**
-- Конвертер BBCode ⇄ Markdown ⇄ HTML + живое превью, печать, HTML-санитайзер; стилевые теги `[color]`/`[size]`/`[font]`, упоминания `[USER]`/`[DEPARTMENT]` и интерактивные теги чата `[SEND]`/`[PUT]`/`[CALL]` (официальный формат бот-сообщений Bitrix24).
-- Виджет `IM_TEXTAREA` (чтение/вставка в чат), install-flow, миграция JSSDK на `actions.v2`.
-- Единый бренд-стиль с конвертером валют; тёмная тема; постоянная визуальная проверка (Playwright e2e в CI).
-- REST: **задачи**, **CRM-комментарии**, **посты Живой ленты** — загрузка текста в редактор и сохранение обратно из тулбара.
-- Платформа обновлена до актуальных версий: `@bitrix24/b24jssdk` + `-nuxt` **2.x**, `@bitrix24/b24ui-nuxt` **2.9** (плюс Nuxt/Vue/Tailwind/markdown-it). Совместимость с `actions.v2` сохранена; SDK 2.x дополнительно открывает `actions.v3`.
-
-**Требует ручной проверки в портале**
-- Load/Save для каждого типа: задача (`DESCRIPTION` + флаг BBCode/HTML), CRM-комментарий (`COMMENT`), пост Ленты (`DETAIL_TEXT`; заголовок сохраняется через get-перед-update).
-- Что выданы скоупы `task`, `crm`, `log` (см. install-страницу).
-
-**Дальше**
-- `[DISK File=id]` (особый формат); опционально — REST-резолв имён упоминаний.
-- Переводы новых i18n-ключей на 17 остальных локалей (`pnpm translate-ui`).
+Коротко: конвертер, виджет `IM_TEXTAREA`, install-flow и REST load/save
+(задачи/CRM/Лента) — **код готов** (ждёт портального QA); платформа обновлена до `@bitrix24/*` 2.x.
+Живые REST/портальные сценарии **проверяются вручную в тестовом портале** — из
+CI их не протестировать (см. Карту проекта § «Что проверить»).
 
 ## Стек
 - [Nuxt 4](https://nuxt.com)
@@ -156,7 +148,7 @@ BBCode оно берётся в кавычки.
 
 CLI и CI используют один и тот же код сборки — локальный `pnpm run deploy …` воспроизводит ровно то, что собирает Actions. (Команда называется `pnpm run deploy`, а не `pnpm deploy`, потому что у pnpm есть встроенная команда `deploy` для монорепо — её и перекрывает наш скрипт.)
 
-Есть и третий вариант — **хостинг внутри облака клиента** (Bitrix24 Vibecode «Black Hole», без публичного IP). Кода не требует (тот же статичный бандл), описан как опция в [`docs/DEPLOY_VIBECODE.md`](docs/DEPLOY_VIBECODE.md).
+Есть и третий вариант — **хостинг внутри облака клиента** (Bitrix24 Vibecode «Black Hole», без публичного IP). Кода не требует (тот же статичный бандл), описан как опция в [Карте проекта](docs/project-map.md) § Деплой.
 
 ```bash
 pnpm run deploy gh-pages         # сборка под GitHub Pages (артефакт в dist/)
@@ -400,12 +392,10 @@ NUXT_PUBLIC_MARKETPLACE_SLUG=shef.bbcodemd
   в `localStorage` (без REST). Пустой слаг → попапа нет (fail-safe).
 
 ## Roadmap
-- [x] REST: задачи, CRM-комментарии, посты Живой ленты — загрузка/сохранение текста (`useB24Rest`, `actions.v2`). **Требуется ручной QA в портале.**
-- [x] Стилевые теги `[color]` / `[size]` / `[font]` — через `<span style>` (round-trip + рендер в превью).
-- [x] Упоминания `[USER=id]` / `[DEPARTMENT=id]` — чип в превью (round-trip, имя берётся из тега).
-- [ ] `[DISK File=id]` — особый формат, пока проходит как текст (round-trip без потерь).
-- [ ] Опционально: REST-резолв имён упоминаний (когда в тексте нет имени).
-- [ ] Полные переводы новых i18n-ключей на 19 локалей через `pnpm translate-ui`.
+
+Дорожная карта и открытые вопросы — в [Карте проекта](docs/project-map.md)
+(§ «Что дальше» и § «Открытые вопросы»). Коротко в работе: `[DISK File=id]`,
+REST-резолв имён упоминаний, полные переводы i18n на 19 локалей.
 
 ## Локализация
 
@@ -420,7 +410,7 @@ pnpm translate-ui
 - **`deploy.yml`** — на push в `main` собирает SPA и публикует на GitHub Pages.
 - **`deploy-docker.yml`** — на push в `main` (если затронуты файлы образа) пересобирает Docker-образ и пушит в GHCR.
 - **`dependabot.yml`** — еженедельно (понедельник) проверяет обновления npm, GitHub Actions и базовых Docker-образов. Bitrix24-, Nuxt-, Vue-пакеты сгруппированы; dev-зависимости (minor/patch) — в общую группу; все action-бампы и образы приходят по одному сгруппированному PR на экосистему. Node-major у образов игнорируется намеренно (corepack убран из `node:25+`).
-- **`docs-links.yml`** — на PR/push с изменениями в `**/*.md` или `scripts/**`: гоняет проверки набора **reporting-kit** (`scripts/check-docs.sh` ссылки/конфликты/эмодзи, `check-skills.sh` навыки↔канон, `check-tg.sh` отправщик Telegram без сети). Отчётность в Telegram — см. [`docs/reports/`](docs/reports/README.md) и раздел «Операционная дисциплина» в `CLAUDE.md`.
+- **`docs-links.yml`** — на PR/push с изменениями в `**/*.md` или `scripts/**`: гоняет проверки набора **reporting-kit** (`scripts/check-docs.sh` ссылки/конфликты/эмодзи, `check-skills.sh` навыки↔канон, `check-tg.sh` отправщик Telegram без сети). Отчётность в Telegram — см. [`docs/reports/`](docs/reports/README.md) и [`docs/PROCESS.md`](docs/PROCESS.md).
 
 ### Branch protection для `main` (обязательно настроить руками)
 
