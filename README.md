@@ -75,7 +75,7 @@ app/
 │   ├── index.vue               # converter UI
 │   ├── install.vue             # Bitrix24 placement install flow
 │   └── widget/im-textarea.vue  # IM_TEXTAREA placement widget
-├── utils/
+├── utils/                      # чистое ядро (конвертеры + b24-entity, metrika, feedback, app-rating)
 │   ├── bbcode-parser.ts        # BBCode → AST
 │   ├── bbcode-to-md.ts         # AST → Markdown
 │   ├── md-to-bbcode.ts         # markdown-it tokens → BBCode (+ raw-HTML maps)
@@ -83,19 +83,24 @@ app/
 │   ├── html-to-md.ts           # HTML → Markdown (htmlparser2)
 │   ├── sanitize-html.ts        # allow-list HTML sanitizer
 │   ├── convert.ts              # facade over the Markdown pivot
-│   ├── b24-entity.ts           # task description ↔ MD (pure)
-│   └── md-to-print-html.ts     # Markdown → print-ready HTML
-├── composables/
+│   ├── md-to-print-html.ts     # Markdown → print-ready HTML
+│   ├── b24-entity.ts           # task/CRM/Feed ↔ MD (pure)
+│   ├── metrika.ts              # Яндекс.Метрика — чистое ядро целей
+│   ├── feedback.ts             # «сообщить об ошибке» — builder + санитизация
+│   └── app-rating.ts           # политика попапа «оцените приложение»
+├── composables/                # тонкие Vue-обёртки над ядром
 │   ├── useConverter.ts         # реактивная 3-сторонняя конвертация + превью
 │   ├── usePrint.ts             # печать рендера через скрытый iframe
 │   ├── useB24.ts               # JSSdk init wrapper
-│   └── useB24Rest.ts           # REST задач (actions.v2): load/save
+│   ├── useB24Rest.ts           # REST задач/CRM/Ленты (actions.v2): load/save
+│   ├── useMetrikaGoal.ts · useFeedback.ts · useAppRating.ts
+├── components/                 # ConverterPane, FeedbackReport, AppRatingModal, AppLogo …
 ├── layouts/                    # clear (index/install) + widget
-├── components/                 # AppLogo, ConverterPane
 └── app.vue                     # init B24, SEO, locale
-i18n/locales/                   # 19 локалей
-tests/                          # vitest
+i18n/locales/                   # 19 локалей   ·   tests/  # vitest
 ```
+
+> Дерево — ключевые файлы; полный обзор слоёв — в [`CLAUDE.md`](CLAUDE.md) § Architecture.
 
 ## Конвертация — таблица маппинга
 
@@ -169,7 +174,7 @@ Base URL подхватывается автоматически из конте
 
 `docker/nginx.conf` отдаёт и security-заголовки: HSTS, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy` и CSP, адаптированный под iframe Bitrix24 (`frame-ancestors` — облачные порталы Б24, **без** `X-Frame-Options`; коробочный портал на своём домене добавляет свой origin в `frame-ancestors`+`connect-src`). CSP пока в режиме **Report-Only** — после портального QA с чистой консолью переключается на enforce (имя заголовка → `Content-Security-Policy`). Конфиг проверяется в CI через `nginx -t`.
 
-Workflow: `.github/workflows/deploy-docker.yml`. Триггерится **автоматически** на push в `main`, если затронуты файлы, влияющие на образ (`app/`, `public/`, `i18n/`, `docker/`, `Dockerfile`, `package.json`, `pnpm-lock.yaml`, `nuxt.config.ts`, `tsconfig.json` и сам workflow). Чисто документационные коммиты сборку не вызывают. Можно также запустить руками: **Actions → Deploy Docker image → Run workflow** с переопределением `site_url`, `base_url`, `tag`.
+Workflow: `.github/workflows/deploy-docker.yml`. Триггерится **автоматически** на push в `main`, если затронуты файлы, влияющие на образ (`app/`, `public/`, `i18n/`, `docker/`, `Dockerfile`, `package.json`, `pnpm-lock.yaml`, `nuxt.config.ts`, `tsconfig.json`, `.dockerignore` и сам workflow). Чисто документационные коммиты сборку не вызывают. Можно также запустить руками: **Actions → Deploy Docker image → Run workflow** с переопределением `site_url`, `base_url`, `tag`.
 
 Образ публикуется в **GHCR** под именем `ghcr.io/<owner>/<repo>` с тегами `latest` и `<sha>`. Отдельные секреты не нужны — аутентификация через `GITHUB_TOKEN`. `NUXT_PUBLIC_SITE_URL` берётся из **GitHub Variable** `NUXT_PUBLIC_SITE_URL` (см. шпаргалку ниже).
 
@@ -205,7 +210,7 @@ make up                          # pull + up -d
 make logs / make ps / make down
 ```
 
-Контейнер имеет встроенный `HEALTHCHECK` (curl `/` через nginx), `restart: unless-stopped` и мягкие лимиты `0.5 CPU / 128 MB` — для статики этого хватает с запасом.
+Контейнер имеет встроенный `HEALTHCHECK` (HTTP-проверка `/` через `wget`), `restart: unless-stopped` и мягкие лимиты `0.5 CPU / 128 MB` — для статики этого хватает с запасом.
 
 `NUXT_PUBLIC_SITE_URL` / `NUXT_APP_BASE_URL` запекаются в бандл на этапе `docker build` через `--build-arg` — менять их через `.env.prod` бесполезно, нужно пересобирать образ (передать новые значения в workflow `Deploy Docker image → Run workflow`).
 
@@ -308,7 +313,7 @@ make restart # down + up
 
 После сохранения нажать **«Установить»** — портал откроет страницу `/install`, она:
 1. инициализирует JSSDK,
-2. через `placement.bind` регистрирует виджет на `IM_TEXTAREA` (handler `https://convert-bbocode-md.bx-shef.by/widget/im-textarea`, контекст `USER;CHAT`, размер `480×320`).
+2. через `placement.bind` регистрирует виджет на `IM_TEXTAREA` (handler `https://convert-bbocode-md.bx-shef.by/widget/im-textarea`, контекст `ALL` = USER+CHAT+LINES+CRM, размер `480×320`).
 
 После этого в правом нижнем углу панели ввода чата появится иконка `BBCode ↔ MD` — клик открывает конвертер.
 
@@ -399,7 +404,7 @@ REST-резолв имён упоминаний, полные переводы i
 
 ## Локализация
 
-Скрипт автоперевода UI:
+Скрипт автоперевода UI (нужен `DEEPSEEK_API_KEY` — см. `.env.example`):
 ```
 pnpm translate-ui
 ```

@@ -165,9 +165,10 @@ Markdown и HTML (**Markdown — опорный формат**), с живым �
 - `make prod-rollback TAG=sha-<sha>` + `make prod-smoke` (immutable `:sha`-тег уже пушится).
 - Пост-деплойный smoke-скрипт (`scripts/smoke.sh`: `GET / →200`, ассет →200, наличие security-заголовков).
 - CSP `script-src` через sha256-хеши вместо `'unsafe-inline'` (образец `currency-converter/scripts/csp-hashes.mjs`).
-- Флип CSP `Report-Only → enforce` в `docker/nginx.conf` (после портального QA).
+- Флип CSP `Report-Only → enforce` в `docker/nginx.conf` (после портального QA). Заметка: сейчас в Report-Only **нет** `report-uri`/`report-to` — нарушения только пишутся в консоль браузера, никуда не собираются (комментарий в `nginx.conf` «collects» неточен). При желании реально собирать нарушения — добавить report-endpoint; иначе Report-Only остаётся чисто наблюдательным «глазами на QA».
 - Тримминг `.dockerignore` (`docs`/`*.md`/`e2e`) + `RUN nginx -t` в `Dockerfile` — **заблокировано в песочнице** (нет docker-демона для проверки; CI образ на PR не собирает).
 - SHA-пины GitHub Actions (`uses: …@<sha>`) — **заблокировано в песочнице** (внешние SHA не резолвятся через прокси / scope MCP).
+- CI-устойчивость: шаг `playwright install --with-deps` (`ci.yml:66`) без явного `timeout-minutes` — при мёртвом apt-зеркале Ubuntu джоб висит до дефолтного 6-часового таймаута и завершается как `cancelled` (наблюдалось на #91 — инфра-флейк, не реальный провал теста). Добавить короткий `timeout-minutes` на джоб (+ретрай при желании); финальный job зеркалит `conclusion` в статус (`ci.yml:9`) — учитывать, что `cancelled` ≠ провал теста, чтобы флейк не маскировался под красный CI.
 
 **Прикладной долг:**
 - Прикладной **timeout/cancel** (`AbortSignal`) для REST Save/Load в `useB24Rest`/`index.vue`: SDK ретраит транзиентные сбои, но верхней границы ожидания одного вызова не задаёт (при `OPERATION_TIME_LIMIT` возможно «висение» до ~10 мин). Прецедент — `useFeedback.ts` (замечание ревью #106).
