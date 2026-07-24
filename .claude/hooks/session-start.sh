@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # In Claude Code web sessions, prepare the repo so lint/typecheck/test/build work
-# from the first turn (pattern from docs/IMPROVEMENT_PLAN.md). No-op outside web
+# from the first turn (pattern from docs/PROCESS.md). No-op outside web
 # sessions and never fails the session — every step is best-effort.
 set -euo pipefail
 
