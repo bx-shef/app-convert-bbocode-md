@@ -137,8 +137,8 @@ Markdown и HTML (**Markdown — опорный формат**), с живым �
 
 | Таргет | Где живёт | Публичный IP | Когда |
 |---|---|---|---|
-| GitHub Pages (`deploy.yml`) | `*.github.io` | да | публичный standalone + демо |
-| Docker/GHCR + nginx (`deploy-docker.yml`) | свой сервер | да | self-host на своём домене |
+| GitHub Pages (`deploy.yml`) | `*.github.io` | да | публичное демо / standalone (не канон) |
+| **Docker/GHCR + nginx (`deploy-docker.yml`)** | свой сервер | да | **канонический контур** (self-host, свой домен) |
 | **Vibecode «Black Hole»** (📝 концепт) | VM в облаке Б24 клиента | **нет** | «всё внутри портала клиента» |
 
 **Vibecode «Black Hole»** — изолированная VM, которую Bitrix24 поднимает в облаке
@@ -147,9 +147,12 @@ Markdown и HTML (**Markdown — опорный формат**), с живым �
 порталу URL туннеля); активируется по решению владельца при доступе к Vibecode.
 Точные REST-шаги фиксируются после первого прогона в реальном контуре.
 
-**Открытый вопрос №0:** какой контур **канонический** для пользователей — Pages
-или Docker/nginx? От этого зависит гигиена деплоя (CSP/security-заголовки/smoke
-живут только на nginx-контуре). Решение — за владельцем.
+**Решение №0 (принято владельцем 2026-07-24): канонический контур — Docker/nginx.**
+Вся гигиена деплоя (CSP/security-заголовки/smoke) живёт на nginx-контуре и
+приоритетна. GitHub Pages остаётся публичным демо/standalone (тот же бандл, без
+серверных заголовков). Оба контура теперь деплоятся **только после зелёного CI**
+(гейт `workflow_run:[ci]` + `conclusion==success` в обоих workflow; ручной
+`workflow_dispatch` — обход для rollback; чекаут пинится на прошедший CI коммит).
 
 ## Что дальше
 
@@ -160,8 +163,8 @@ Markdown и HTML (**Markdown — опорный формат**), с живым �
 | #91 | nuxt 4.4→4.5 | под минором Vite 8 + Rspack 2 — нужен ручной смоук `pnpm dev`, не автомерж |
 | #109 | vue-tsc 3.3.5→3.3.8 | CI красный: строгая семантика TS7 требует правки `@click`-обработчиков в `index.vue` |
 
-**Инженерный долг — деплой-гигиена** (после решения №0 по контуру; образцы у соседа `currency-converter`):
-- Гейт «деплой только после зелёного CI» (`workflow_run:[ci]` + `conclusion==success`) для **обоих** workflow — сейчас `deploy.yml`/`deploy-docker.yml` пушат независимо от `ci.yml` (**P0**).
+**Инженерный долг — деплой-гигиена** (решение №0 принято: контур — Docker/nginx; образцы у соседа `currency-converter`):
+- ✅ **Сделано (P0):** гейт «деплой только после зелёного CI» (`workflow_run:[ci]` + `conclusion==success`) в **обоих** workflow; `workflow_dispatch` остаётся ручным обходом для rollback; чекаут пинится на `workflow_run.head_sha` (деплоится именно прошедший CI коммит).
 - `make prod-rollback TAG=sha-<sha>` + `make prod-smoke` (immutable `:sha`-тег уже пушится).
 - Пост-деплойный smoke-скрипт (`scripts/smoke.sh`: `GET / →200`, ассет →200, наличие security-заголовков).
 - CSP `script-src` через sha256-хеши вместо `'unsafe-inline'` (образец `currency-converter/scripts/csp-hashes.mjs`).
