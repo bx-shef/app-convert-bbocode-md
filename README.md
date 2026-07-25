@@ -1,6 +1,6 @@
 # BBCode ↔ Markdown ↔ HTML converter for Bitrix24
 
-> Last reviewed: 2026-07-24
+> Last reviewed: 2026-07-25
 
 [![CI](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/ci.yml/badge.svg)](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/ci.yml)
 [![Deploy GitHub Pages](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/deploy.yml/badge.svg)](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/deploy.yml)
@@ -27,7 +27,7 @@ Live-конвертер BBCode (диалект Bitrix24) ⇄ Markdown ⇄ HTML �
 - **Bitrix24 UI Kit** — нативный вид внутри портала; виджет `IM_TEXTAREA` для вставки в чат.
 - **Готовая install-страница** для регистрации приложения как placement (mock-flow без серверной части).
 - **i18n** — 19 локалей (EN+RU поддерживаются вручную, остальные — fallback на EN + `pnpm translate-ui`).
-- **Юнит-тесты** — 275 тестов на vitest (обе стороны, HTML, санитайзер, roundtrip).
+- **Юнит-тесты** — 293 теста на vitest (обе стороны, HTML, санитайзер, roundtrip, парсер, REST-таймаут).
 - **Развёртывание из коробки** — единый CLI `pnpm run deploy <gh-pages|docker>` плюс готовые GitHub Actions: статический хостинг на GitHub Pages и Docker-образ в GHCR (nginx + SPA-фоллбэк, `docker compose pull && up -d` на вашем сервере).
 
 ## Статус и план
@@ -282,19 +282,28 @@ curl -I https://convert-bbocode-md.bx-shef.by/
 
 В браузере: <https://convert-bbocode-md.bx-shef.by/>.
 
-**Откат к предыдущей версии.**
+**Откат к предыдущей версии.** `deploy-docker.yml` пушит рядом с `:latest`
+неизменяемый тег `:<sha>` (raw commit sha, **без** префикса `sha-`).
 ```bash
-# в .env.prod заменить DOCKER_TAG=latest → DOCKER_TAG=<sha из GHCR>
-make up
+# Быстрый one-shot откат + авто-smoke:
+make prod-rollback TAG=<sha из GHCR>
+# ВАЖНО: это разово. Чтобы закрепить (иначе следующий `make up` вернёт :latest) —
+# в .env.prod заменить DOCKER_TAG=latest → DOCKER_TAG=<sha>, затем `make up`.
 ```
+Watchtower откат назад НЕ вызовет: он пере-качивает тот же immutable `:<sha>` и
+находит тот же digest. Реальный риск возврата на `:latest` — будущий голый
+`make up` со stale `.env.prod`.
 
 **Полезное.**
 ```bash
-make logs    # tail логов prod-стека
-make ps      # статус
-make down    # остановить
-make restart # down + up
+make prod-redeploy  # pull :latest + up -d --wait + smoke
+make prod-smoke     # функциональный smoke (контейнер отдаёт SPA-шелл)
+make logs           # tail логов prod-стека
+make ps             # статус
+make down           # остановить
+make restart        # down + up
 ```
+Публичный end-to-end smoke по URL: `scripts/smoke.sh https://<host>`.
 
 ## Развёртывание в Bitrix24
 
