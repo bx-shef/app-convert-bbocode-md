@@ -1,6 +1,7 @@
 import type { B24Frame } from '@bitrix24/b24jssdk'
 import { Text } from '@bitrix24/b24jssdk'
 import { useB24 } from './useB24'
+import { withTimeout } from '~/utils/with-timeout'
 import {
   type EntityKind,
   pickTask, taskDescriptionToMarkdown, buildTaskUpdateFields,
@@ -44,9 +45,21 @@ export function useB24Rest() {
   // already-throttled method. The `*.update` saves are idempotent on the field
   // value, but a blind retry can still double server-side side effects (edit
   // history, notifications) when a write applied but its response was lost.
+  //
+  // We DO cap the total wait with `withTimeout` — an upper bound, not a retry:
+  // the SDK's internal backoff/retries stay intact, but if a call is still
+  // stuck after CALL_TIMEOUT_MS (e.g. a server-side OPERATION_TIME_LIMIT storm)
+  // the UI gets a TimeoutError instead of hanging for minutes. The bound is far
+  // above a normal call plus the SDK's retry budget, so it only trips on a real
+  // stall. A timed-out write may still have applied server-side — acceptable
+  // vs. an indefinite hang, and the field-value writes are idempotent.
+  const CALL_TIMEOUT_MS = 30_000
   async function call(method: string, params: Record<string, unknown>): Promise<unknown> {
     const $b24 = frame()
-    const res = await $b24.actions.v2.call.make({ method, params, requestId: Text.getUuidRfc4122() })
+    const res = await withTimeout(
+      $b24.actions.v2.call.make({ method, params, requestId: Text.getUuidRfc4122() }),
+      CALL_TIMEOUT_MS
+    )
     if (!res.isSuccess) throw new Error(res.getErrorMessages().join('; '))
     return res.getData()
   }
