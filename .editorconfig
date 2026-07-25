@@ -11,3 +11,8 @@ insert_final_newline = true
 
 [*.md]
 trim_trailing_whitespace = false
+
+# Make requires real tabs in recipes — override the global space indent so an
+# editor doesn't silently turn a leading tab into spaces ("missing separator").
+[{Makefile,makefile,GNUmakefile}]
+indent_style = tab
