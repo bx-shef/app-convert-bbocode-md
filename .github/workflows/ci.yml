@@ -21,6 +21,11 @@ concurrency:
 jobs:
   ci:
     runs-on: ${{ matrix.os }}
+    # Bound the run: a hung step (e.g. a dead apt mirror during the Playwright
+    # system-deps install) otherwise rides GitHub's 6h default and surfaces as a
+    # `cancelled` run that reads like a real failure. 20 min is ~6× a normal
+    # green run (~3 min).
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -63,7 +68,17 @@ jobs:
         run: pnpm build
 
       - name: Install Playwright (chromium)
-        run: pnpm exec playwright install --with-deps chromium
+        # --with-deps runs apt-get, which has flaked on a dead Ubuntu mirror and
+        # hung the whole job. Bound this step and retry so a transient mirror
+        # blip self-heals instead of failing CI (root cause of #91's red).
+        timeout-minutes: 8
+        run: |
+          for attempt in 1 2 3; do
+            pnpm exec playwright install --with-deps chromium && exit 0
+            echo "playwright install failed (attempt $attempt), retrying in 15s…"
+            sleep 15
+          done
+          exit 1
 
       - name: E2E (visual verification)
         run: pnpm test:e2e
