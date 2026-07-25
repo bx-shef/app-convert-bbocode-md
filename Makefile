@@ -11,7 +11,7 @@ help:
 	@echo "  restart       down + up"
 	@echo "  pull          docker compose pull"
 	@echo "  prod-redeploy pull :latest (or DOCKER_TAG) + up -d, then smoke"
-	@echo "  prod-rollback deploy a specific image tag: make prod-rollback TAG=<commit-sha>"
+	@echo "  prod-rollback ONE-SHOT deploy TAG=<sha> (persist in .env.prod, else next 'make up' reverts to :latest)"
 	@echo "  prod-smoke    functional check: the app container serves the SPA shell"
 	@echo "  logs          tail prod logs"
 	@echo "  ps            list prod containers"
@@ -48,26 +48,32 @@ ps:
 	$(PROD) ps
 
 # Pull the current tag (:latest by default, or DOCKER_TAG) and restart, then smoke.
+# `--wait` blocks until the container's HEALTHCHECK reports healthy before smoke.
 prod-redeploy:
 	$(PROD) pull
-	$(PROD) up -d
+	$(PROD) up -d --wait
 	$(MAKE) prod-smoke
 
 # Roll back (or pin) to a specific immutable image tag — the raw commit SHA that
-# deploy-docker.yml pushes alongside :latest. One-shot; to persist across the
-# host's shared Watchtower / `make up`, set DOCKER_TAG=<sha> in .env.prod.
+# deploy-docker.yml pushes alongside :latest (NO `sha-` prefix).
 #   make prod-rollback TAG=<full-commit-sha>
+# ONE-SHOT: this only sets the tag for this `up -d`. Watchtower will NOT drag it
+# back — it re-pulls whatever immutable :<sha> the container now runs and finds
+# the same digest. The real revert risk is a future *plain* `make up` re-reading
+# a stale .env.prod (still DOCKER_TAG=latest). To persist, set DOCKER_TAG=<sha>
+# in .env.prod.
 prod-rollback:
 	@test -n "$(TAG)" || { echo "usage: make prod-rollback TAG=<image-tag> (raw commit sha pushed by deploy-docker.yml alongside :latest)"; exit 1; }
-	DOCKER_TAG=$(TAG) $(PROD) pull
-	DOCKER_TAG=$(TAG) $(PROD) up -d
-	DOCKER_TAG=$(TAG) $(MAKE) prod-smoke
+	DOCKER_TAG="$(TAG)" $(PROD) pull
+	DOCKER_TAG="$(TAG)" $(PROD) up -d --wait
+	DOCKER_TAG="$(TAG)" $(MAKE) prod-smoke
+	@echo "NOTE: one-shot rollback to '$(TAG)'. Persist it in .env.prod (DOCKER_TAG=$(TAG)) or a later 'make up' reverts to :latest."
 
 # Functional smoke: the app container answers with the built SPA shell, checked
 # in-cluster (no public URL / TLS needed). For an end-to-end public check use
 # `scripts/smoke.sh <url>`.
 prod-smoke:
-	@$(PROD) exec -T app wget -qO- http://127.0.0.1/ | grep -qi 'nuxt' \
+	@$(PROD) exec -T app wget -T 5 -qO- http://127.0.0.1/ | grep -qi 'nuxt' \
 	  && echo "prod-smoke OK: app serves the SPA shell" \
 	  || { echo "prod-smoke FAIL: app did not return the SPA shell"; exit 1; }
 
