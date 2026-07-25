@@ -46,14 +46,23 @@ export function useB24Rest() {
   // value, but a blind retry can still double server-side side effects (edit
   // history, notifications) when a write applied but its response was lost.
   //
-  // We DO cap the total wait with `withTimeout` — an upper bound, not a retry:
-  // the SDK's internal backoff/retries stay intact, but if a call is still
-  // stuck after CALL_TIMEOUT_MS (e.g. a server-side OPERATION_TIME_LIMIT storm)
-  // the UI gets a TimeoutError instead of hanging for minutes. The bound is far
-  // above a normal call plus the SDK's retry budget, so it only trips on a real
-  // stall. A timed-out write may still have applied server-side — acceptable
-  // vs. an indefinite hang, and the field-value writes are idempotent.
-  const CALL_TIMEOUT_MS = 30_000
+  // Upper bound on how long the UI waits for one REST call — a deliberate
+  // fail-fast, NOT "only trips on a real stall". The SDK's own retries stay
+  // intact underneath, but they can legitimately sleep a long time: an
+  // OPERATION_TIME_LIMIT retry waits >=10s each (up to maxRetries), and a hard
+  // rate-limit defers to the reset of a ~10-min window. We cap at 60s anyway —
+  // a minute-plus wait is worse UX than a timeout the user can retry — so a
+  // genuinely rate-limited call IS aborted here by design (we can't cover the
+  // full retry budget without reintroducing the multi-minute hang we're killing).
+  //
+  // Two caveats, both bounded by the SDK lacking cancellation (no AbortSignal in
+  // @bitrix24/b24jssdk 2.x — Promise.race can't cancel the real request):
+  //   1. A timed-out *write* may still apply server-side later. Field writes are
+  //      idempotent on the value, so an identical re-save is safe.
+  //   2. Re-triggering after a timeout can race two in-flight calls for one
+  //      entity (the button re-enables while the old call may still run). See
+  //      docs/project-map.md § «Что дальше» — residual, gated on SDK cancel support.
+  const CALL_TIMEOUT_MS = 60_000
   async function call(method: string, params: Record<string, unknown>): Promise<unknown> {
     const $b24 = frame()
     const res = await withTimeout(
