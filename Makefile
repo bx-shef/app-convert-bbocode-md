@@ -1,4 +1,4 @@
-.PHONY: help dev check up down logs ps pull restart status init-network init-proxy down-proxy clean
+.PHONY: help dev check up down logs ps pull restart status init-network init-proxy down-proxy clean prod-redeploy prod-rollback prod-smoke
 
 PROD := docker compose -f docker-compose.prod.yml --env-file .env.prod
 
@@ -10,6 +10,9 @@ help:
 	@echo "  down          stop & remove the prod stack"
 	@echo "  restart       down + up"
 	@echo "  pull          docker compose pull"
+	@echo "  prod-redeploy pull :latest (or DOCKER_TAG) + up -d, then smoke"
+	@echo "  prod-rollback deploy a specific image tag: make prod-rollback TAG=<commit-sha>"
+	@echo "  prod-smoke    functional check: the app container serves the SPA shell"
 	@echo "  logs          tail prod logs"
 	@echo "  ps            list prod containers"
 	@echo "  status        docker stats"
@@ -43,6 +46,30 @@ logs:
 
 ps:
 	$(PROD) ps
+
+# Pull the current tag (:latest by default, or DOCKER_TAG) and restart, then smoke.
+prod-redeploy:
+	$(PROD) pull
+	$(PROD) up -d
+	$(MAKE) prod-smoke
+
+# Roll back (or pin) to a specific immutable image tag — the raw commit SHA that
+# deploy-docker.yml pushes alongside :latest. One-shot; to persist across the
+# host's shared Watchtower / `make up`, set DOCKER_TAG=<sha> in .env.prod.
+#   make prod-rollback TAG=<full-commit-sha>
+prod-rollback:
+	@test -n "$(TAG)" || { echo "usage: make prod-rollback TAG=<image-tag> (raw commit sha pushed by deploy-docker.yml alongside :latest)"; exit 1; }
+	DOCKER_TAG=$(TAG) $(PROD) pull
+	DOCKER_TAG=$(TAG) $(PROD) up -d
+	DOCKER_TAG=$(TAG) $(MAKE) prod-smoke
+
+# Functional smoke: the app container answers with the built SPA shell, checked
+# in-cluster (no public URL / TLS needed). For an end-to-end public check use
+# `scripts/smoke.sh <url>`.
+prod-smoke:
+	@$(PROD) exec -T app wget -qO- http://127.0.0.1/ | grep -qi 'nuxt' \
+	  && echo "prod-smoke OK: app serves the SPA shell" \
+	  || { echo "prod-smoke FAIL: app did not return the SPA shell"; exit 1; }
 
 # --- Server-wide proxy (run once per server) ---
 init-network:
