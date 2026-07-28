@@ -1,8 +1,8 @@
 {
   "mock": {
     "toast": {
-      "title": "Demo Mode",
-      "description": "Changes will not be applied."
+      "title": "Demo mode",
+      "description": "The converter is open outside Bitrix24 — loading and saving portal items isn't available."
     }
   },
   "page": {
@@ -15,9 +15,9 @@
         "clear": "Clear",
         "copy": "Copy",
         "copied": "Copied to clipboard",
-        "copyFailed": "Copy failed",
+        "copyFailed": "Couldn't copy. Select the text and copy it manually (Ctrl+C).",
         "print": "Print",
-        "printFailed": "Print failed",
+        "printFailed": "Couldn't open the print dialog. Please try again.",
         "language": "Language",
         "chatMode": "Chat mode",
         "chatModeHint": "Render tables as bullet lists (Bitrix24 chat does not support [table]).",
@@ -25,7 +25,7 @@
         "markdownPlaceholder": "Paste Markdown here…",
         "htmlPlaceholder": "Paste HTML here…",
         "preview": "Preview",
-        "previewEmpty": "Rendered output appears here"
+        "previewEmpty": "The rendered result appears here"
       },
       "feedback": {
         "button": "Report a bad conversion",
@@ -33,11 +33,11 @@
         "intro": "Describe what converted incorrectly — it helps fix the converter.",
         "commentPlaceholder": "What went wrong?",
         "attach": "Attach the source markup (all panes)",
-        "attachHint": "Helps reproduce the issue. Your text leaves the browser only if you tick this.",
+        "attachHint": "Helps reproduce the issue. Your text leaves the browser only if you tick this box.",
         "cancel": "Cancel",
         "send": "Send",
         "sent": "Thanks! Your report was sent.",
-        "failed": "Couldn't send the report. Please try again."
+        "failed": "Couldn't send the report. Check your connection and press Send again."
       },
       "rating": {
         "title": "Enjoying the converter?",
@@ -52,12 +52,12 @@
       },
       "setup": {
         "installB24": "Install in your Bitrix24",
-        "installB24Intro": "This SPA can be registered as a Bitrix24 placement so you get a button right inside the chat input.",
-        "installB24Step1": "In your portal: Developer resources → Other → Local application.",
+        "installB24Intro": "This app can be registered as a Bitrix24 placement — the converter button then appears right in the panel above the chat input.",
+        "installB24Step1": "In your portal, open Developer resources → Other → Local application.",
         "installB24Step2": "Application URL:",
         "installB24Step3": "Installation URL:",
         "installB24Step4": "Scopes:",
-        "installB24Step5": "Save → Install. The install page will register the IM_TEXTAREA widget for you.",
+        "installB24Step5": "Press Save, then Install — the install page registers the chat-panel widget for you.",
         "selfHost": "Self-host your own copy",
         "selfHostIntro": "Want your own domain or air-gapped install? The repository is MIT-licensed and ships with two ready deploy targets.",
         "selfHostReadme": "Full instructions are in the",
@@ -76,31 +76,31 @@
         "save": "Save",
         "loaded": "Loaded #{id}",
         "saved": "Saved #{id}",
-        "loadFailed": "Failed to load",
-        "saveFailed": "Failed to save"
+        "loadFailed": "Couldn't load from Bitrix24. Check the item type and its ID, then press Load again.",
+        "saveFailed": "Couldn't save to Bitrix24. Check the item type and its ID, then press Save again."
       }
     },
     "widget": {
       "im": {
         "seo": { "title": "BBCode ↔ MD" },
-        "hint": "Markdown → BBCode, insert into chat",
+        "hint": "Type Markdown and press Insert — it goes into the chat input as BBCode.",
         "placeholder": "Type Markdown here…",
         "read": "Load",
         "send": "Insert",
         "print": "Print",
         "inserted": "Inserted into chat",
-        "readFailed": "Read failed",
-        "insertFailed": "Insert failed",
-        "printFailed": "Print failed",
-        "notInFrame": "Not running inside Bitrix24"
+        "readFailed": "Couldn't read the text from the chat input. Press Load again.",
+        "insertFailed": "Couldn't insert the text into chat. Press Insert again.",
+        "printFailed": "Couldn't open the print dialog. Please try again.",
+        "notInFrame": "The widget is open outside Bitrix24 — inserting into chat isn't available."
       }
     },
     "install": {
       "seo": {
-        "title": "Application Installation"
+        "title": "Application installation"
       },
       "ui": {
-        "title": "Application Installation"
+        "title": "Application installation"
       },
       "diagnostics": {
         "title": "Diagnostics",
@@ -111,17 +111,17 @@
         "appCode": "App",
         "scopes": "Granted scopes",
         "placements": "Bound placements",
-        "noPlacements": "(none — bind has not run yet or failed)"
+        "noPlacements": "(none yet — binding hasn't run or it failed)"
       },
       "step": {
         "init": {
-          "caption": "Please wait a moment..."
+          "caption": "Connecting to Bitrix24…"
         },
         "placement": {
-          "caption": "Widgets..."
+          "caption": "Registering the chat widget…"
         },
         "finish": {
-          "caption": "Completion"
+          "caption": "Done!"
         }
       }
     }
