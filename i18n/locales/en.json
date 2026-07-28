@@ -5,6 +5,11 @@
       "description": "The converter is open outside Bitrix24 — loading and saving portal items isn't available."
     }
   },
+  "error": {
+    "title": "Error",
+    "timeout": "Bitrix24 didn't respond in time. Check your connection and try again.",
+    "notReady": "Bitrix24 isn't ready yet. Refresh the page and try again."
+  },
   "page": {
     "index": {
       "seo": {
@@ -15,9 +20,9 @@
         "clear": "Clear",
         "copy": "Copy",
         "copied": "Copied to clipboard",
-        "copyFailed": "Couldn't copy. Select the text and copy it manually (Ctrl+C).",
+        "copyFailed": "Couldn't copy. Select the text and copy it manually (Ctrl+C or ⌘C).",
         "print": "Print",
-        "printFailed": "Couldn't open the print dialog. Please try again.",
+        "printFailed": "Couldn't open the print dialog. Press Print again.",
         "language": "Language",
         "chatMode": "Chat mode",
         "chatModeHint": "Render tables as bullet lists (Bitrix24 chat does not support [table]).",
@@ -91,8 +96,8 @@
         "inserted": "Inserted into chat",
         "readFailed": "Couldn't read the text from the chat input. Press Load again.",
         "insertFailed": "Couldn't insert the text into chat. Press Insert again.",
-        "printFailed": "Couldn't open the print dialog. Please try again.",
-        "notInFrame": "The widget is open outside Bitrix24 — inserting into chat isn't available."
+        "printFailed": "Couldn't open the print dialog. Press Print again.",
+        "notInFrame": "The widget is open outside Bitrix24 — talking to the chat isn't available."
       }
     },
     "install": {
@@ -101,6 +106,9 @@
       },
       "ui": {
         "title": "Application installation"
+      },
+      "mock": {
+        "description": "Install isn't available outside Bitrix24 — showing a demo of the process, then opening the converter."
       },
       "diagnostics": {
         "title": "Diagnostics",

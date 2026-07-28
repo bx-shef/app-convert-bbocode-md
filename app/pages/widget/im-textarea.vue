@@ -23,6 +23,7 @@ const markdown = ref('')
 const isBusy = ref(false)
 
 const { printMarkdown } = usePrint()
+const describeError = useB24ErrorText()
 
 useHead({ title: t('page.widget.im.seo.title') })
 
@@ -72,7 +73,7 @@ async function readFromChat() {
     // Chat content is BBCode → convert to MD for editing
     markdown.value = bbcodeToMd(text)
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : String(e)
+    const msg = describeError(e)
     toast.add({ title: t('page.widget.im.readFailed'), description: msg, color: 'air-primary-alert' })
   } finally {
     isBusy.value = false
@@ -119,7 +120,7 @@ async function sendToChat() {
     console.info('[widget] im:setImTextareaContent ←', response)
     toast.add({ title: t('page.widget.im.inserted'), color: 'air-primary-success', duration: 1500 })
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : String(e)
+    const msg = describeError(e)
     console.error('[widget] im:setImTextareaContent failed', e)
     toast.add({ title: t('page.widget.im.insertFailed'), description: msg, color: 'air-primary-alert' })
   } finally {
