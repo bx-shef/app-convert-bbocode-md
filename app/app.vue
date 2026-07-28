@@ -9,7 +9,7 @@ import CloudErrorIcon from '@bitrix24/b24icons-vue/main/CloudErrorIcon'
 const config = useRuntimeConfig()
 
 const toast = useToast()
-const { locale, defaultLocale, locales: localesI18n, setLocale } = useI18n()
+const { t, locale, defaultLocale, locales: localesI18n, setLocale } = useI18n()
 const b24Instance = useB24()
 const { isBitrixMobile } = useDevice()
 
@@ -50,7 +50,7 @@ onMounted(async () => {
   const result: Result = await b24Instance.init()
   if (!result.isSuccess) {
     toast.add({
-      title: 'Error',
+      title: t('error.title'),
       description: result.getErrorMessages().join('\n'),
       color: 'air-primary-alert',
       icon: CloudErrorIcon

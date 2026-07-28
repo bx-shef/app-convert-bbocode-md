@@ -34,6 +34,7 @@ const { bbcode, markdown, html, preview, settings, setBb, setMd, setHtml, clear 
 const { copy, copied, isSupported: clipboardSupported } = useClipboard({ legacy: true, copiedDuring: 1500 })
 const { printMarkdown } = usePrint()
 const rest = useB24Rest()
+const describeError = useB24ErrorText()
 
 const config = useRuntimeConfig()
 const { reachGoal } = useMetrikaGoal()
@@ -180,7 +181,7 @@ async function loadFromB24() {
     setMd(await rest.loadMarkdown(entityKind.value, id))
     toast.add({ title: t('page.index.b24.loaded', { id }), color: 'air-primary-success', icon: CheckLIcon, duration: 1500 })
   } catch (e) {
-    toast.add({ title: t('page.index.b24.loadFailed'), description: e instanceof Error ? e.message : String(e), color: 'air-primary-alert', duration: 3000 })
+    toast.add({ title: t('page.index.b24.loadFailed'), description: describeError(e), color: 'air-primary-alert', duration: 3000 })
   } finally {
     b24Busy.value = false
   }
@@ -196,7 +197,7 @@ async function saveToB24() {
     rating.registerUse()
     toast.add({ title: t('page.index.b24.saved', { id }), color: 'air-primary-success', icon: CheckLIcon, duration: 1500 })
   } catch (e) {
-    toast.add({ title: t('page.index.b24.saveFailed'), description: e instanceof Error ? e.message : String(e), color: 'air-primary-alert', duration: 3000 })
+    toast.add({ title: t('page.index.b24.saveFailed'), description: describeError(e), color: 'air-primary-alert', duration: 3000 })
   } finally {
     b24Busy.value = false
   }

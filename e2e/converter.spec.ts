@@ -91,7 +91,7 @@ test.describe('Bitrix24 task bar (standalone)', () => {
     await page.goto('/')
     await page.locator('input[type="number"]').first().fill('11')
     await page.getByRole('button', { name: /^Load$|Загрузить/ }).click()
-    await expect(page.getByText(/Demo Mode|Демо-режим/).first()).toBeVisible()
+    await expect(page.getByText(/Demo mode|Демо-режим/i).first()).toBeVisible()
   })
 })
 

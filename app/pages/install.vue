@@ -252,7 +252,7 @@ onMounted(async () => {
       toast.add({
         id: 'install-warning-mock',
         title: t('mock.toast.title'),
-        description: t('mock.toast.description'),
+        description: t('page.install.mock.description'),
         icon: Market1Icon,
         color: 'air-primary-warning',
         duration: 0,
