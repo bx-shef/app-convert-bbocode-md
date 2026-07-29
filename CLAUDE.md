@@ -64,7 +64,7 @@ Nuxt 4 SPA placement for Bitrix24 that converts Bitrix24 BBCode ↔ Markdown.
 - Server-side handlers (`server/` deliberately absent).
 
 ## Conversion mapping
-See `README.md` § Конвертация for the full table. Key rules:
+See `README.md` § «Таблица соответствия форматов» for the full table. Key rules:
 - `[u]` ↔ `<u>` (Markdown has no native underline; HTML fallback).
 - `[color]`/`[size]`/`[font]` ↔ `<span style="color:… | font-size:…px | font-family:…">` (MD carries the span; `md-to-bbcode` parses the style back, `sanitize-html` allow-lists a few safe CSS props).
 - `[USER=id]`/`[DEPARTMENT=id]` ↔ `<span data-bb-user|data-bb-dept="id">Name</span>` (round-trip carrier; preview renders a chip via `.preview-html [data-bb-*]`).
@@ -90,12 +90,40 @@ pnpm build
 
 **Visual/e2e**: `e2e/` holds Playwright specs run against the built server. Assertions are functional + a dark-mode contrast guard (no flaky pixel baselines); screenshots land in `e2e/output/` (gitignored) and upload as CI artifacts. Runs in CI after `build`.
 
-**DoD for UI changes**: after any UI change, run the e2e and **look at** `e2e/output/` before calling it done — don't trust "built without errors". When building interfaces, cross-check the Bitrix24 UI docs: https://bitrix24.github.io/b24ui/. Full test plan + portal QA checklist: `docs/project-map.md` § «Что проверить».
+**DoD for UI changes**: after any UI change, run the e2e and **look at** `e2e/output/` before calling it done — don't trust "built without errors". When building interfaces, cross-check the Bitrix24 UI docs: https://bitrix24.github.io/b24ui/. Portal QA checklist + local check commands: `docs/project-map.md` § «Проверка в портале» / § «Как проверить сборку у себя».
 
-## Процесс, состояние, отчётность
+## Процесс разработки
 
-Технический гайд выше описывает **как устроен код**. Всё остальное вынесено:
+How the work is run (this is the dev-side process; the owner-facing docs are listed below).
 
-- **Процесс работы** (ветки, PR, ревью 5 ролей, штамп ревью, тесты, reporting-kit/Telegram, хук Bitrix24) — [`docs/PROCESS.md`](docs/PROCESS.md).
-- **Состояние проекта** (что сделано / что проверить / деплой / открытые вопросы) — [`docs/project-map.md`](docs/project-map.md).
-- **Пользовательский обзор и деплой** — [`README.md`](README.md).
+**Ветки и PR**
+- В `main` **не пушим напрямую.** Любая работа — в отдельной ветке, вливается через Pull Request с описанием на русском: что / зачем / на что влияет.
+- **Один PR — одна задача.** Не смешиваем несвязанные изменения.
+- **Мержит владелец** по явному сигналу. Автомерж/force-merge не используем.
+- **Не трогаем без сигнала владельца:** триггеры деплоя (`on:` в workflow), прод-образ, выдачу секретов.
+- После мержа — синхронно обновляем `docs/` (в первую очередь [`docs/project-map.md`](docs/project-map.md)).
+
+**Ревью — 5 ролей.** Перед мержем содержательных изменений: (1) документация, (2) программист, (3) тестировщик, (4) безопасность, (5) тех-директор. Отчёт на русском по формату **кто · что · почему · как исправить** с важностью (blocker/major/minor/nit). Замечания устраняем **в этом же PR**.
+
+**Пропорциональность.** Полный проход 5 ролей — на содержательные/рисковые изменения (код, поведение конвертера, деплой-пайплайн, security). Для рутинных бампов зависимостей, которые CI-гейт проверяет целиком, достаточно тщательного само-ревью + зелёного CI.
+
+**Перед коммитом**
+- `pnpm check` (lint + typecheck + test) — обязательно; для UI-правок ещё `pnpm build && pnpm test:e2e`.
+- Правки доков: `bash scripts/check-docs.sh && bash scripts/check-skills.sh && bash scripts/check-tg.sh`.
+- Штамп `> Last reviewed: YYYY-MM-DD` бампим только при содержательном изменении дока.
+
+**Отчётность (reporting-kit).** Вендорный бандл в `docs/reports/` (зеркалит `.claude/skills/*`) — держим **как есть**, он исключён из наших проверок. Отправляет только `scripts/tg-send.sh` и **только по явной команде «шли»**; без `TG_BOT_TOKEN`/`TG_CHAT_ID` намеренно отказывает.
+
+**Bitrix24 через хук.** Для setup/проверки портала — входящий вебхук `B24_HOOK___SUFFIX`. Хук с максимальными правами — **секрет**: в окружении, не в git/логах.
+
+**Связанные репозитории:** `bx-shef/ai-agent` (база знаний + reporting-kit), `bx-shef/currency-converter` (соседнее приложение, единый стиль).
+
+## Документация для владельца
+
+Технический гайд выше — про **устройство кода**. Всё остальное — три файла:
+
+- [`docs/PROCESS.md`](docs/PROCESS.md) — процесс от настроек до данных в Bitrix24 (настройка → деплой → установка → работа с порталом).
+- [`docs/project-map.md`](docs/project-map.md) — карта частей проекта с метками готово / не проверено / отложено / заблокировано.
+- [`docs/ROADMAP.md`](docs/ROADMAP.md) — планы на будущее.
+
+[`README.md`](README.md) — короткая витрина репозитория со ссылками на эти три файла.
