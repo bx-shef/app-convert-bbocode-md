@@ -61,7 +61,8 @@ export function useB24Rest() {
   //      idempotent on the value, so an identical re-save is safe.
   //   2. Re-triggering after a timeout can race two in-flight calls for one
   //      entity (the button re-enables while the old call may still run). See
-  //      docs/project-map.md § «Что дальше» — residual, gated on SDK cancel support.
+  //      docs/project-map.md § «Связь с Bitrix24» (note under the table) —
+  //      residual, gated on SDK cancel support.
   const CALL_TIMEOUT_MS = 60_000
   async function call(method: string, params: Record<string, unknown>): Promise<unknown> {
     const $b24 = frame()

@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-> Last reviewed: 2026-07-24
+> Last reviewed: 2026-07-28
 
 Nuxt 4 SPA placement for Bitrix24 that converts Bitrix24 BBCode ↔ Markdown.
 
@@ -43,7 +43,7 @@ Nuxt 4 SPA placement for Bitrix24 that converts Bitrix24 BBCode ↔ Markdown.
 ## Conventions
 - **Tests are required** for any change to the converter utils (`app/utils/{bbcode-parser,bbcode-to-md,md-to-bbcode,md-to-html,html-to-md,sanitize-html,convert,md-to-print-html}.ts`). Run `pnpm test` before commit. Tests live in `tests/`:
   - `bbcode-to-md.test.ts`, `md-to-bbcode.test.ts`, `md-to-html.test.ts`, `html-to-md.test.ts`, `sanitize-html.test.ts`, `convert.test.ts`, `roundtrip.test.ts`, `md-to-print-html.test.ts`, `table.test.ts`.
-- **i18n** — when adding a new UI string, add the key to `i18n/locales/en.json` and `i18n/locales/ru.json`. Other 17 locales fall back to `en` (defaultLocale). User runs `pnpm translate-ui` later for full translation.
+- **i18n** — when adding a new UI string, add the key to `i18n/locales/en.json` and `i18n/locales/ru.json`. **The other 17 locales do NOT fall back to `en` today**: `fallbackLocale` is unset (no `i18n/i18n.config.ts`), so `@nuxtjs/i18n` defaults it to `false` and a missing key renders as the raw key path (`page.index.ui.title`). Those locales carry 4 of 87 keys — the portal looks broken in them. Known defect, tracked in `docs/project-map.md` § UI; fix = set `fallbackLocale: 'en'` and/or run `pnpm translate-ui`.
 - **B24 UI components only**: `B24Textarea`, `B24DashboardPanel`, `B24Button`, `B24DashboardNavbar`, `B24Progress`, etc. Auto-imported via `@bitrix24/b24ui-nuxt`.
 - **No server code.** `server/` folder was intentionally removed. No SSR API endpoints. App is pure SPA (runtime fetches go through `useB24` → Bitrix24 REST).
 - **Analytics/telemetry** — client-side only, opt-in via env-gate, empty = off. No server-side OTel (pure SPA). **Wired analytics = Yandex.Metrika** (`NUXT_PUBLIC_YANDEX_COUNTER_ID`), the iframe-safe option: injected only on the standalone converter page and self-muting inside the portal iframe (see the metrika files above). A dormant Cloudflare beacon (`NUXT_PUBLIC_CF_ANALYTICS_TOKEN`) also exists in `nuxt.config.ts` but is **unguarded** (injects unconditionally) — leave it off; prefer Metrika. Enable at most one. Principles (mirroring `ai-price-import`): (1) collect **shape/counters only, never content** — the user's textarea text must never leave the browser **via analytics/telemetry** (explicit REST save / insert-to-chat are separate, user-initiated); (2) if an event is ever tagged by portal, **hash (salted)** `member_id`/domain, never raw; (3) errors = **class, not message text**; (4) analytics must be kept **OFF inside the B24 iframe** — **realized** for Metrika via `public/metrika.js`'s `window.self !== window.top` self-mute (goals therefore fire only on the standalone `/`; portal users are never tracked). Precedent: `currency-converter/public/metrika.js`.
@@ -64,7 +64,7 @@ Nuxt 4 SPA placement for Bitrix24 that converts Bitrix24 BBCode ↔ Markdown.
 - Server-side handlers (`server/` deliberately absent).
 
 ## Conversion mapping
-See `README.md` § Конвертация for the full table. Key rules:
+See `README.md` § «Таблица соответствия форматов» for the full table. Key rules:
 - `[u]` ↔ `<u>` (Markdown has no native underline; HTML fallback).
 - `[color]`/`[size]`/`[font]` ↔ `<span style="color:… | font-size:…px | font-family:…">` (MD carries the span; `md-to-bbcode` parses the style back, `sanitize-html` allow-lists a few safe CSS props).
 - `[USER=id]`/`[DEPARTMENT=id]` ↔ `<span data-bb-user|data-bb-dept="id">Name</span>` (round-trip carrier; preview renders a chip via `.preview-html [data-bb-*]`).
@@ -90,12 +90,41 @@ pnpm build
 
 **Visual/e2e**: `e2e/` holds Playwright specs run against the built server. Assertions are functional + a dark-mode contrast guard (no flaky pixel baselines); screenshots land in `e2e/output/` (gitignored) and upload as CI artifacts. Runs in CI after `build`.
 
-**DoD for UI changes**: after any UI change, run the e2e and **look at** `e2e/output/` before calling it done — don't trust "built without errors". When building interfaces, cross-check the Bitrix24 UI docs: https://bitrix24.github.io/b24ui/. Full test plan + portal QA checklist: `docs/project-map.md` § «Что проверить».
+**DoD for UI changes**: after any UI change, run the e2e and **look at** `e2e/output/` before calling it done — don't trust "built without errors". When building interfaces, cross-check the Bitrix24 UI docs: https://bitrix24.github.io/b24ui/. Portal QA checklist + local check commands: `docs/project-map.md` § «Проверка в портале» / § «Как проверить сборку у себя».
 
-## Процесс, состояние, отчётность
+## Процесс разработки
 
-Технический гайд выше описывает **как устроен код**. Всё остальное вынесено:
+How the work is run (this is the dev-side process; the owner-facing docs are listed below).
 
-- **Процесс работы** (ветки, PR, ревью 5 ролей, штамп ревью, тесты, reporting-kit/Telegram, хук Bitrix24) — [`docs/PROCESS.md`](docs/PROCESS.md).
-- **Состояние проекта** (что сделано / что проверить / деплой / открытые вопросы) — [`docs/project-map.md`](docs/project-map.md).
-- **Пользовательский обзор и деплой** — [`README.md`](README.md).
+**Ветки и PR**
+- В `main` **не пушим напрямую.** Любая работа — в отдельной ветке, вливается через Pull Request с описанием на русском: что / зачем / на что влияет.
+- **Один PR — одна задача.** Не смешиваем несвязанные изменения.
+- **Мержит владелец** по явному сигналу. Автомерж/force-merge не используем.
+- **Не трогаем без сигнала владельца:** триггеры деплоя (`on:` в workflow), прод-образ, **канонический контур деплоя** (решение владельца от 2026-07-24: Docker/nginx — основной, GitHub Pages — только витрина), выдачу секретов.
+- **Защита ветки `main` — техническая, а не договорная.** Зелёный CI сам по себе merge не блокирует: это делает branch protection в GitHub Settings. Чек-лист обязательных галочек — в [`docs/PROCESS.md`](docs/PROCESS.md), шаг 0.
+- После мержа — синхронно обновляем `docs/` (в первую очередь [`docs/project-map.md`](docs/project-map.md)).
+
+**Ревью — 5 ролей.** Перед мержем содержательных изменений: (1) документация и навыки, (2) программист (решения, типы, корректность), (3) тестировщик (покрытие и сами тесты), (4) безопасность (уязвимости, санитайзер, CSP, секреты), (5) тех-директор (скоуп, инженерная оценка, вердикт). Отчёт на русском по формату **кто · что · почему · как исправить** с важностью (blocker/major/minor/nit). Замечания устраняем **в этом же PR**.
+
+**Пропорциональность.** Полный проход 5 ролей — на содержательные/рисковые изменения (код, поведение конвертера, деплой-пайплайн, security). Для рутинных бампов зависимостей, которые CI-гейт проверяет целиком, достаточно тщательного само-ревью + зелёного CI.
+
+**Перед коммитом**
+- `pnpm check` (lint + typecheck + test) — обязательно; для UI-правок ещё `pnpm build && pnpm test:e2e`.
+- Правки доков: `bash scripts/check-docs.sh && bash scripts/check-skills.sh && bash scripts/check-tg.sh`.
+- Штамп `> Last reviewed: YYYY-MM-DD` бампим только при содержательном изменении дока.
+
+**Отчётность (reporting-kit).** Вендорный бандл в `docs/reports/` (зеркалит `.claude/skills/*`) — держим **как есть**, он исключён из наших проверок. Отправляет только `scripts/tg-send.sh` и **только по явной команде «шли»**; без `TG_BOT_TOKEN`/`TG_CHAT_ID` намеренно отказывает.
+
+**Bitrix24 через хук.** Для setup/проверки портала — входящий вебхук `B24_HOOK___SUFFIX`. Хук с максимальными правами — **секрет**: в окружении, не в git/логах; **для рантайма/регулярных проверок заводим отдельный хук с минимальными правами** (утечка ограниченного хука стоит кратно дешевле).
+
+**Связанные репозитории:** `bx-shef/ai-agent` (база знаний + reporting-kit), `bx-shef/currency-converter` (соседнее приложение, единый стиль).
+
+## Документация для владельца
+
+Технический гайд выше — про **устройство кода**. Всё остальное — три файла:
+
+- [`docs/PROCESS.md`](docs/PROCESS.md) — процесс от настроек до данных в Bitrix24 (настройка → деплой → установка → работа с порталом).
+- [`docs/project-map.md`](docs/project-map.md) — карта частей проекта с метками готово / не проверено / отложено / заблокировано.
+- [`docs/ROADMAP.md`](docs/ROADMAP.md) — планы на будущее.
+
+[`README.md`](README.md) — короткая витрина репозитория со ссылками на эти три файла.
