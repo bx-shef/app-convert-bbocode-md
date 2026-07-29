@@ -1,16 +1,1 @@
-{
-  "page": {
-    "index": {
-      "seo": {
-        "title": "Trang Chủ"
-      },
-      "menu": {
-        "main": "Thêm Người Dùng"
-      },
-      "message": {
-        "title": "Xem giao dịch mới",
-        "line1": "Xóa người dùng"
-      }
-    }
-  }
-}
+{}

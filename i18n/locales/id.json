@@ -1,16 +1,1 @@
-{
-  "page": {
-    "index": {
-      "seo": {
-        "title": "Beranda"
-      },
-      "menu": {
-        "main": "Tambahkan Pengguna"
-      },
-      "message": {
-        "title": "Lihat kesepakatan baru",
-        "line1": "Hapus pengguna"
-      }
-    }
-  }
-}
+{}
