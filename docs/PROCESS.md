@@ -14,12 +14,27 @@
 
 | Что | Зачем | Обязательно |
 |---|---|---|
-| Домен с HTTPS | Bitrix24 пускает в iframe только по `https` | да |
+| Домен с HTTPS | Bitrix24 пускает в окно внутри портала (iframe) только по `https` | да |
 | Сервер с Docker | основной способ размещения | да (GitHub Pages — только витрина) |
 | Портал Bitrix24 с правами администратора | зарегистрировать приложение | да |
 | Доступ к репозиторию на GitHub | сборка и выкладка идут через GitHub Actions | да |
 
-Проверка шага: домен открывается по `https`, на сервере работает `docker compose version`.
+### Защита главной ветки — настроить один раз
+
+Иначе изменения с непройденными проверками можно влить в `main` вручную, и
+дальше они уедут в прод. Настраивается руками в GitHub:
+**Settings → Branches → Add branch protection rule**, шаблон ветки `main`:
+
+- Require a pull request before merging (запретить прямые записи в `main`);
+- Require approvals — минимум 1;
+- Require status checks to pass → выбрать проверку **`ci`**;
+- Require branches to be up to date before merging;
+- Require conversation resolution before merging;
+- Block force pushes и Restrict deletions;
+- Do not allow bypassing the above settings.
+
+Проверка шага: домен открывается по `https`, на сервере работает
+`docker compose version`, а попытка влить PR с красными проверками блокируется.
 
 ---
 
@@ -96,6 +111,26 @@ make prod-rollback TAG=<номер коммита>
 ```bash
 make prod-smoke                       # приложение внутри контейнера отвечает
 scripts/smoke.sh https://ваш-домен    # снаружи: страница открывается, заголовки на месте
+```
+
+### Если нужно собрать вручную
+
+Обычно не требуется — сборкой занимается GitHub. Но если GitHub Actions
+недоступен или нужно проверить образ до отправки изменений:
+
+```bash
+NUXT_PUBLIC_SITE_URL=https://ваш-домен \
+DOCKER_IMAGE=ghcr.io/bx-shef/app-convert-bbocode-md \
+DOCKER_TAG=latest \
+pnpm run deploy docker --push        # без --push соберёт локально, никуда не отправит
+
+pnpm run deploy gh-pages             # собрать вариант для витрины
+```
+
+Проверить собранный образ на своей машине, не трогая сервер:
+
+```bash
+HTTP_PORT=8080 docker compose up -d  # откроется на http://localhost:8080
 ```
 
 Проверка шага: `https://ваш-домен` открывает конвертер, в адресной строке замок.
@@ -215,7 +250,12 @@ cp .env.prod.example .env.prod        # вписать домен и почту 
 make init-network                     # общая сеть proxy-net, если её ещё нет
 ```
 
-Если образ в реестре приватный — на сервере понадобится `docker login ghcr.io`.
+**Доступ к образу.** После первой сборки образ появляется в реестре GHCR
+(хранилище образов при GitHub). Дальше два варианта:
+- сделать пакет публичным: «Code → Packages → app-convert-bbocode-md →
+  Package settings → Change visibility → Public» — тогда сервер тянет образ без входа;
+- оставить приватным — тогда на сервере нужен `docker login ghcr.io`
+  (логин GitHub, пароль — токен доступа с правом `read:packages`).
 
 **3. Первый запуск.**
 
@@ -229,6 +269,9 @@ make logs      # журнал, если что-то не так
 поднимает соседний проект): он раз в несколько минут подтягивает свежий образ и
 перезапускает контейнер. Поэтому обычное обновление руками запускать не нужно —
 команды `make up` и `make prod-redeploy` остаются для первого запуска и отката.
+Важно: **второй Watchtower на том же сервере поднимать нельзя** — они конфликтуют.
+Подробности и грабли — в
+[гайде соседнего проекта](https://github.com/bx-shef/currency-converter/blob/main/docs/AI_DEPLOY_GUIDE.md).
 
 **Проверка вручную, если нужна:**
 
