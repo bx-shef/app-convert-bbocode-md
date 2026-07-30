@@ -1,16 +1,1 @@
-{
-  "page": {
-    "index": {
-      "seo": {
-        "title": "Startseite"
-      },
-      "menu": {
-        "main": "Benutzer hinzufügen"
-      },
-      "message": {
-        "title": "Neue Angebote ansehen",
-        "line1": "Benutzer entfernen"
-      }
-    }
-  }
-}
+{}

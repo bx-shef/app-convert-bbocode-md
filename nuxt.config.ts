@@ -79,6 +79,9 @@ export default defineNuxtConfig({
     strategy: 'no_prefix',
     langDir: 'locales',
     locales: contentLocales,
-    defaultLocale: 'en'
+    defaultLocale: 'en',
+    // Enables the English fallback for the 17 partially-translated locales —
+    // see i18n/i18n.config.ts. Without it a missing key renders as its own path.
+    vueI18n: './i18n.config.ts'
   }
 })
