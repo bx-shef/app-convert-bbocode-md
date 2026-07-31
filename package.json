@@ -52,8 +52,11 @@
   "pnpm": {
     "overrides": {
       "brace-expansion@2": "^2.1.2",
-      "brace-expansion@5": "^5.0.7",
-      "svgo": "^4.0.2"
+      "brace-expansion@5": "^5.0.8",
+      "svgo": "^4.0.2",
+      "postcss": "^8.5.18",
+      "tar": "^7.5.21",
+      "valibot": "^1.4.2"
     }
   }
 }

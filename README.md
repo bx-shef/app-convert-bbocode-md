@@ -1,6 +1,6 @@
 # Конвертер BBCode ↔ Markdown ↔ HTML для Bitrix24
 
-> Last reviewed: 2026-07-28
+> Last reviewed: 2026-07-31
 
 [![CI](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/ci.yml/badge.svg)](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/ci.yml)
 [![Deploy Docker](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/deploy-docker.yml/badge.svg)](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/deploy-docker.yml)
@@ -45,7 +45,7 @@ Bitrix24: кнопка у поля ввода чата плюс загрузка
 - **Печать** — Markdown → готовый к печати документ.
 - **Работа с порталом** — загрузить текст задачи, комментария CRM или поста Ленты, отредактировать и сохранить обратно.
 - **Кнопка в чате** — забрать текст из поля ввода, отредактировать, вернуть обратно.
-- **19 языков интерфейса** — русский и английский переведены полностью; остальные 17 пока не переведены (см. [карту проекта](docs/project-map.md) — там описано текущее ограничение).
+- **19 языков интерфейса** — русский и английский переведены полностью; остальные 17 пока показывают английский, а не перевод (запасной язык настроен, см. [карту проекта](docs/project-map.md)).
 
 ## Быстрый старт
 
