@@ -44,7 +44,7 @@ jobs:
         run: docker run --rm -v "${{ github.workspace }}/docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro" nginx:1.31-alpine nginx -t
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@v6.0.9
 
       - name: Install node
         uses: actions/setup-node@v7
