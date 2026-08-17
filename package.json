@@ -24,7 +24,7 @@
     "@bitrix24/b24jssdk-nuxt": "^2.0.0",
     "@bitrix24/b24ui-nuxt": "^2.9.0",
     "@nuxtjs/i18n": "^10.4.0",
-    "@unhead/vue": "^3.2.3",
+    "@unhead/vue": "^3.3.2",
     "@vueuse/core": "^14.3.0",
     "@vueuse/nuxt": "^14.3.0",
     "htmlparser2": "^12.0.0",
