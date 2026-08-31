@@ -35,18 +35,18 @@
     "vue": "^3.5.40"
   },
   "devDependencies": {
-    "@nuxt/eslint": "^1.16.0",
-    "@playwright/test": "^1.61.1",
+    "@nuxt/eslint": "^1.17.0",
+    "@playwright/test": "^1.62.1",
     "@types/markdown-it": "^14.1.2",
-    "@types/node": "^26.1.1",
+    "@types/node": "^26.4.0",
     "@vitest/ui": "^3.2.6",
     "dotenv": "^17.4.2",
     "eslint": "^10.7.0",
     "openai": "^6.48.0",
-    "tsx": "^4.23.1",
+    "tsx": "^4.23.12",
     "typescript": "^6.0.3",
     "vitest": "^3.2.6",
-    "vue-tsc": "^3.3.8"
+    "vue-tsc": "^3.3.11"
   },
   "packageManager": "pnpm@10.33.0",
   "pnpm": {
