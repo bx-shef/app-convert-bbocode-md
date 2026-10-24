@@ -96,7 +96,11 @@ if (yandexCounterId) {
     meta: [
       { name: 'yandex-metrika-id', content: yandexCounterId }
     ],
+    // Counter starts only after cookie consent (Belarus Law 99-Z): cookie-consent.js is the shared
+    // landing banner, a copy from bx-shef/Lp (edit it there); metrika.js runs from
+    // BxConsent.onAnalytics. Both defer — order is kept. Inside the B24 iframe there is no banner.
     script: [
+      { 'key': 'cookie-consent', 'src': `${config.app.baseURL}cookie-consent.js`, 'defer': true, 'data-policy': 'https://offer.bx-shef.by/privacy', 'data-services': 'Яндекс Метрику (статистика посещений)' },
       { key: 'yandex-metrika', src: `${config.app.baseURL}metrika.js`, defer: true }
     ]
   })
@@ -544,6 +548,20 @@ useEventListener('keydown', (e: KeyboardEvent) => {
           rel="noopener noreferrer"
           class="hover:underline"
         >offer.bx-shef.by</a>
+        <a
+          href="https://offer.bx-shef.by/privacy"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="hover:underline"
+        >{{ t('page.index.footer.privacy') }}</a>
+        <button
+          v-if="yandexCounterId"
+          type="button"
+          data-cookie-settings
+          class="hover:underline"
+        >
+          {{ t('page.index.footer.cookieSettings') }}
+        </button>
         <a
           href="https://github.com/bx-shef/app-convert-bbocode-md"
           target="_blank"
