@@ -83,11 +83,17 @@
         "saved": "Saved #{id}",
         "loadFailed": "Couldn't load from Bitrix24. Check the item type and its ID, then press Load again.",
         "saveFailed": "Couldn't save to Bitrix24. Check the item type and its ID, then press Save again."
+      },
+      "footer": {
+        "privacy": "Privacy policy",
+        "cookieSettings": "Cookie settings"
       }
     },
     "widget": {
       "im": {
-        "seo": { "title": "BBCode ↔ MD" },
+        "seo": {
+          "title": "BBCode ↔ MD"
+        },
         "hint": "Type Markdown and press Insert — it goes into the chat input as BBCode.",
         "placeholder": "Type Markdown here…",
         "read": "Load",

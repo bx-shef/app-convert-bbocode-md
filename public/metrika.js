@@ -14,6 +14,9 @@
   var meta = document.querySelector('meta[name="yandex-metrika-id"]')
   var id = meta && meta.getAttribute('content')
   if (!id || !/^\d+$/.test(id)) return
+  // Only with cookie consent: no banner (script failed to load) — no counter at all.
+  if (!window.BxConsent) return
+  window.BxConsent.onAnalytics(function () {
   ;(function (m, e, t, r, i, k, a) {
     m[i] = m[i] || function () { (m[i].a = m[i].a || []).push(arguments) }
     m[i].l = 1 * new Date()
@@ -25,4 +28,5 @@
   // tracking would ship those href URLs (user content) to Metrika, breaking
   // analytics principle #1 (counters only, never content).
   window.ym(Number(id), 'init', { clickmap: true, trackLinks: false, accurateTrackBounce: true })
+  })
 })()
