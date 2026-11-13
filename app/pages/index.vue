@@ -541,7 +541,7 @@ useEventListener('keydown', (e: KeyboardEvent) => {
     <!-- Standalone footer — credits + links, unified with the currency-converter sibling app -->
     <template v-if="!isUseB24" #footer>
       <nav class="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 px-4 py-2 text-xs text-(--ui-color-base-4)">
-        <span>© {{ currentYear }} ИП Шевчик И. С</span>
+        <span>© {{ currentYear }} ООО «БэИксШефБай»</span>
         <a
           href="https://offer.bx-shef.by/"
           target="_blank"
