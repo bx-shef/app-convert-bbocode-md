@@ -31,7 +31,7 @@ RUN pnpm run generate
 # the runtime image copies the processed conf from here (NOT the build context).
 RUN node scripts/csp-hashes.mjs dist docker/nginx.conf
 
-FROM nginx:1.31-alpine AS runtime
+FROM nginx:1.31.9-alpine AS runtime
 COPY --from=build /app/docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist /usr/share/nginx/html
 EXPOSE 80
