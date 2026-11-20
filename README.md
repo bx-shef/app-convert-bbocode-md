@@ -5,7 +5,6 @@
 [![CI](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/ci.yml/badge.svg)](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/ci.yml)
 [![Deploy Docker](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/deploy-docker.yml/badge.svg)](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/deploy-docker.yml)
 [![Deploy GitHub Pages](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/deploy.yml/badge.svg)](https://github.com/bx-shef/app-convert-bbocode-md/actions/workflows/deploy.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Bitrix24 UI](https://img.shields.io/badge/Made%20with-Bitrix24%20UI-2fc6f6?logo=bitrix24&labelColor=020420)](https://bitrix24.github.io/b24ui/)
 
 Переводит текст между форматом Bitrix24 (BBCode), Markdown и HTML — с живым
@@ -105,5 +104,5 @@ pnpm build        # сборка
 
 ## Лицензия
 
-MIT — см. [LICENSE](LICENSE). Стартовая структура приложения основана на шаблоне
+Права принадлежат ООО «БэИксШефБай» — см. [LICENSE](LICENSE). Стартовая структура приложения основана на шаблоне
 [bitrix24/templates-dashboard](https://github.com/bitrix24/templates-dashboard).
